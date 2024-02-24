@@ -1,0 +1,114 @@
+@media all and (prefers-color-scheme: light) {
+    :root {
+        --color-text: #000000;
+        --color-bg: #dbdad7;
+        --color-bg-primary: #71b800;
+        --color-bg-secondary: #85d800;
+        --color-bg-nav: #bbbbbb;
+    }
+}
+
+@media all and (prefers-color-scheme: dark) {
+    :root {
+        --color-text: #dbdad7;
+        --color-bg: #333333;
+        --color-bg-primary: #af9500;
+        --color-bg-secondary: #8f7900;
+        --color-bg-nav: #3b3b3b;
+    }
+}
+
+:root {
+    --color-btn-text: #ffffff;
+}
+
+html {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: sans-serif;
+}
+
+body {
+    min-width: 360px;
+}
+
+header, nav, main, footer {
+    margin: 1rem;
+}
+
+header, footer {
+    background-color: var(--color-bg-primary);
+    padding: 1rem;
+    border-radius: 12px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.header-img {
+    border-radius: 100px;
+}
+
+.nav-list {
+    display: flex;
+    padding: 0;
+    list-style-type: none;
+    flex-wrap: wrap;
+}
+
+.nav-link {
+    display: inline-block;
+    color: var(--color-text);
+    font-size: large;
+    padding: 1rem 2rem;
+    text-decoration: none;
+    background-color: var(--color-bg-nav);
+}
+
+.nav-link-current {
+    background-color: var(--color-bg-secondary);
+}
+
+.nav-link:hover {
+    background-color: var(--color-bg-primary);
+}
+
+#content {
+    border: none;
+}
+
+footer {
+    text-align: center;
+}
+
+@media all and (max-width: 720px) {
+    header {
+        flex-direction: column;
+    }
+
+    .header-text {
+        text-align: center;
+    }
+
+    .header-img {
+        align-self: center;
+    }
+
+    .nav-item {
+        flex-basis: 100%;
+        text-align: center;
+    }
+
+    .nav-link {
+        display: block;
+        width: 100%;
+    }
+}
+
+@media all and (max-width: 400px) {
+    body, header, nav, .nav-list, main, footer {
+        margin: 0;
+    }
+}
