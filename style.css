@@ -1,7 +1,5 @@
 @media all and (prefers-color-scheme: light) {
     :root {
-        --color-text: #000000;
-        --color-bg: #dbdad7;
         --color-bg-primary: #71b800;
         --color-bg-secondary: #85d800;
         --color-bg-nav: #bbbbbb;
@@ -10,22 +8,10 @@
 
 @media all and (prefers-color-scheme: dark) {
     :root {
-        --color-text: #dbdad7;
-        --color-bg: #333333;
         --color-bg-primary: #af9500;
         --color-bg-secondary: #8f7900;
         --color-bg-nav: #3b3b3b;
     }
-}
-
-:root {
-    --color-btn-text: #ffffff;
-}
-
-html {
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    font-family: sans-serif;
 }
 
 body {
@@ -47,6 +33,10 @@ header {
     justify-content: space-between;
 }
 
+.header-link {
+    display: contents;
+}
+
 .header-img {
     border-radius: 100px;
 }
@@ -65,9 +55,10 @@ header {
     padding: 1rem 2rem;
     text-decoration: none;
     background-color: var(--color-bg-nav);
+    border-radius: 10px;
 }
 
-.nav-link-current {
+.current {
     background-color: var(--color-bg-secondary);
 }
 
@@ -104,6 +95,7 @@ footer {
     .nav-link {
         display: block;
         width: 100%;
+        border-radius: 0;
     }
 }
 

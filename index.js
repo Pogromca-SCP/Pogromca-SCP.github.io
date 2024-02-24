@@ -1,8 +1,11 @@
-const currentLinkClass = "nav-link-current";
+const currentLinkClass = "current";
 const frameId = "content";
 
-/** @param {string} name */
-const navigate = (name) => {
+/**
+ * @param {string} name 
+ * @param {number} height
+ */
+const navigate = (name, height) => {
     for (const link of document.getElementsByClassName(currentLinkClass)) {
         link.classList.remove(currentLinkClass);
     }
@@ -14,4 +17,5 @@ const navigate = (name) => {
     /** @type {HTMLIFrameElement} */
     const frame = document.getElementById(frameId);
     frame.src = `./${name}/${name}.html`;
+    frame.height = height;
 };
