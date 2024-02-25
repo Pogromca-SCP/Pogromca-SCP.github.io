@@ -1,0 +1,74 @@
+body
+{
+    display: grid;
+    height: 98vh;
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: 2fr 1fr;
+    grid-column-gap: 5px;
+    grid-row-gap: 5px;
+    background-color: #000000;
+}
+
+#input
+{
+    grid-area: 1 / 1 / 3 / 2;
+    resize: none;
+    background-color: #222222;
+    color: #888888;
+}
+
+#canvas
+{
+    grid-area: 1 / 2 / 2 / 3;
+    height: 100%;
+    width: 100%;
+}
+
+#output
+{
+    grid-area: 2 / 2 / 3 / 3;
+    background-color: #222222;
+    overflow-y: auto;
+    overflow-wrap: break-word;
+}
+
+#menu
+{
+    border-bottom: #000000 3px solid;
+    background-color: rgba(34, 34, 34, 1);
+    position: sticky;
+    top: 0;
+}
+
+#menu > button, #menu > input
+{
+    font-size: large;
+    margin: 1rem;
+    border-radius: 8px;
+    background-color: #444444;
+    color: #999999;
+}
+
+.info, .error, .success
+{
+    padding: 1rem;
+    border-bottom: #444444 2px solid;
+}
+
+.info
+{
+    background-color: #222222;
+    color: #888888;
+}
+
+.error
+{
+    background-color: #290000;
+    color: #e46962;
+}
+
+.success
+{
+    background-color: #002900;
+    color: #69e462;
+}
