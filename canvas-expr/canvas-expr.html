@@ -1,21 +1,37 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8" />
-        <link rel="stylesheet" href="./style.css" />
-    </head>
-    <body>
-        <textarea id="input" wrap="off"></textarea>
-        <canvas id="canvas"></canvas>
-        <div id="output">
-            <div id="menu">
-                <button id="run" onclick="run();">></button>
-                <button onclick="clearConsole();">X</button>
-                <input id="count" type="number" min="1" max="100" value="32" onkeydown="return false;" />
-                <input id="size" type="number" min="1" max="20" value="1" onkeydown="return false;" />
-            </div>
-            <div id="console"></div>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Canvas Expressions</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="An in-browser editor for creating canvas simulations based on written expression code." />
+    <meta name="keywords" content="Adam Szerszenowicz, portfolio, canvas, domain specific language" />
+    <link rel="icon" href="../logo.png" />
+    <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+    <textarea id="input" wrap="off" spellcheck="false">x' = x; y' = y;</textarea>
+    <canvas id="canvas"></canvas>
+    <div id="output">
+        <div id="menu">
+            <button id="run" onclick="run();">RUN</button>
+            <button onclick="clearConsole();">CLEAR</button>
+            <!-- <button onclick="clearConsole();">HELP</button> -->
+            <input id="count" type="number" min="1" max="100" value="32" onkeydown="return false;" />
+            <input id="size" type="number" min="1" max="20" value="1" onkeydown="return false;" />
+            <a href="../index.html">
+                <button>EXIT</button>
+            </a>
         </div>
-        <script src="./index.js"></script>
-    </body>
+        <div id="console"></div>
+    </div>
+    <script src="./js/enums.js"></script>
+    <script src="./js/scanner.js"></script>
+    <script src="./js/compiler.js"></script>
+    <script src="./js/std-lib.js"></script>
+    <script src="./js/runtime.js"></script>
+</body>
+
 </html>
