@@ -1,3 +1,9 @@
+/** @type {HTMLDivElement} */
+const popupContainer = document.getElementById("popup-container");
+
+/** @type {HTMLDivElement} */
+const popupConver = document.getElementById("popup-cover");
+
 /** @type {HTMLTextAreaElement} */
 const input = document.getElementById("input");
 
@@ -19,6 +25,17 @@ const pixelsCount = document.getElementById("count");
 /** @type {HTMLInputElement} */
 const pixelsSize = document.getElementById("size");
 
+const hiddenClass = "hidden";
+
+/**
+ * @typedef {Object} Pixel
+ * @property {number} x
+ * @property {number} y
+ * @property {number} h
+ * @property {number} s
+ * @property {number} v
+ */
+
 const vm = {
     /** @type {(number | string)[]} */
     chunk: [],
@@ -29,20 +46,28 @@ const vm = {
 
     /** @type {Pixel[]} */
     pixels: [],
-    pixelSize: 0
+    pixelSize: 0,
+    halfSize: 0
 };
 
 const inputVars = {
-    x: 0,
-    y: 0,
-    index: 0,
+    /** @type {number[]} */
+    x: [],
+
+    /** @type {number[]} */
+    y: [],
+
+    /** @type {number[]} */
+    index: [],
     count: 0,
-    fraction: 0,
+
+    /** @type {number[]} */
+    fraction: [],
     pi: Math.PI,
     tau: Math.PI * 2,
     time: () => new Date(Date.now()).getTime() / 1000,
-    projectionTime: () => new Date(Date.now() - vm.started.getTime()).getTime() / 1000,
-    projectionStartTime: () => vm.started.getTime() / 1000
+    simulationTime: () => new Date(Date.now() - vm.started.getTime()).getTime() / 1000,
+    simulationStartTime: () => vm.started.getTime() / 1000
 };
 
 const run = () => {
@@ -63,13 +88,28 @@ const run = () => {
     vm.started = new Date(Date.now());
     vm.pixels = [];
     vm.pixelSize = pxSize;
+    vm.halfSize = pxSize / 2;
+    inputVars.x = [];
+    inputVars.y = [];
+    inputVars.index = [];
     inputVars.count = pxCount;
+    inputVars.fraction = [];
     addInfo(`Running expression with ${pxCount} elements of size: ${pxSize}.`);
-    window.requestAnimationFrame(execute);
+    preparePixels();
     runButton.disabled = false;
 };
 
-const clearConsole = () => output.innerHTML = "";;
+const clearConsole = () => output.innerHTML = "";
+
+const showRef = () => {
+    popupContainer.className = "";
+    popupConver.className = "";
+};
+
+const hideRef = () => {
+    popupContainer.className = hiddenClass;
+    popupConver.className = hiddenClass;
+};
 
 /**
  * @param {string} message 
@@ -91,54 +131,49 @@ const addError = (message) => addMessage(message, "error");
 /** @param {string} message */
 const addSuccess = (message) => addMessage(message, "success");
 
-/**
- * @typedef {Object} Pixel
- * @property {number} x
- * @property {number} y
- * @property {number} h
- * @property {number} s
- * @property {number} v
- */
-
-const execute = () => {
+const preparePixels = () => {
     if (inputVars.count < 1) {
         return;
     }
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    const halfSize = vm.pixelSize / 2;
     const columns = Math.floor(Math.sqrt(inputVars.count));
     const rows = Math.ceil(inputVars.count / columns);
     const dx = canvas.width / columns;
     const dy = canvas.height / rows;
 
     for (let i = 0; i < inputVars.count; ++i) {
-        inputVars.x = (i % columns + 0.5) * dx;
-        inputVars.y = (Math.floor(i / columns) % rows + 0.5) * dy;
-        inputVars.index = i;
-        inputVars.fraction = i / inputVars.count;
-        let pixel;
-
-        if (i < vm.pixels.length) {
-            pixel = vm.pixels[i];
-        } else {
-            pixel = {};
-            vm.pixels.push(pixel);
-        }
-
-        if (!updatePixel(pixel)) {
-            return;
-        }
-
-        context.fillStyle = `hsl(${pixel.h}, ${pixel.s}%, ${pixel.v}%)`;
-        context.fillRect(Math.round(pixel.x - halfSize), Math.round(pixel.y - halfSize), vm.pixelSize, vm.pixelSize);
+        inputVars.x.push((i % columns + 0.5) * dx);
+        inputVars.y.push((Math.floor(i / columns) % rows + 0.5) * dy);
+        inputVars.index.push(i);
+        inputVars.fraction.push(i / inputVars.count);
+        vm.pixels.push({});
     }
 
     window.requestAnimationFrame(execute);
 };
 
-/** @param {Pixel} pixel */
-const updatePixel = (pixel) => {
+const execute = () => {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < inputVars.count; ++i) {
+        const pixel = vm.pixels[i];
+
+        if (!updatePixel(pixel, i)) {
+            return;
+        }
+
+        context.fillStyle = `hsl(${pixel.h}, ${pixel.s}%, ${pixel.v}%)`;
+        context.fillRect(Math.round(pixel.x - vm.halfSize), Math.round(pixel.y - vm.halfSize), vm.pixelSize, vm.pixelSize);
+    }
+
+    window.requestAnimationFrame(execute);
+};
+
+/**
+ * @param {Pixel} pixel
+ * @param {number} i
+ */
+const updatePixel = (pixel, i) => {
     /** @type {Record<string, number>} */
     const data = {};
     let index = 0;
@@ -160,13 +195,13 @@ const updatePixel = (pixel) => {
                 if (value === undefined) {
                     value = inputVars[op];
 
-                    if (typeof(value) === "function") {
+                    if (value === undefined) {
+                        value = data[op];
+                    } else if (typeof(value) === "function") {
                         value = value();
+                    } else if (typeof(value) !== "number") {
+                        value = value[i];
                     }
-                }
-
-                if (value === undefined) {
-                    value = data[op];
                 }
 
                 vm.stack.push(value);
@@ -216,13 +251,7 @@ const updatePixel = (pixel) => {
             case opCodes.divide: {
                 const b = vm.stack.pop();
                 const a = vm.stack.pop();
-
-                if (b === 0) {
-                    addError("Runtime error: Cannot divide by zero.");
-                    return false;
-                }
-
-                vm.stack.push(a / b);
+                vm.stack.push(b === 0 ? 0 : a / b);
                 break;
             }
             case opCodes.not: {
@@ -253,13 +282,7 @@ const updatePixel = (pixel) => {
             case opCodes.mod: {
                 const b = vm.stack.pop();
                 const a = vm.stack.pop();
-
-                if (b === 0) {
-                    addError("Runtime error: Cannot divide by zero.");
-                    return false;
-                }
-
-                vm.stack.push(a % b);
+                vm.stack.push(b === 0 ? 0 : a % b);
                 break;
             }
             case opCodes.and: {
@@ -318,7 +341,7 @@ const runFunctionCall = (argNum) => {
             break;
         }
         default:
-            addError("Runtime error: Incorrect amount of parameters.");
+            addError("Runtime error: Incorrect amount of function arguments.");
             return false;
     }
 

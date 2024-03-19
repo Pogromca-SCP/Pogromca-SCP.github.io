@@ -5,20 +5,252 @@
     <meta charset="utf-8" />
     <title>Canvas Expressions</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="An in-browser editor for creating canvas simulations based on written expression code." />
+    <meta name="description" content="An in-browser editor for creating canvas simulations based on written math expression code." />
     <meta name="keywords" content="Adam Szerszenowicz, portfolio, canvas, domain specific language" />
     <link rel="icon" href="../logo.png" />
     <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
+    <div id="popup-container" class="hidden">
+        <h1>Expression Reference</h1>
+        <h2>Outputs</h2>
+        <p>The outputs are the variables that control the look and behaviour of each individual element.</p>
+        <table>
+            <tr>
+                <th>Output</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>x'</td>
+                <td>Horizontal coordinate of the element on a canvas.</td>
+            </tr>
+            <tr>
+                <td>y'</td>
+                <td>Vertical coordinate of the element on a canvas.</td>
+            </tr>
+            <tr>
+                <td>h</td>
+                <td>The color hue, ranging from 0° to 360°. This value is always remapped to this range.</td>
+            </tr>
+            <tr>
+                <td>s</td>
+                <td>The color saturation, ranging from 0 to 1.</td>
+            </tr>
+            <tr>
+                <td>v</td>
+                <td>The color value (brightness), ranging from 0 to 1.</td>
+            </tr>
+        </table>
+        <h2>Inputs</h2>
+        <p>These are read-only variables that you can feed into the output expressions.</p>
+        <table>
+            <tr>
+                <th>Input</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>x</td>
+                <td>The initial horizontal coordinate of the element on a canvas.</td>
+            </tr>
+            <tr>
+                <td>y</td>
+                <td>The initial vertical coordinate of the element on a canvas.</td>
+            </tr>
+            <tr>
+                <td>index</td>
+                <td>The unique number associated with the current element (starts from 0).</td>
+            </tr>
+            <tr>
+                <td>count</td>
+                <td>The total amount of simulated elements.</td>
+            </tr>
+            <tr>
+                <td>fraction</td>
+                <td>Value of 'index' divided by 'count'.</td>
+            </tr>
+            <tr>
+                <td>pi</td>
+                <td>3.14159265358979323846264338327950288419716...</td>
+            </tr>
+            <tr>
+                <td>tau</td>
+                <td>Two times pi.</td>
+            </tr>
+            <tr>
+                <td>time</td>
+                <td>The current time, in seconds, on the local system.</td>
+            </tr>
+            <tr>
+                <td>simulationTime</td>
+                <td>The time, in seconds, since the expression was activated.</td>
+            </tr>
+            <tr>
+                <td>simulationStartTime</td>
+                <td>The time, in seconds, when the expression was activated.</td>
+            </tr>
+        </table>
+        <h2>Functions</h2>
+        <p>Some usefull built-in functions to use in the expressions.</p>
+        <table>
+            <tr>
+                <th>Function</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>sin(angle)</td>
+                <td>Returns the sine of 'angle'.</td>
+            </tr>
+            <tr>
+                <td>cos(angle)</td>
+                <td>Returns the cosine of 'angle'.</td>
+            </tr>
+            <tr>
+                <td>tan(angle)</td>
+                <td>Returns the tangent of 'angle'.</td>
+            </tr>
+            <tr>
+                <td>asin(float)</td>
+                <td>Returns the arcsine of 'float'.</td>
+            </tr>
+            <tr>
+                <td>acos(float)</td>
+                <td>Returns the arccosine of 'float'.</td>
+            </tr>
+            <tr>
+                <td>atan(float)</td>
+                <td>Returns the arctangent of 'float'.</td>
+            </tr>
+            <tr>
+                <td>atan2(x, y)</td>
+                <td>Returns the arctangent of 'y' divided by 'x'.</td>
+            </tr>
+            <tr>
+                <td>sqrt(float)</td>
+                <td>Returns the square-root of 'float'.</td>
+            </tr>
+            <tr>
+                <td>min(a, b)</td>
+                <td>Returns the smaller value of 'a' or 'b'.</td>
+            </tr>
+            <tr>
+                <td>max(a, b)</td>
+                <td>Returns the larger value of 'a' or 'b'</td>
+            </tr>
+            <tr>
+                <td>floor(float)</td>
+                <td>Returns the value 'float' rounded down to the nearest whole number less than 'float'</td>
+            </tr>
+            <tr>
+                <td>ceil(float)</td>
+                <td>Returns the value 'float' rounded up to the nearest whole number greater than 'float'</td>
+            </tr>
+            <tr>
+                <td>round(float)</td>
+                <td>Returns the value 'float' rounded to the nearest whole number.</td>
+            </tr>
+            <tr>
+                <td>abs(float)</td>
+                <td>Returns the absolute value of 'float' ('float' &lt; 0 ? -'float' : 'float').</td>
+            </tr>
+            <tr>
+                <td>rand()</td>
+                <td>Returns a random number between 0.0 and 1.0.</td>
+            </tr>
+            <tr>
+                <td>if(float, a, b)</td>
+                <td>Returns 'a' if 'float' is 1 or greater otherwise returns b.</td>
+            </tr>
+            <tr>
+                <td>lerp(frac, a, b)</td>
+                <td>Interpolates between 'a' and 'b' using 'frac' (a * frac + b * (1 - frac)).</td>
+            </tr>
+        </table>
+        <h2>Operators</h2>
+        <p>Basic math and logic operations to use in the expressions.</p>
+        <table>
+            <tr>
+                <th>Operator</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>=</td>
+                <td>Assigns the value of the right operand to the left operand.</td>
+            </tr>
+            <tr>
+                <td>+</td>
+                <td>Returns the sum of the left and right operands.</td>
+            </tr>
+            <tr>
+                <td>-</td>
+                <td>Returns the left subtract the right operand.</td>
+            </tr>
+            <tr>
+                <td>*</td>
+                <td>Returns the product of the left and right operands.</td>
+            </tr>
+            <tr>
+                <td>/</td>
+                <td>Returns the left divided by the right operand.</td>
+            </tr>
+            <tr>
+                <td>^</td>
+                <td>Returns the left operand to the power of the right operand.</td>
+            </tr>
+            <tr>
+                <td>%</td>
+                <td>Returns the remainder of the left operand divided by the right operand.</td>
+            </tr>
+            <tr>
+                <td>&lt;</td>
+                <td>Returns 1 when the left operand is less than the right, otherwise returns 0.</td>
+            </tr>
+            <tr>
+                <td>&gt;</td>
+                <td>Returns 1 when the left operand is greater than the right, otherwise returns 0.</td>
+            </tr>
+            <tr>
+                <td>&lt;=</td>
+                <td>Returns 1 when the left operand is less than the right, otherwise returns 0.</td>
+            </tr>
+            <tr>
+                <td>&lt;=</td>
+                <td>Returns 1 when the left operand is greater than the right, otherwise returns 0.</td>
+            </tr>
+            <tr>
+                <td>==</td>
+                <td>Returns 1 when the left operand is equal to the right, otherwise returns 0.</td>
+            </tr>
+            <tr>
+                <td>&amp;</td>
+                <td>Returns 1 if both the left side and right side are true.</td>
+            </tr>
+            <tr>
+                <td>|</td>
+                <td>Returns 1 if either the left side and right side are true.</td>
+            </tr>
+            <tr>
+                <td>!</td>
+                <td>Returns 1 if the expression is false and 0 if the expression is true.</td>
+            </tr>
+            <tr>
+                <td>#</td>
+                <td>Starts a comment.</td>
+            </tr>
+            <tr>
+                <td>()</td>
+                <td>Can be used to group sub-expressions.</td>
+            </tr>
+        </table>
+    </div>
+    <div id="popup-cover" class="hidden" onclick="hideRef();"></div>
     <textarea id="input" wrap="off" spellcheck="false">x' = x; y' = y;</textarea>
     <canvas id="canvas"></canvas>
     <div id="output">
         <div id="menu">
             <button id="run" onclick="run();">RUN</button>
             <button onclick="clearConsole();">CLEAR</button>
-            <!-- <button onclick="clearConsole();">HELP</button> -->
+            <button onclick="showRef();">DOCS</button>
             <input id="count" type="number" min="1" max="100" value="32" onkeydown="return false;" />
             <input id="size" type="number" min="1" max="20" value="1" onkeydown="return false;" />
             <a href="../index.html">
@@ -28,9 +260,9 @@
         <div id="console"></div>
     </div>
     <script src="./js/enums.js"></script>
+    <script src="./js/std-lib.js"></script>
     <script src="./js/scanner.js"></script>
     <script src="./js/compiler.js"></script>
-    <script src="./js/std-lib.js"></script>
     <script src="./js/runtime.js"></script>
 </body>
 

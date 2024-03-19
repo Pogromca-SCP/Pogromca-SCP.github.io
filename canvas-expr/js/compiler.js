@@ -62,7 +62,7 @@ const compiler = {
         this.errorAtCurrent(message);
     },
 
-    /** @param {number} code */
+    /** @param {number | string} code */
     emitNum(code) {
         this.chunk.push(code);
     },
@@ -76,7 +76,7 @@ const compiler = {
         this.emitNum(value);
     },
 
-    /** @param {number} value */
+    /** @param {number | string} value */
     emitConstant(value) {
         this.emitNums(opCodes.constant, value);
     },
@@ -130,7 +130,7 @@ const compiler = {
                 const func = stdFunctions[prev.lexeme];
 
                 if (func === undefined) {
-                    compiler.error(`Cannot call '${prev.lexeme}' because it's not a function.`);
+                    this.error(`Cannot call '${prev.lexeme}' because it's not a function.`);
                 } else {
                     this.callStack.push(func);
                 }

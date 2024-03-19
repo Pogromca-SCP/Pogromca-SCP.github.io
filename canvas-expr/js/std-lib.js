@@ -18,71 +18,23 @@ const makeStdFunction = (func, arity) => ({
     func: func
 });
 
+/** @type {Record<string, StdFunction | undefined>} */
 const stdFunctions = {
     rand: makeStdFunction(() => Math.random(), 0),
-    
-    /** @param {number} x */
-    sin: makeStdFunction((x) => Math.sin(x), 1),
-
-    /** @param {number} x */
-    cos: makeStdFunction((x) => Math.cos(x), 1),
-
-    /** @param {number} x */
-    tan: makeStdFunction((x) => Math.tan(x), 1),
-
-    /** @param {number} x */
-    asin: makeStdFunction((x) => Math.asin(x), 1),
-
-    /** @param {number} x */
-    acos: makeStdFunction((x) => Math.acos(x), 1),
-
-    /** @param {number} x */
-    atan: makeStdFunction((x) => Math.atan(x), 1),
-
-    /** @param {number} x */
-    sqrt: makeStdFunction((x) => Math.sqrt(x), 1),
-
-    /** @param {number} x */
-    floor: makeStdFunction((x) => Math.floor(x), 1),
-
-    /** @param {number} x */
-    ceil: makeStdFunction((x) => Math.ceil(x), 1),
-
-    /** @param {number} x */
-    round: makeStdFunction((x) => Math.round(x), 1),
-
-    /** @param {number} x */
-    abs: makeStdFunction((x) => Math.abs(x), 1),
-
-    /**
-     * @param {number} x
-     * @param {number} y
-     */
-    atan2: makeStdFunction((x, y) => Math.atan2(x, y), 2),
-
-    /**
-     * @param {number} x
-     * @param {number} y
-     */
-    min: makeStdFunction((x, y) => Math.min(x, y), 2),
-
-    /**
-     * @param {number} x
-     * @param {number} y
-     */
-    max: makeStdFunction((x, y) => Math.max(x, y), 2),
-
-    /**
-     * @param {number} cond
-     * @param {number} a
-     * @param {number} b
-     */
-    if: makeStdFunction((cond, a, b) => cond < 1 ? b : a, 3),
-
-    /**
-     * @param {number} frac
-     * @param {number} a
-     * @param {number} b
-     */
-    lerp: makeStdFunction((frac, a, b) => (a * frac + b * (1 - frac)), 3)
+    sin: makeStdFunction(/** @param {number} x */ (x) => Math.sin(x), 1),
+    cos: makeStdFunction(/** @param {number} x */ (x) => Math.cos(x), 1),
+    tan: makeStdFunction(/** @param {number} x */ (x) => Math.tan(x), 1),
+    asin: makeStdFunction(/** @param {number} x */ (x) => Math.asin(x), 1),
+    acos: makeStdFunction(/** @param {number} x */ (x) => Math.acos(x), 1),
+    atan: makeStdFunction(/** @param {number} x */ (x) => Math.atan(x), 1),
+    sqrt: makeStdFunction(/** @param {number} x */ (x) => Math.sqrt(x), 1),
+    floor: makeStdFunction(/** @param {number} x */ (x) => Math.floor(x), 1),
+    ceil: makeStdFunction(/** @param {number} x */ (x) => Math.ceil(x), 1),
+    round: makeStdFunction(/** @param {number} x */ (x) => Math.round(x), 1),
+    abs: makeStdFunction(/** @param {number} x */ (x) => Math.abs(x), 1),
+    atan2: makeStdFunction(/** @param {number} x @param {number} y */ (x, y) => Math.atan(x === 0 ? 0 : y / x), 2),
+    min: makeStdFunction(/** @param {number} x @param {number} y */ (x, y) => Math.min(x, y), 2),
+    max: makeStdFunction(/** @param {number} x @param {number} y */ (x, y) => Math.max(x, y), 2),
+    if: makeStdFunction(/** @param {number} cond @param {number} a @param {number} b */ (cond, a, b) => cond < 1 ? b : a, 3),
+    lerp: makeStdFunction(/** @param {number} frac @param {number} a @param {number} b */ (frac, a, b) => (a * frac + b * (1 - frac)), 3)
 };

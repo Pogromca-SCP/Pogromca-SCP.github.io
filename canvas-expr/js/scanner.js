@@ -6,6 +6,18 @@
  */
 
 class Scanner {
+    /** @type {string} */
+    source;
+
+    /** @type {number} */
+    start;
+
+    /** @type {number} */
+    current;
+
+    /** @type {number} */
+    line;
+
     /** @param {string} source */
     constructor(source) {
         this.source = source;
@@ -16,12 +28,12 @@ class Scanner {
 
     /** @param {string} ch */
     static isDigit(ch) {
-        return ch.match("[0-9]") !== null;
+        return ch.match(/[0-9]/) !== null;
     }
 
     /** @param {string} ch */
     static isAlpha(ch) {
-        return ch.match("[a-zA-Z'_]") !== null;
+        return ch.match(/[a-zA-Z'_]/) !== null;
     }
 
     get isAtEnd() {
@@ -29,7 +41,7 @@ class Scanner {
     }
 
     get peek() {
-        return this.isAtEnd ? "\0" : this.source.charAt(this.current);
+        return this.source.charAt(this.current);
     }
 
     get peekNext() {
@@ -131,7 +143,7 @@ class Scanner {
             case "!":
                 return this.makeToken(this.match("=") ? tokenTypes.bangEqual : tokenTypes.bang);
             case "#":
-                while (this.peek !== "\n" && !this.isAtEnd) {
+                while (!this.isAtEnd && this.peek !== "\n") {
                     ++this.current;
                 }
 
@@ -141,7 +153,7 @@ class Scanner {
                     return this.number();
                 }
             default:
-                return this.errorToken("Unexpected character.");
+                return this.errorToken(`Unexpected character: ${ch}.`);
         }
     }
 
