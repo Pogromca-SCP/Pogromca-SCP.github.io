@@ -1,6 +1,8 @@
+// @ts-check
+
 const compiler = {
-    /** @type {Scanner | null} */
-    scanner: null,
+    /** @type {Scanner} */
+    scanner: Scanner.emptyScanner,
 
     /** @type {Token | null} */
     current: null,
@@ -46,7 +48,7 @@ const compiler = {
 
     /** @param {number} type */
     check(type) {
-        return this.current.type === type;
+        return this.current?.type === type;
     },
 
     /**
@@ -54,7 +56,7 @@ const compiler = {
      * @param {string} message
      */
     consume(type, message) {
-        if (this.current.type === type) {
+        if (this.current?.type === type) {
             this.advance();
             return;
         }
@@ -92,10 +94,16 @@ const compiler = {
     },
 
     /**
-     * @param {Token} token
+     * @param {Token | null} token
      * @param {string} message
      */
     errorAt(token, message) {
+        if (token === null) {
+            addError(`Error at unknown location: ${message}`);
+            this.hadError = true;
+            return;
+        }
+
         let infix = "";
 
         if (token.type === tokenTypes.end) {
@@ -111,7 +119,7 @@ const compiler = {
     /** @param {number} precedence */
     parsePrecedence(precedence) {
         this.advance();
-        const prefixRule = parseRules[this.previous.type].prefix;
+        const prefixRule = parseRules[this.previous?.type ?? tokenTypes.error].prefix;
 
         if (prefixRule === null) {
             this.error("Expected expression.");
@@ -121,16 +129,21 @@ const compiler = {
         const canAssign = precedence <= precedenceLevels.assignment;
         prefixRule(canAssign);
 
-        while (precedence <= parseRules[this.current.type].precedence) {
+        while (precedence <= parseRules[this.current?.type ?? tokenTypes.error].precedence) {
             const prev = this.previous;
             this.advance();
-            const infixRule = parseRules[this.previous.type].infix;
+            const infixRule = parseRules[this.previous?.type ?? tokenTypes.error].infix;
+
+            if (infixRule === null) {
+                this.error("Expected expression.");
+                return;
+            }
 
             if (infixRule === call) {
-                const func = stdFunctions[prev.lexeme];
+                const func = prev === null ? undefined : stdFunctions[prev.lexeme];
 
                 if (func === undefined) {
-                    this.error(`Cannot call '${prev.lexeme}' because it's not a function.`);
+                    this.error(`Cannot call '${prev?.lexeme}' because it's not a function.`);
                 } else {
                     this.callStack.push(func);
                 }
@@ -170,7 +183,7 @@ const compile = (src) => {
     }
 
     const result = compiler.hadError ? null : compiler.chunk;
-    compiler.scanner = null;
+    compiler.scanner = Scanner.emptyScanner;
     compiler.current = null;
     compiler.previous = null;
     compiler.chunk = [];
@@ -181,7 +194,7 @@ const compile = (src) => {
 };
 
 const expression = () => compiler.parsePrecedence(precedenceLevels.assignment);
-const number = () => compiler.emitConstant(parseFloat(compiler.previous.lexeme));
+const number = () => compiler.emitConstant(parseFloat(compiler.previous?.lexeme ?? "0.0"));
 
 const grouping = () => {
     expression();
@@ -189,7 +202,7 @@ const grouping = () => {
 };
 
 const unary = () => {
-    const operator = compiler.previous.type;
+    const operator = compiler.previous?.type;
     compiler.parsePrecedence(precedenceLevels.unary);
 
     switch (operator) {
@@ -206,7 +219,7 @@ const unary = () => {
 };
 
 const binary = () => {
-    const operator = compiler.previous.type;
+    const operator = compiler.previous?.type ?? tokenTypes.error;
     compiler.parsePrecedence(parseRules[operator].precedence + 1);
 
     switch (operator) {
@@ -274,7 +287,7 @@ const argumentsList = () => {
     }
 
     compiler.consume(tokenTypes.rightParen, "Expected ')' after arguments.");
-    const expected = compiler.callStack.pop().arity;
+    const expected = compiler.callStack.pop()?.arity;
 
     if (count !== expected) {
         compiler.error(`Function expected ${expected} arguments.`);
@@ -284,10 +297,15 @@ const argumentsList = () => {
 };
 
 /**
- * @param {Token} name
+ * @param {Token | null} name
  * @param {boolean} canAssign
  */
 const namedVariable = (name, canAssign) => {
+    if (name === null) {
+        compiler.error("Encountered null in named variable expression.");
+        return;
+    }
+
     if (canAssign && compiler.match(tokenTypes.equal)) {
         let define = true;
 

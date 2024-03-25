@@ -1,5 +1,7 @@
+// @ts-check
+
 /**
- * @typedef {(() => number) | ((x: number) => number) | ((x: number, y: number) => number) | ((x: number, y: number, z: number) => number)}  StdFuncBody
+ * @typedef {(...args: number[]) => number}  StdFuncBody
  */
 
 /**

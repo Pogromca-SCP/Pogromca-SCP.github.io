@@ -1,3 +1,5 @@
+// @ts-check
+
 const tokenTypes = {
     // Operators
     equal: 0,

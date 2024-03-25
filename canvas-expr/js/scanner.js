@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * @typedef {Object} Token
  * @property {number} type
@@ -34,6 +36,10 @@ class Scanner {
     /** @param {string} ch */
     static isAlpha(ch) {
         return ch.match(/[a-zA-Z'_]/) !== null;
+    }
+
+    static get emptyScanner() {
+        return new Scanner("");
     }
 
     get isAtEnd() {
