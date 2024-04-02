@@ -47,11 +47,14 @@ const inputVars = {
 
     /** @type {number[]} */
     fraction: [],
+    size: 1,
     pi: Math.PI,
     tau: Math.PI * 2,
     time: () => new Date(Date.now()).getTime() / 1000,
     simulationTime: () => new Date(Date.now() - vm.started.getTime()).getTime() / 1000,
-    simulationStartTime: () => vm.started.getTime() / 1000
+    simulationStartTime: () => vm.started.getTime() / 1000,
+    width: () => canvas.width,
+    height: () => canvas.height
 };
 
 const run = () => {
@@ -78,6 +81,7 @@ const run = () => {
     inputVars.index = [];
     inputVars.count = pxCount;
     inputVars.fraction = [];
+    inputVars.size = pxSize;
     addInfo(`Running expression with ${pxCount} elements of size: ${pxSize}.`);
     preparePixels();
     runButton.disabled = false;
