@@ -256,7 +256,10 @@
         </table>
     </div>
     <div id="popup-cover" class="hidden" onclick="hideRef();"></div>
-    <textarea id="input" wrap="off" spellcheck="false">x' = x; y' = y;</textarea>
+    <div id="code">
+        <div id="lines">1</div>
+        <textarea id="input" wrap="off" spellcheck="false" oninput="displayLineNumbers();" onscroll="updateLinesScroll();">x' = x; y' = y;</textarea>
+    </div>
     <canvas id="canvas"></canvas>
     <div id="output">
         <div id="menu">

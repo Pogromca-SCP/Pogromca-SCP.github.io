@@ -2,6 +2,7 @@
 
 const popupContainer = /** @type {HTMLDivElement} */ (document.getElementById("popup-container"));
 const popupConver = /** @type {HTMLDivElement} */ (document.getElementById("popup-cover"));
+const lines = /** @type {HTMLDivElement} */ (document.getElementById("lines"));
 const input = /** @type {HTMLTextAreaElement} */ (document.getElementById("input"));
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas"));
 const context = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
@@ -55,6 +56,21 @@ const inputVars = {
     simulationStartTime: () => vm.started.getTime() / 1000,
     width: () => canvas.width,
     height: () => canvas.height
+};
+
+const displayLineNumbers = () => {
+    const len = input.value.split("\n").length;
+    let value = "1";
+
+    for (let i = 2; i <= len; ++i) {
+        value += `<br/>${i}`;
+    }
+
+    lines.innerHTML = value;
+};
+
+const updateLinesScroll = () => {
+    lines.scrollTop = input.scrollTop;
 };
 
 const run = () => {
@@ -343,3 +359,6 @@ const runFunctionCall = (argNum) => {
 
     return true;
 };
+
+displayLineNumbers();
+updateLinesScroll();
