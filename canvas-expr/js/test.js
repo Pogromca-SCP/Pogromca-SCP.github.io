@@ -1,3 +1,3 @@
-import Test from "./importme";
+import Test from "./importme.js";
 
 Test();
