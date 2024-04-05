@@ -6,7 +6,7 @@ import stdFunctions from "./std-lib.js";
 /** @typedef {import("./std-lib.js").StdFuncBody} StdFuncBody */
 
 const popupContainer = /** @type {HTMLDivElement} */ (document.getElementById("popup-container"));
-const popupConver = /** @type {HTMLDivElement} */ (document.getElementById("popup-cover"));
+const popupCover = /** @type {HTMLDivElement} */ (document.getElementById("popup-cover"));
 const lines = /** @type {HTMLDivElement} */ (document.getElementById("lines"));
 const input = /** @type {HTMLTextAreaElement} */ (document.getElementById("input"));
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas"));
@@ -113,12 +113,12 @@ const clearConsole = () => output.innerHTML = "";
 
 const showRef = () => {
   popupContainer.className = "";
-  popupConver.className = "";
+  popupCover.className = "";
 };
 
 const hideRef = () => {
   popupContainer.className = hiddenClass;
-  popupConver.className = hiddenClass;
+  popupCover.className = hiddenClass;
 };
 
 /**
@@ -368,11 +368,11 @@ const runFunctionCall = (argNum) => {
   return true;
 };
 
-window.hideRef = hideRef;
-window.showRef = showRef;
-window.clearConsole = clearConsole;
-window.run = run;
-window.displayLineNumbers = displayLineNumbers;
-window.updateLinesScroll = updateLinesScroll;
+window["hideRef"] = hideRef;
+window["showRef"] = showRef;
+window["clearConsole"] = clearConsole;
+window["run"] = run;
+window["displayLineNumbers"] = displayLineNumbers;
+window["updateLinesScroll"] = updateLinesScroll;
 displayLineNumbers();
 updateLinesScroll();
