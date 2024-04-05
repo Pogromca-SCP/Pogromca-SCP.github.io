@@ -1,31 +1,31 @@
 @media all and (prefers-color-scheme: light) {
-    :root {
-        --color-text: #000000;
-        --color-bg: #dbdad7;
-    }
+  :root {
+    --color-text: #000000;
+    --color-bg: #dbdad7;
+  }
 }
 
 @media all and (prefers-color-scheme: dark) {
-    :root {
-        --color-text: #dbdad7;
-        --color-bg: #333333;
-    }
+  :root {
+    --color-text: #dbdad7;
+    --color-bg: #333333;
+  }
 }
 
 html {
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    font-family: sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: sans-serif;
 }
 
 body {
-    min-width: 360px;
+  min-width: 360px;
 }
 
 main {
-    padding: 1.5rem;
+  padding: 1.5rem;
 }
 
 h1 {
-    color: #ff0000;
+  color: #ff0000;
 }

@@ -1,148 +1,148 @@
 @media all and (prefers-color-scheme: light) {
-    :root {
-        --color-text: #000000;
-        --color-bg-secondary: #ffffff;
-        --color-bg-primary: #dbdad7;
-        --color-console: #dddddd;
-    }
+  :root {
+    --color-text: #000000;
+    --color-bg-secondary: #ffffff;
+    --color-bg-primary: #dbdad7;
+    --color-console: #dddddd;
+  }
 }
 
 @media all and (prefers-color-scheme: dark) {
-    :root {
-        --color-text: #888888;
-        --color-bg-secondary: #000000;
-        --color-bg-primary: #222222;
-        --color-console: #444444;
-    }
+  :root {
+    --color-text: #888888;
+    --color-bg-secondary: #000000;
+    --color-bg-primary: #222222;
+    --color-console: #444444;
+  }
 }
 
 html {
-    font-family: sans-serif;
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text);
+  font-family: sans-serif;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
 }
 
 body {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    grid-template-rows: 2fr 1fr;
-    gap: 5px;
-    height: 950px;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  grid-template-rows: 2fr 1fr;
+  gap: 5px;
+  height: 950px;
 }
 
 #code {
-    grid-area: 1 / 1 / 3 / 2;
-    display: flex;
+  grid-area: 1 / 1 / 3 / 2;
+  display: flex;
 }
 
 #input, #lines {
-    background-color: var(--color-bg-primary);
-    color: var(--color-text);
-    border: var(--color-text) 2px solid;
-    padding: 2px;
-    font-family: monospace;
-    font-size: 1rem;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text);
+  border: var(--color-text) 2px solid;
+  padding: 2px;
+  font-family: monospace;
+  font-size: 1rem;
 }
 
 #lines {
-    border-right: none;
-    padding-right: 0.5rem;
-    overflow: hidden;
+  border-right: none;
+  padding-right: 0.5rem;
+  overflow: hidden;
 }
 
 #input {
-    resize: none;
-    width: 100%;
-    border-left: none;
-    margin: 0;
+  resize: none;
+  width: 100%;
+  border-left: none;
+  margin: 0;
 }
 
 #canvas {
-    grid-area: 1 / 2 / 2 / 3;
-    height: 100%;
-    width: 100%;
+  grid-area: 1 / 2 / 2 / 3;
+  height: 100%;
+  width: 100%;
 }
 
 #output {
-    grid-area: 2 / 2 / 3 / 3;
-    background-color: var(--color-bg-primary);
-    overflow-y: auto;
-    overflow-wrap: break-word;
+  grid-area: 2 / 2 / 3 / 3;
+  background-color: var(--color-bg-primary);
+  overflow-y: auto;
+  overflow-wrap: break-word;
 }
 
 #menu {
-    border-bottom: var(--color-bg-secondary) 3px solid;
-    background-color: var(--color-bg-primary);
-    position: sticky;
-    top: 0;
+  border-bottom: var(--color-bg-secondary) 3px solid;
+  background-color: var(--color-bg-primary);
+  position: sticky;
+  top: 0;
 }
 
 button, input {
-    font-size: large;
-    margin: 1rem;
-    border-radius: 8px;
-    background-color: var(--color-console);
-    color: var(--color-text);
+  font-size: large;
+  margin: 1rem;
+  border-radius: 8px;
+  background-color: var(--color-console);
+  color: var(--color-text);
 }
 
 a {
-    display: contents;
+  display: contents;
 }
 
 .info, .error, .success {
-    padding: 1rem;
-    border-bottom: var(--color-console) 2px solid;
+  padding: 1rem;
+  border-bottom: var(--color-console) 2px solid;
 }
 
 .info {
-    background-color: var(--color-bg-primary);
-    color: var(--color-text);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text);
 }
 
 .error {
-    background-color: #290000;
-    color: #e46962;
+  background-color: #290000;
+  color: #e46962;
 }
 
 .success {
-    background-color: #002900;
-    color: #69e462;
+  background-color: #002900;
+  color: #69e462;
 }
 
 #popup-cover, #popup-container {
-    position: absolute;
-    display: block;
-    opacity: 2;
+  position: absolute;
+  display: block;
+  opacity: 2;
 }
 
 #popup-cover {
-    top: 0;
-    left: 0;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 20;
-    width: 100%;
-    height: 960px;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 20;
+  width: 100%;
+  height: 960px;
 }
 
 #popup-container {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 30;
-    width: 50%;
-    height: 80%;
-    border-width: 5px;
-    border-style: solid;
-    border-radius: 10px;
-    background-color: var(--color-bg-primary);
-    padding: 1rem;
-    overflow-y: auto;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  width: 50%;
+  height: 80%;
+  border-width: 5px;
+  border-style: solid;
+  border-radius: 10px;
+  background-color: var(--color-bg-primary);
+  padding: 1rem;
+  overflow-y: auto;
 }
 
 h1 {
-    text-align: center;
+  text-align: center;
 }
 
 .hidden {
-    display: none !important;
+  display: none !important;
 }

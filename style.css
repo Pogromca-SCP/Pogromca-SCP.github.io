@@ -1,160 +1,160 @@
 @media all and (prefers-color-scheme: light) {
-    :root {
-        --color-text: #000000;
-        --color-bg: rgba(219, 218, 215, 1);
-    }
+  :root {
+    --color-text: #000000;
+    --color-bg: rgba(219, 218, 215, 1);
+  }
 }
 
 @media all and (prefers-color-scheme: dark) {
-    :root {
-        --color-text: #dbdad7;
-        --color-bg: rgba(51, 51, 51, 1);
-    }
+  :root {
+    --color-text: #dbdad7;
+    --color-bg: rgba(51, 51, 51, 1);
+  }
 }
 
 :root {
-    --link-size: 300px;
+  --link-size: 300px;
 }
 
 html {
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    font-family: sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: sans-serif;
 }
 
 body {
-    min-width: 360px;
+  min-width: 360px;
 }
 
 header {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: 0;
-    text-align: center;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0;
+  text-align: center;
 }
 
 h1, h2 {
-    margin: 3rem;
-    animation: fadein 2s;
+  margin: 3rem;
+  animation: fadein 2s;
 }
 
 h1 {
-    grid-area: 1 / 1 / 2 / 2;
-    font-size: 4rem;
+  grid-area: 1 / 1 / 2 / 2;
+  font-size: 4rem;
 }
 
 h2 {
-    grid-area: 2 / 1 / 3 / 2;
-    font-size: 3rem;
+  grid-area: 2 / 1 / 3 / 2;
+  font-size: 3rem;
 }
 
 a {
-    display: contents;
+  display: contents;
 }
 
 header > a > img {
-    grid-area: 1 / 2 / 3 / 3;
-    width: var(--link-size);
-    height: var(--link-size);
-    border-radius: var(--link-size);
-    margin-left: 25%;
-    align-self: center;
+  grid-area: 1 / 2 / 3 / 3;
+  width: var(--link-size);
+  height: var(--link-size);
+  border-radius: var(--link-size);
+  margin-left: 25%;
+  align-self: center;
 }
 
 ul {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 }
 
 li {
-    position: relative;
-    list-style-type: none;
-    height: 350px;
-    background: linear-gradient(to right, var(--color-bg) 0%, transparent 100%);
+  position: relative;
+  list-style-type: none;
+  height: 350px;
+  background: linear-gradient(to right, var(--color-bg) 0%, transparent 100%);
 }
 
 li > div {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 h3, p {
-    margin: 1rem;
+  margin: 1rem;
 }
 
 h3 {
-    font-size: 2rem;
+  font-size: 2rem;
 }
 
 button {
-    color: var(--color-text);
-    font-size: large;
-    border: 2px solid var(--color-text);
-    background-color: transparent;
-    text-decoration: none;
-    overflow: hidden;
-    position: relative;
-    width: 30%;
-    height: 20%;
-    margin: 2rem;
-    cursor: pointer;
+  color: var(--color-text);
+  font-size: large;
+  border: 2px solid var(--color-text);
+  background-color: transparent;
+  text-decoration: none;
+  overflow: hidden;
+  position: relative;
+  width: 30%;
+  height: 20%;
+  margin: 2rem;
+  cursor: pointer;
 }
 
 button > div {
-    width: 100%;
-    height: 100%;
-    left: -100%;
-    background-color: #03b8ffc0;
-    position: absolute;
-    transition: all .35s ease-Out;
-    bottom: 0;
+  width: 100%;
+  height: 100%;
+  left: -100%;
+  background-color: #03b8ffc0;
+  position: absolute;
+  transition: all .35s ease-Out;
+  bottom: 0;
 }
 
 button:hover > div {
-    left: 0;
+  left: 0;
 }
 
 button > b {
-    position: relative;
+  position: relative;
 }
 
 li > img {
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    z-index: -1;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: -1;
 }
 
 footer {
-    text-align: center;
-    padding: 2rem;
+  text-align: center;
+  padding: 2rem;
 }
 
 @media all and (max-width: 1000px) {
-    header > a > img {
-        margin: 0;
-    }
+  header > a > img {
+    margin: 0;
+  }
 }
 
 @media all and (max-width: 720px) {
-    header {
-        display: flex;
-        flex-direction: column;
-    }
+  header {
+    display: flex;
+    flex-direction: column;
+  }
 
-    h1, h2, h3, p {
-        margin: 0;
-    }
+  h1, h2, h3, p {
+    margin: 0;
+  }
 }
 
 @keyframes fadein {
-    from {
-        opacity: 0;
-    }
+  from {
+    opacity: 0;
+  }
 
-    to {
-        opacity: 1;
-    }
+  to {
+    opacity: 1;
+  }
 }
