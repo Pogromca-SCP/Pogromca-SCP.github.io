@@ -1,4 +1,5 @@
 // @ts-check
+import { tokenTypes } from "./enums.js";
 
 /**
  * @typedef {Object} Token
@@ -7,7 +8,7 @@
  * @property {number} line
  */
 
-class Scanner {
+export default class Scanner {
   /** @type {string} */
   source;
 

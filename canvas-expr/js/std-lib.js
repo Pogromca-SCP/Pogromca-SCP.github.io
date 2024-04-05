@@ -40,3 +40,5 @@ const stdFunctions = {
   if: makeStdFunction(/** @param {number} cond @param {number} a @param {number} b */ (cond, a, b) => cond < 1 ? b : a, 3),
   lerp: makeStdFunction(/** @param {number} frac @param {number} a @param {number} b */ (frac, a, b) => (a * frac + b * (1 - frac)), 3)
 };
+
+export default stdFunctions;

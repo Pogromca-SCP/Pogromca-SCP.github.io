@@ -1,4 +1,12 @@
 // @ts-check
+import Scanner from "./scanner.js";
+import { tokenTypes, opCodes, precedenceLevels } from "./enums.js";
+import stdFunctions from "./std-lib.js";
+
+/**
+ * @typedef {import("./scanner.js").Token} Token
+ * @typedef {import("./std-lib.js").StdFunction} StdFunction
+ */
 
 const compiler = {
   /** @type {Scanner} */
@@ -20,6 +28,11 @@ const compiler = {
   /** @type {StdFunction[]} */
   callStack: [],
 
+  /** @type {Record<string, number | number[] | (() => number)>} */
+  inputVars: {},
+
+  /** @type {(message: string) => void} */
+  onError: (message) => {},
   advance() {
     this.previous = this.current;
 
@@ -99,7 +112,7 @@ const compiler = {
    */
   errorAt(token, message) {
     if (token === null) {
-      addError(`Error at unknown location: ${message}`);
+      this.onError(`Error at unknown location: ${message}`);
       this.hadError = true;
       return;
     }
@@ -112,7 +125,7 @@ const compiler = {
       infix = ` at '${token.lexeme}'`;
     }
 
-    addError(`[line ${token.line}] Error${infix}: ${message}`);
+    this.onError(`[line ${token.line}] Error${infix}: ${message}`);
     this.hadError = true;
   },
 
@@ -171,9 +184,15 @@ const compiler = {
  * @property {number} precedence
  */
 
-/** @param {string} src */
-const compile = (src) => {
+/**
+ * @param {string} src
+ * @param {Record<string, number | number[] | (() => number)>} inputVars
+ * @param {(message: string) => void} onError
+ */
+const compile = (src, inputVars, onError) => {
   compiler.scanner = new Scanner(src);
+  compiler.inputVars = inputVars;
+  compiler.onError = onError;
   compiler.advance();
 
   while (!compiler.match(tokenTypes.end)) {
@@ -314,7 +333,7 @@ const namedVariable = (name, canAssign) => {
       define = false;
     }
 
-    if (inputVars[name.lexeme] !== undefined) {
+    if (compiler.inputVars[name.lexeme] !== undefined) {
       compiler.error(`Cannot assign value to '${name.lexeme}' because it's readonly.`);
       define = false;
     }
@@ -326,7 +345,7 @@ const namedVariable = (name, canAssign) => {
       compiler.variables.push(name.lexeme);
     }
   } else {
-    if (stdFunctions[name.lexeme] === undefined && inputVars[name.lexeme] === undefined && !compiler.variables.includes(name.lexeme)) {
+    if (stdFunctions[name.lexeme] === undefined && compiler.inputVars[name.lexeme] === undefined && !compiler.variables.includes(name.lexeme)) {
       compiler.error(`Cannot read value of '${name.lexeme}' because it's undefined.`);
     }
 
@@ -365,3 +384,5 @@ const parseRules = [
   { prefix: null, infix: null, precedence: precedenceLevels.none }, // Error
   { prefix: null, infix: null, precedence: precedenceLevels.none } // End
 ];
+
+export default compile;

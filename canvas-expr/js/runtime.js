@@ -1,4 +1,9 @@
 // @ts-check
+import compile from "./compiler.js";
+import { opCodes } from "./enums.js";
+import stdFunctions from "./std-lib.js";
+
+/** @typedef {import("./std-lib.js").StdFuncBody} StdFuncBody */
 
 const popupContainer = /** @type {HTMLDivElement} */ (document.getElementById("popup-container"));
 const popupConver = /** @type {HTMLDivElement} */ (document.getElementById("popup-cover"));
@@ -79,7 +84,7 @@ const run = () => {
   inputVars.count = 0;
   const pxSize = parseInt(pixelsSize.value);
   const pxCount = parseInt(pixelsCount.value);
-  const code = compile(input.value);
+  const code = compile(input.value, inputVars, addError);
 
   if (code === null) {
     runButton.disabled = false;

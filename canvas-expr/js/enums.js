@@ -1,6 +1,6 @@
 // @ts-check
 
-const tokenTypes = {
+export const tokenTypes = {
   // Operators
   equal: 0,
   plus: 1,
@@ -32,7 +32,7 @@ const tokenTypes = {
   end: 23
 };
 
-const opCodes = {
+export const opCodes = {
   constant: 0,
   pop: 1,
   get: 2,
@@ -53,7 +53,7 @@ const opCodes = {
   or: 17
 };
 
-const precedenceLevels = {
+export const precedenceLevels = {
   none: 0,
   assignment: 1,
   or: 2,
