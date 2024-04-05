@@ -109,7 +109,7 @@ a {
   color: #69e462;
 }
 
-#popup-cover, #popup-container {
+#popup-cover, #popup-container, noscript {
   position: absolute;
   display: block;
   opacity: 2;
@@ -124,7 +124,7 @@ a {
   height: 960px;
 }
 
-#popup-container {
+#popup-container, noscript {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
