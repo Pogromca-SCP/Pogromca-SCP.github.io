@@ -18,7 +18,8 @@ const hiddenClass = "hidden";
  * @property {number} y
  * @property {number} h
  * @property {number} s
- * @property {number} v
+ * @property {number} l
+ * @property {number} a
  */
 
 const vm = {
@@ -156,7 +157,8 @@ const preparePixels = () => {
       y: 0,
       h: 0,
       s: 0,
-      v: 0
+      l: 0,
+      a: 0
     });
   }
 
@@ -173,7 +175,7 @@ const execute = () => {
       return;
     }
 
-    context.fillStyle = `hsl(${pixel.h}, ${pixel.s}%, ${pixel.v}%)`;
+    context.fillStyle = `hsla(${pixel.h}, ${pixel.s}%, ${pixel.l}%, ${pixel.a})`;
     context.fillRect(Math.round(pixel.x - vm.halfSize), Math.round(pixel.y - vm.halfSize), vm.pixelSize, vm.pixelSize);
   }
 
@@ -315,13 +317,14 @@ const updatePixel = (pixel, i) => {
   pixel.x = data["x'"] ?? 0;
   pixel.y = data["y'"] ?? 0;
   pixel.h = (data.h ?? 0) % 360;
-  pixel.s = clamp(data.s ?? 0.5);
-  pixel.v = clamp(data.v ?? 0.5);
+  pixel.s = clamp(data.s ?? 1) * 100;
+  pixel.l = clamp(data.l ?? 0.5) * 100;
+  pixel.a = clamp(data.a ?? 1);
   return true;
 };
 
 /** @param {number} x */
-const clamp = (x) => x < 0 ? 0 : (x > 1 ? 100 : x * 100);
+const clamp = (x) => x < 0 ? 0 : (x > 1 ? 1 : x);
 
 /** @param {number} argNum */
 const runFunctionCall = (argNum) => {
