@@ -368,5 +368,11 @@ const runFunctionCall = (argNum) => {
   return true;
 };
 
+window.hideRef = hideRef;
+window.showRef = showRef;
+window.clearConsole = clearConsole;
+window.run = run;
+window.displayLineNumbers = displayLineNumbers;
+window.updateLinesScroll = updateLinesScroll;
 displayLineNumbers();
 updateLinesScroll();
