@@ -89,7 +89,6 @@ h3 {
 }
 
 button {
-  color: var(--color-text);
   font-size: large;
   border: 2px solid var(--color-text);
   background-color: transparent;
@@ -118,6 +117,10 @@ button:hover > div {
 
 button > b {
   position: relative;
+}
+
+b {
+  color: var(--color-text);
 }
 
 li > img {

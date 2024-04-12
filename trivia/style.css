@@ -1,0 +1,148 @@
+@media all and (prefers-color-scheme: light) {
+  :root {
+    --color-text: #000000;
+    --color-bg-secondary: #ffffff;
+    --color-bg-primary: #dbdad7;
+    --color-bg-inputs: #dddddd;
+  }
+}
+
+@media all and (prefers-color-scheme: dark) {
+  :root {
+    --color-text: #888888;
+    --color-bg-secondary: #000000;
+    --color-bg-primary: #222222;
+    --color-bg-inputs: #444444;
+  }
+}
+
+html {
+  font-family: sans-serif;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  grid-template-rows: 1fr;
+  gap: 1rem;
+  min-width: 250px;
+}
+
+main > div {
+  display: flex;
+  flex-direction: column;
+}
+
+main > div:first-child {
+  grid-area: 1 / 1 / span 1 / span 1;
+  background-color: var(--color-bg-inputs);
+  border: 2px solid var(--color-text);
+}
+
+main > div:last-child {
+  grid-area: 1 / 2 / span 1 / span 1;
+}
+
+a {
+  display: contents;
+}
+
+main > div > a > button {
+  width: fit-content;
+}
+
+h1, main > div > h2, p {
+  text-align: center;
+}
+
+label {
+  margin-left: 1rem;
+}
+
+button, input, select {
+  font-size: large;
+  margin: 1rem;
+  border-radius: 8px;
+  background-color: var(--color-bg-inputs);
+  color: var(--color-text);
+}
+
+ul {
+  background-color: #920000;
+  border: 2px solid #fd3c32;
+  color: #ffffff;
+  margin: 0;
+  list-style-type: "!  ";
+}
+
+ul:empty, .hidden {
+  display: none !important;
+}
+
+main > div > a > img {
+  background-color: #000000;
+  align-self: center;
+}
+
+#loader {
+  border: 16px solid transparent;
+  border-top: 16px solid var(--color-text);
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 1.5s linear infinite;
+  margin: 3rem;
+  align-self: center;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+#A-row, #B-row, #C-row, #D-row {
+  display: flex;
+  align-items: center;
+  padding-left: 2rem;
+}
+
+#A, #B, #C, #D {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  color: #ffffff;
+}
+
+#A {
+  background-color: #0000ff;
+}
+
+#B {
+  background-color: #ff0000;
+}
+
+#C {
+  background-color: #197207;
+}
+
+#D {
+  background-color: #c602d8;
+}
+
+@media all and (max-width: 700px) {
+  main {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #A-row, #B-row, #C-row, #D-row {
+    padding: 0;
+  }
+}
