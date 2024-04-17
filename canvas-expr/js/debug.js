@@ -1,13 +1,14 @@
 // @ts-check
 import { opCodes } from "./enums.js";
 
+let debugMessage = "";
+
 /**
  * @param {string} name
  * @param {number} offset
- * @returns 
  */
 const simple = (name, offset) => {
-    console.debug(name);
+    debugMessage += `\n${name}`;
     return offset + 1;
 };
 
@@ -17,7 +18,7 @@ const simple = (name, offset) => {
  * @param {number} offset
  */
 const constant = (chunk, name, offset) => {
-    console.debug(`${name} '${chunk[offset + 1]}'`);
+    debugMessage += `\n${name} "${chunk[offset + 1]}"`;
     return offset + 2;
 };
 
@@ -64,15 +65,22 @@ const showInstruction = (chunk, offset) => {
         case opCodes.or:
             return simple("OP_OR", offset);
         default:
-            console.error(`Unknown opcode ${chunk[offset]}`);
-            return chunk.length;
+            debugMessage += `\nUnknown opcode ${chunk[offset]}`;
+            return offset + 1;
     }
 };
 
 /** @param {(number | string)[]} chunk */
 const showChunk = (chunk) => {
+    debugMessage = "Compiled chunk:";
+
     for (let i = 0; i < chunk.length; ) {
         i = showInstruction(chunk, i);
+    }
+
+    if (debugMessage.length > 0) {
+        console.debug(debugMessage);
+        debugMessage = "";
     }
 };
 

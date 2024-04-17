@@ -119,6 +119,7 @@ const loadQuestions = async () => {
   }
 
   gameState.state = gameStates.loading;
+  question.innerHTML = "";
   clearErrors();
   show(loader);
   let request = `https://opentdb.com/api.php?amount=${amount.value}`;
