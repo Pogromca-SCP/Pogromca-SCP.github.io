@@ -1,5 +1,6 @@
 // @ts-check
 import compile from "./compiler.js";
+import debugDisplay from "./debug.js";
 import { opCodes } from "./enums.js";
 import stdFunctions from "./std-lib.js";
 
@@ -92,6 +93,7 @@ const run = () => {
   }
 
   addSuccess("Expression compiled successfully.");
+  debugDisplay(code);
   vm.chunk = code;
   vm.stack = [];
   vm.started = new Date(Date.now());
@@ -275,7 +277,7 @@ const updatePixel = (pixel, i) => {
       }
       case opCodes.not: {
         const value = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(value < 1 ? 0 : 1);
+        vm.stack.push(value === 0 ? 1 : 0);
         break;
       }
       case opCodes.negate: {
@@ -307,13 +309,13 @@ const updatePixel = (pixel, i) => {
       case opCodes.and: {
         const b = /** @type {number} */ (vm.stack.pop());
         const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push((a >= 1 && b >= 1) ? 1 : 0);
+        vm.stack.push((a === 0 || b === 0) ? 0 : 1);
         break;
       }
       case opCodes.or: {
         const b = /** @type {number} */ (vm.stack.pop());
         const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push((a >= 1 || b >= 1) ? 1 : 0);
+        vm.stack.push((a === 0 && b === 0) ? 0 : 1);
         break;
       }
     }

@@ -176,7 +176,7 @@
       </tr>
       <tr>
         <td>if(float, a, b)</td>
-        <td>Returns 'a' if 'float' is 1 or greater otherwise returns b.</td>
+        <td>Returns 'a' if 'float' is not zero otherwise returns b.</td>
       </tr>
       <tr>
         <td>lerp(frac, a, b)</td>
@@ -211,7 +211,7 @@
         <td>Returns the left divided by the right operand.</td>
       </tr>
       <tr>
-        <td>^</td>
+        <td>**</td>
         <td>Returns the left operand to the power of the right operand.</td>
       </tr>
       <tr>
@@ -227,28 +227,32 @@
         <td>Returns 1 when the left operand is greater than the right, otherwise returns 0.</td>
       </tr>
       <tr>
-        <td>&lt;=</td>
-        <td>Returns 1 when the left operand is less than the right, otherwise returns 0.</td>
+        <td>&gt;=</td>
+        <td>Returns 0 when the left operand is less than the right, otherwise returns 1.</td>
       </tr>
       <tr>
         <td>&lt;=</td>
-        <td>Returns 1 when the left operand is greater than the right, otherwise returns 0.</td>
+        <td>Returns 0 when the left operand is greater than the right, otherwise returns 1.</td>
       </tr>
       <tr>
         <td>==</td>
         <td>Returns 1 when the left operand is equal to the right, otherwise returns 0.</td>
       </tr>
       <tr>
+        <td>!=</td>
+        <td>Returns 0 when the left operand is equal to the right, otherwise returns 1.</td>
+      </tr>
+      <tr>
         <td>&amp;</td>
-        <td>Returns 1 if both the left side and right side are true.</td>
+        <td>Returns 1 if both the left side and right side are not zero.</td>
       </tr>
       <tr>
         <td>|</td>
-        <td>Returns 1 if either the left side and right side are true.</td>
+        <td>Returns 1 if either the left side and right side are not zero.</td>
       </tr>
       <tr>
         <td>!</td>
-        <td>Returns 1 if the expression is false and 0 if the expression is true.</td>
+        <td>Returns 1 if the expression is zero and 0 if the expression is not zero.</td>
       </tr>
       <tr>
         <td>#</td>

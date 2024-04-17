@@ -57,7 +57,7 @@ const gameState = {
 };
 
 const roundTime = 20;
-const resultsTime = 5;
+const resultsTime = 3;
 
 /** @param {string} str */
 const decode = (str) => {
@@ -195,12 +195,7 @@ const gameLoop = () => {
     return;
   }
 
-  if (gameState.state === gameStates.ending) {
-    timer.innerHTML = "";
-    question.innerHTML = "";
-    gameState.state = gameStates.settings;
-    return;
-  } else if (gameState.state === gameStates.question) {
+  if (gameState.state === gameStates.question) {
     gameState.state = gameStates.results;
     question.innerText = `Time's up. Correct answer was ${gameState.correct}`;
     updateTimer(resultsTime);
@@ -214,9 +209,9 @@ const gameLoop = () => {
   const current = gameState.questions.pop();
 
   if (current === undefined) {
+    timer.innerHTML = "";
     question.innerText = `Game finished. Final score: ${gameState.score}/${gameState.rounds}`;
-    gameState.state = gameStates.ending;
-    updateTimer(resultsTime);
+    gameState.state = gameStates.settings;
     return;
   }
 

@@ -37,7 +37,7 @@ const stdFunctions = {
   atan2: makeStdFunction(/** @param {number} x @param {number} y */ (x, y) => Math.atan(x === 0 ? 0 : y / x), 2),
   min: makeStdFunction(/** @param {number} x @param {number} y */ (x, y) => Math.min(x, y), 2),
   max: makeStdFunction(/** @param {number} x @param {number} y */ (x, y) => Math.max(x, y), 2),
-  if: makeStdFunction(/** @param {number} cond @param {number} a @param {number} b */ (cond, a, b) => cond < 1 ? b : a, 3),
+  if: makeStdFunction(/** @param {number} cond @param {number} a @param {number} b */ (cond, a, b) => cond === 0 ? b : a, 3),
   lerp: makeStdFunction(/** @param {number} frac @param {number} a @param {number} b */ (frac, a, b) => (a * frac + b * (1 - frac)), 3)
 };
 

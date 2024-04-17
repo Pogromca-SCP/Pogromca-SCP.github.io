@@ -5,8 +5,7 @@ export const gameStates = {
   settings: 1,
   loading: 2,
   question: 3,
-  results: 4,
-  ending: 5
+  results: 4
 };
 
 export const responseCodes = {

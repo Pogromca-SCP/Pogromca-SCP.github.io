@@ -132,11 +132,9 @@ export default class Scanner {
       case "-":
         return this.makeToken(tokenTypes.minus);
       case "*":
-        return this.makeToken(tokenTypes.star);
+        return this.makeToken(this.match("*") ? tokenTypes.exp : tokenTypes.star);
       case "/":
         return this.makeToken(tokenTypes.slash);
-      case "^":
-        return this.makeToken(tokenTypes.exp);
       case "%":
         return this.makeToken(tokenTypes.modulo);
       case "<":
