@@ -22,14 +22,17 @@ const compiler = {
   chunk: [],
   hadError: false,
 
-  /** @type {string[]} */
-  variables: [],
+  /** @type {Record<string, number>} */
+  variables: {},
 
   /** @type {StdFunction[]} */
   callStack: [],
 
   /** @type {Record<string, number | number[] | (() => number)>} */
   inputVars: {},
+
+  /** @type {string[]} */
+  outputs: [],
 
   /** @type {(message: string) => void} */
   onError: (message) => {},
@@ -187,11 +190,13 @@ const compiler = {
 /**
  * @param {string} src
  * @param {Record<string, number | number[] | (() => number)>} inputVars
+ * @param {string[]} outputs
  * @param {(message: string) => void} onError
  */
-const compile = (src, inputVars, onError) => {
+const compile = (src, inputVars, outputs, onError) => {
   compiler.scanner = new Scanner(src);
   compiler.inputVars = inputVars;
+  compiler.outputs = outputs;
   compiler.onError = onError;
   compiler.advance();
 
@@ -201,13 +206,19 @@ const compile = (src, inputVars, onError) => {
     compiler.emitNum(opCodes.pop);
   }
 
+  for (const name in compiler.variables) {
+    if (compiler.variables[name] < 1) {
+      compiler.error(`Variable '${name}' is assigned but its value is never used.`);
+    }
+  }
+
   const result = compiler.hadError ? null : compiler.chunk;
   compiler.scanner = Scanner.emptyScanner;
   compiler.current = null;
   compiler.previous = null;
   compiler.chunk = [];
   compiler.hadError = false;
-  compiler.variables = [];
+  compiler.variables = {};
   compiler.callStack = [];
   return result;
 };
@@ -341,11 +352,11 @@ const namedVariable = (name, canAssign) => {
     expression();
     compiler.emitNums(opCodes.set, name.lexeme);
 
-    if (define && !compiler.variables.includes(name.lexeme)) {
-      compiler.variables.push(name.lexeme);
+    if (define && compiler.variables[name.lexeme] === undefined) {
+      compiler.variables[name.lexeme] = compiler.outputs.includes(name.lexeme) ? 1 : 0;
     }
   } else {
-    if (stdFunctions[name.lexeme] === undefined && compiler.inputVars[name.lexeme] === undefined && !compiler.variables.includes(name.lexeme)) {
+    if (stdFunctions[name.lexeme] === undefined && compiler.inputVars[name.lexeme] === undefined && compiler.variables[name.lexeme] === undefined) {
       compiler.error(`Cannot read value of '${name.lexeme}' because it's undefined.`);
     }
 
@@ -353,6 +364,7 @@ const namedVariable = (name, canAssign) => {
       compiler.error(`Function '${name.lexeme}' can only be used for calling.`);
     }
 
+    ++compiler.variables[name.lexeme];
     compiler.emitNums(opCodes.get, name.lexeme);
   }
 };

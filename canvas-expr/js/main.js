@@ -65,6 +65,8 @@ const inputVars = {
   height: () => canvas.height
 };
 
+const outputs = ["x'", "y'", "h", "s", "l", "a"];
+
 const displayLineNumbers = () => {
   const len = input.value.split("\n").length;
   let value = "1";
@@ -85,7 +87,7 @@ const run = () => {
   inputVars.count = 0;
   const pxSize = parseInt(pixelsSize.value);
   const pxCount = parseInt(pixelsCount.value);
-  const code = compile(input.value, inputVars, addError);
+  const code = compile(input.value, inputVars, outputs, addError);
 
   if (code === null) {
     runButton.disabled = false;
