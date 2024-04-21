@@ -320,6 +320,9 @@ const updatePixel = (pixel, i) => {
         vm.stack.push((a === 0 && b === 0) ? 0 : 1);
         break;
       }
+      default:
+        addError("Runtime error: Unknown opcode.");
+        return false;
     }
   }
 
