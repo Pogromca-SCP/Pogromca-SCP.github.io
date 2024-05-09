@@ -1,0 +1,94 @@
+@media all and (prefers-color-scheme: light) {
+  :root {
+    --color-text: #000000;
+    --color-bg-secondary: #ffffff;
+    --color-bg-primary: #cbcac7;
+    --color-bg-inputs: #dddddd;
+  }
+}
+
+@media all and (prefers-color-scheme: dark) {
+  :root {
+    --color-text: #888888;
+    --color-bg-secondary: #000000;
+    --color-bg-primary: #222222;
+    --color-bg-inputs: #444444;
+  }
+}
+
+:root {
+  --nav-border: var(--color-text) solid 1px;
+}
+
+body {
+  margin: 0;
+  min-width: 900px;
+}
+
+nav {
+  width: 100%;
+  height: fit-content;
+  background-color: var(--color-bg-secondary);
+}
+
+nav > ol, nav > ol > li > ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+nav > ol {
+  display: flex;
+  font-size: large;
+  height: 2rem;
+  line-height: 2rem;
+}
+
+nav > ol > li {
+  width: 5rem;
+  border-right: var(--nav-border);
+  text-align: center;
+}
+
+noscript > li {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  color: #ffffff;
+  background-color: #aa0000;
+}
+
+nav > ol > li, nav > ol > li > ul > li {
+  color: var(--color-text);
+  background-color: var(--color-bg-primary);
+}
+
+nav > ol > li:hover, nav > ol > li > ul > li:hover {
+  background-color: var(--color-bg-inputs);
+}
+
+nav > ol > li > ul {
+  display: none;
+  position: relative;
+  z-index: 100;
+}
+
+nav > ol > li:hover > ul {
+  display: block;
+}
+
+nav > ol > li > ul > li {
+  text-align: start;
+  padding: 0.5rem;
+}
+
+nav > ol > li > ul > li:empty {
+  border-top: var(--nav-border);
+  padding: 0;
+}
+
+a {
+  display: block;
+  color: var(--color-text);
+  text-decoration: none;
+  padding: 0.5rem;
+}
