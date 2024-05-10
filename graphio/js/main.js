@@ -1,61 +1,35 @@
 // @ts-check
-const a = /** @type {HTMLInputElement} */ (document.getElementById("A"));
-const b = /** @type {HTMLInputElement} */ (document.getElementById("B"));
-const c = /** @type {HTMLInputElement} */ (document.getElementById("C"));
-const upload = /** @type {HTMLInputElement} */ (document.getElementById("file-upload"));
+import { loadFile, saveFile } from "./files.js";
+import { undoAction, redoAction } from "./history.js";
+import { showProperties } from "./properties.js";
+import settings from "./settings.js";
 
-const newGraph = () => {
-  a.value = "";
-  b.value = "";
-  c.value = "";
-  aValue = a.value;
-  clearActionHistory();
+window["newGraph"] = () => {
 };
 
-const openGraph = () => {
-  upload.click();
+window["openGraph"] = () => {
+  loadFile(str => console.log(str), "application/json");
 };
 
-upload.onchange = e => {
-  const file = e.target.files[0];
-
-  // setting up the reader
-  const reader = new FileReader();
-  reader.readAsText(file,'UTF-8');
-
-  // here we tell the reader what to do when it's done reading...
-  reader.onload = readerEvent => {
-     const content = readerEvent.target?.result?.toString() ?? ""; // this is the content!
-     const obj = JSON.parse(content);
-     a.value = obj.a;
-     b.value = obj.b;
-     c.value = obj.c;
-     clearActionHistory();
-  };
+window["saveGraph"] = () => {
+  saveFile("test.json", JSON.stringify({}));
 };
 
-const saveGraph = () => {
-  download("test.json", JSON.stringify({ a: a.value, b: b.value, c: c.value }));
+window["importGraph"] = () => {
+  loadFile(str => console.log(str), ".sql");
 };
 
-const download = (filename, text) => {
-  const element = document.createElement('a');
-  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-  element.setAttribute('download', filename);
-  element.style.display = 'none';
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
+window["exportGraph"] = () => {
+  saveFile("test.sql", JSON.stringify({}));
 };
 
-let aValue = a.value;
-
-a.onchange = e => {
-  makeAction(new SetText(a, aValue, e.target.value));
-  aValue = e.target.value;
-};
-
-/*window.addEventListener("beforeunload", e => {
+window.addEventListener("beforeunload", e => {
   e.preventDefault();
   return "";
-});*/
+});
+
+window["undoAction"] = undoAction;
+window["redoAction"] = redoAction;
+
+window["clear"] = () => showProperties("", null);
+window["settings"] = () => showProperties("Settings", settings);

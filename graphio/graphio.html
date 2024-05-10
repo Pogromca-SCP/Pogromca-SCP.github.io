@@ -21,8 +21,8 @@
           <li onclick="openGraph();">Open</li>
           <li onclick="saveGraph();">Save</li>
           <li></li>
-          <li>Import</li>
-          <li>Export</li>
+          <li onclick="importGraph();">Import</li>
+          <li onclick="exportGraph();">Export</li>
           <li></li>
           <li style="padding: 0;"><a href="../index.html">Exit</a></li>
         </ul>
@@ -32,6 +32,8 @@
         <ul>
           <li onclick="undoAction();">Undo</li>
           <li onclick="redoAction();">Redo</li>
+          <li></li>
+          <li onclick="settings();">Settings</li>
         </ul>
       </li>
       <noscript>
@@ -40,13 +42,14 @@
     </ol>
   </nav>
   <main>
-    <input id="A" />
-    <input id="B" />
-    <input id="C" />
+    <div id="side-menu">
+      <div id="explorer" onclick="clear();"></div>
+      <div id="properties"></div>
+    </div>
+    <div id="graph"></div>
   </main>
   <input id="file-upload" type="file" hidden />
-  <script src="./js/history.js"></script>
-  <script src="./js/main.js"></script>
+  <script src="./js/main.js" type="module"></script>
 </body>
 
 </html>

@@ -20,6 +20,12 @@
   --nav-border: var(--color-text) solid 1px;
 }
 
+html {
+  color: var(--color-text);
+  background-color: var(--color-bg-secondary);
+  font-family: sans-serif;
+}
+
 body {
   margin: 0;
   min-width: 900px;
@@ -28,7 +34,7 @@ body {
 nav {
   width: 100%;
   height: fit-content;
-  background-color: var(--color-bg-secondary);
+  border-bottom: var(--nav-border);
 }
 
 nav > ol, nav > ol > li > ul {
@@ -58,7 +64,6 @@ noscript > li {
 }
 
 nav > ol > li, nav > ol > li > ul > li {
-  color: var(--color-text);
   background-color: var(--color-bg-primary);
 }
 
@@ -91,4 +96,56 @@ a {
   color: var(--color-text);
   text-decoration: none;
   padding: 0.5rem;
+}
+
+main {
+  display: flex;
+  height: 96vh;
+}
+
+#side-menu {
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-primary);
+  border-right: var(--nav-border);
+}
+
+#explorer, #properties {
+  height: 50%;
+}
+
+#explorer {
+  border-bottom: var(--nav-border);
+}
+
+#properties {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+#properties > p {
+  font-size: large;
+  text-align: center;
+}
+
+#properties > div {
+  display: flex;
+  margin-top: 0.5rem;
+}
+
+#properties > div > label, #properties > div > input {
+  margin-left: 0.5rem;
+  margin-right: 0.5rem
+}
+
+#properties > div > input {
+  width: 100%;
+  background-color: var(--color-bg-inputs);
+  color: var(--color-text);
+}
+
+#graph {
+  width: 100%;
 }
