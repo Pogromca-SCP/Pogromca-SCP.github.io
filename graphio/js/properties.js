@@ -233,7 +233,7 @@ const clamp = (x, min, max) => {
  */
 const applyFlags = (x, flags) => {
   if ((flags & INTEGER) !== 0) {
-    x = Math.floor(x);
+    x = Math.trunc(x);
   }
 
   if ((flags & UNSIGNED) !== 0) {
