@@ -15,7 +15,7 @@ class Property {
 
   constructor(isTransient = false) {
     if (this.constructor === Property) {
-      throw new Error("Cannot instantiate abstract class 'Property'");
+      throw new Error("Cannot instantiate abstract class 'Property'.");
     }
 
     this.#transient = isTransient;
@@ -27,6 +27,20 @@ class Property {
     return "text";
   }
 
+  /** @returns {null | boolean | number | string} */
+  getValue() {
+    return null;
+  }
+
+  /** @returns {null | boolean | number | string} */
+  getDefaultValue() {
+    return null;
+  }
+
+  toString() {
+    return "";
+  }
+
   /** @param {string} newValue */
   setValue(newValue) {}
   setDefault() {}
@@ -35,17 +49,14 @@ class Property {
     return this.#transient;
   }
 
-  /**
-   * @param {string} value
-   * @param {boolean} hideButton
-   */
-  updateDisplay(value, hideButton) {
+  updateDisplay() {
     if (this.#display === null) {
       return;
     }
 
     const tmp = this.#display.onchange;
     this.#display.onchange = null;
+    const value = this.toString();
 
     if (this.#display.type === "checkbox") {
       this.#display.checked = value.length > 0;
@@ -56,7 +67,7 @@ class Property {
     this.#display.onchange = tmp;
 
     if (this.#button !== null) {
-      this.#button.hidden = hideButton;
+      this.#button.hidden = this.getValue() === this.getDefaultValue();
     }
   }
 
@@ -97,6 +108,7 @@ class Property {
     this.#button = button;
     element.appendChild(button);
     props.appendChild(element);
+    this.updateDisplay();
   }
 }
 
@@ -104,18 +116,14 @@ class ChangeBooleanPropertyAction {
   /** @type {BooleanProperty} */
   #target;
   /** @type {boolean} */
-  #oldValue;
-  /** @type {boolean} */
   #newValue;
 
   /**
    * @param {BooleanProperty} target
-   * @param {boolean} oldValue
    * @param {boolean} newValue
    */
-  constructor(target, oldValue, newValue) {
+  constructor(target, newValue) {
     this.#target = target;
-    this.#oldValue = oldValue;
     this.#newValue = newValue;
   }
 
@@ -124,7 +132,7 @@ class ChangeBooleanPropertyAction {
   }
 
   undo() {
-    this.#target.transientUpdate(this.#oldValue)
+    this.#target.transientUpdate(!this.#newValue);
   }
 }
 
@@ -152,14 +160,20 @@ export class BooleanProperty extends Property {
     return this.#default;
   }
 
+  toString() {
+    return this.#value ? "on" : "";
+  }
+
   /** @param {string} newValue */
   setValue(newValue) {
-    if (this.isTransient()) {
-      this.transientUpdate(newValue.length > 0);
+    const val = newValue.length > 0;
+
+    if (this.isTransient() || this.#value === val) {
+      this.transientUpdate(val);
       return;
     }
 
-    doAction(new ChangeBooleanPropertyAction(this, this.#value, newValue.length > 0));
+    doAction(new ChangeBooleanPropertyAction(this, val));
   }
 
   setDefault() {
@@ -169,7 +183,7 @@ export class BooleanProperty extends Property {
   /** @param {boolean} newValue */
   transientUpdate(newValue) {
     this.#value = newValue;
-    this.updateDisplay(newValue ? "on" : "", this.#value === this.#default);
+    this.updateDisplay();
   }
 
   toggle() {
@@ -289,6 +303,10 @@ export class NumberProperty extends Property {
     return this.#default;
   }
 
+  toString() {
+    return this.#value.toString();
+  }
+
   getFlags() {
     return this.#flags;
   }
@@ -307,7 +325,7 @@ export class NumberProperty extends Property {
     val = clamp(val, this.#min, this.#max);
     val = applyFlags(val, this.#flags);
 
-    if (this.isTransient()) {
+    if (this.isTransient() || this.#value === val) {
       this.transientUpdate(val);
       return;
     }
@@ -322,7 +340,7 @@ export class NumberProperty extends Property {
   /** @param {number} newValue */
   transientUpdate(newValue) {
     this.#value = newValue;
-    this.updateDisplay(newValue.toString(), this.#value === this.#default);
+    this.updateDisplay();
   }
 
   inc() {
@@ -395,6 +413,10 @@ export class TextProperty extends Property {
     return this.#default;
   }
 
+  toString() {
+    return this.#value;
+  }
+
   getMaxLength() {
     return this.#maxLength;
   }
@@ -405,7 +427,7 @@ export class TextProperty extends Property {
       newValue = this.#maxLength < 1 ? "" : newValue.substring(0, this.#maxLength);
     }
 
-    if (this.isTransient()) {
+    if (this.isTransient() || this.#value === newValue) {
       this.transientUpdate(newValue);
       return;
     }
@@ -420,7 +442,7 @@ export class TextProperty extends Property {
   /** @param {string} newValue */
   transientUpdate(newValue) {
     this.#value = newValue;
-    this.updateDisplay(newValue, this.#value === this.#default);
+    this.updateDisplay();
   }
 }
 

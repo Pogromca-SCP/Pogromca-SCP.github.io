@@ -3,6 +3,7 @@ import { BooleanProperty, NumberProperty, NO_FLAGS, INTEGER, UNSIGNED, TextPrope
 
 const settings = {
   Bool: new BooleanProperty(),
+  True: new BooleanProperty(true),
   Number: new NumberProperty(100),
   ClampedNumber: new NumberProperty(5, NO_FLAGS, 0, 10),
   Integer: new NumberProperty(0, INTEGER),
