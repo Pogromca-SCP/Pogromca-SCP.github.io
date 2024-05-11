@@ -56,7 +56,7 @@ class Property {
     this.#display.onchange = tmp;
 
     if (this.#button !== null) {
-      this.#button.hidden = showButton;
+      this.#button.hidden = !showButton;
     }
   }
 
