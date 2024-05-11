@@ -37,9 +37,9 @@ class Property {
 
   /**
    * @param {string} value
-   * @param {boolean} showButton
+   * @param {boolean} hideButton
    */
-  updateDisplay(value, showButton) {
+  updateDisplay(value, hideButton) {
     if (this.#display === null) {
       return;
     }
@@ -56,7 +56,7 @@ class Property {
     this.#display.onchange = tmp;
 
     if (this.#button !== null) {
-      this.#button.hidden = !showButton;
+      this.#button.hidden = hideButton;
     }
   }
 
@@ -169,7 +169,7 @@ export class BooleanProperty extends Property {
   /** @param {boolean} newValue */
   transientUpdate(newValue) {
     this.#value = newValue;
-    this.updateDisplay(newValue ? "on" : "", this.#value !== this.#default);
+    this.updateDisplay(newValue ? "on" : "", this.#value === this.#default);
   }
 
   toggle() {
@@ -322,7 +322,7 @@ export class NumberProperty extends Property {
   /** @param {number} newValue */
   transientUpdate(newValue) {
     this.#value = newValue;
-    this.updateDisplay(newValue.toString(), this.#value !== this.#default);
+    this.updateDisplay(newValue.toString(), this.#value === this.#default);
   }
 
   inc() {
@@ -420,7 +420,7 @@ export class TextProperty extends Property {
   /** @param {string} newValue */
   transientUpdate(newValue) {
     this.#value = newValue;
-    this.updateDisplay(newValue, this.#value !== this.#default);
+    this.updateDisplay(newValue, this.#value === this.#default);
   }
 }
 
