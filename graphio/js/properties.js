@@ -10,14 +10,17 @@ class Property {
   #transient;
   /** @type {HTMLInputElement | null} */
   #display;
+  /** @type {HTMLButtonElement | null} */
+  #button;
 
   constructor(isTransient = false) {
     if (this.constructor === Property) {
-      throw new Error("Cannot instantiate abstract class Property");
+      throw new Error("Cannot instantiate abstract class 'Property'");
     }
 
     this.#transient = isTransient;
     this.#display = null;
+    this.#button = null;
   }
 
   getInputType() {
@@ -32,8 +35,11 @@ class Property {
     return this.#transient;
   }
 
-  /** @param {string} value */
-  updateDisplay(value) {
+  /**
+   * @param {string} value
+   * @param {boolean} showButton
+   */
+  updateDisplay(value, showButton) {
     if (this.#display === null) {
       return;
     }
@@ -48,6 +54,10 @@ class Property {
     }
     
     this.#display.onchange = tmp;
+
+    if (this.#button !== null) {
+      this.#button.hidden = showButton;
+    }
   }
 
   clearDisplay() {
@@ -57,6 +67,13 @@ class Property {
 
     this.#display.onchange = null;
     this.#display = null;
+
+    if (this.#button === null) {
+      return;
+    }
+
+    this.#button.onclick = null;
+    this.#button = null;
   }
 
   /** @param {string} name */
@@ -74,6 +91,11 @@ class Property {
     input.onchange = input.type === "checkbox" ? e => this.setValue(input.checked ? "on" : "") : e => this.setValue(input.value);
     this.#display = input;
     element.appendChild(input);
+    const button = document.createElement("button");
+    button.innerText = "<";
+    button.onclick = e => this.setDefault();
+    this.#button = button;
+    element.appendChild(button);
     props.appendChild(element);
   }
 }
@@ -122,6 +144,14 @@ export class BooleanProperty extends Property {
     return "checkbox";
   }
 
+  getValue() {
+    return this.#value;
+  }
+
+  getDefaultValue() {
+    return this.#default;
+  }
+
   /** @param {string} newValue */
   setValue(newValue) {
     if (this.isTransient()) {
@@ -139,7 +169,11 @@ export class BooleanProperty extends Property {
   /** @param {boolean} newValue */
   transientUpdate(newValue) {
     this.#value = newValue;
-    this.updateDisplay(newValue ? "on" : "");
+    this.updateDisplay(newValue ? "on" : "", this.#value !== this.#default);
+  }
+
+  toggle() {
+    this.setValue(this.#value ? "" : "on");
   }
 }
 
@@ -171,33 +205,107 @@ class ChangeNumberPropertyAction {
   }
 }
 
+export const NO_FLAGS = 0;
+export const INTEGER = 1;
+export const UNSIGNED = 2;
+export const ALLOW_NAN = 4;
+
+/**
+ * @param {number} x
+ * @param {null | number} min
+ * @param {null | number} max
+ */
+const clamp = (x, min, max) => {
+  if (min !== null && x < min) {
+    return min;
+  }
+
+  if (max !== null && x > max) {
+    return max;
+  }
+
+  return x;
+};
+
+/**
+ * @param {number} x
+ * @param {number} flags
+ */
+const applyFlags = (x, flags) => {
+  if ((flags & INTEGER) !== 0) {
+    x = Math.floor(x);
+  }
+
+  if ((flags & UNSIGNED) !== 0) {
+    x = Math.abs(x);
+  }
+
+  if ((flags & ALLOW_NAN) === 0 && Number.isNaN(x)) {
+    x = 0;
+  }
+
+  return x;
+};
+
 export class NumberProperty extends Property {
   /** @type {number} */
   #value;
-  /** @type {boolean} */
-  #isInt;
+  /** @type {number} */
+  #flags;
   /** @type {number} */
   #default;
+  /** @type {null | number} */
+  #min;
+  /** @type {null | number} */
+  #max;
 
-  constructor(defaultValue = 0, isInteger = false, isTransient = false) {
+  /**
+   * @param {number} defaultValue
+   * @param {number} flags
+   * @param {null | number} minValue
+   * @param {null | number} maxValue
+   * @param {boolean} isTransient
+   */
+  constructor(defaultValue = 0, flags = 0, minValue = null, maxValue = null, isTransient = false) {
     super(isTransient);
-    const val = isInteger ? Math.floor(defaultValue) : defaultValue;
-    this.#default = val;
-    this.#isInt = isInteger;
-    this.#value = val;
+    defaultValue = clamp(defaultValue, minValue, maxValue);
+    defaultValue = applyFlags(defaultValue, flags);
+    this.#default = defaultValue;
+    this.#flags = flags;
+    this.#min = minValue;
+    this.#max = maxValue;
+    this.#value = defaultValue;
   }
 
   getInputType() {
     return "number";
   }
 
-  isInteger() {
-    return this.#isInt;
+  getValue() {
+    return this.#value;
+  }
+
+  getDefaultValue() {
+    return this.#default;
+  }
+
+  getFlags() {
+    return this.#flags;
+  }
+
+  getMinValue() {
+    return this.#min;
+  }
+
+  getMaxValue() {
+    return this.#max;
   }
 
   /** @param {string} newValue */
   setValue(newValue) {
-    const val = this.#isInt ? parseInt(newValue) : parseFloat(newValue);
+    let val = parseFloat(newValue);
+    val = clamp(val, this.#min, this.#max);
+    val = applyFlags(val, this.#flags);
 
     if (this.isTransient()) {
       this.transientUpdate(val);
@@ -214,7 +322,15 @@ export class NumberProperty extends Property {
   /** @param {number} newValue */
   transientUpdate(newValue) {
     this.#value = newValue;
-    this.updateDisplay(newValue.toString());
+    this.updateDisplay(newValue.toString(), this.#value !== this.#default);
+  }
+
+  inc() {
+    this.setValue((this.#value + 1).toString());
+  }
+
+  dec() {
+    this.setValue((this.#value - 1).toString());
   }
 }
 
@@ -251,15 +367,44 @@ export class TextProperty extends Property {
   #value;
   /** @type {string} */
   #default;
+  /** @type {null | number} */
+  #maxLength;
 
-  constructor(defaultValue = "", isTransient = false) {
+  /**
+   * @param {string} defaultValue
+   * @param {null | number} maxLength
+   * @param {boolean} isTransient
+   */
+  constructor(defaultValue = "", maxLength = null, isTransient = false) {
     super(isTransient);
+    
+    if (maxLength !== null && defaultValue.length > maxLength) {
+      defaultValue = maxLength < 1 ? "" : defaultValue.substring(0, maxLength);
+    }
+
     this.#default = defaultValue;
     this.#value = defaultValue;
+    this.#maxLength = maxLength;
+  }
+
+  getValue() {
+    return this.#value;
+  }
+
+  getDefaultValue() {
+    return this.#default;
+  }
+
+  getMaxLength() {
+    return this.#maxLength;
   }
 
   /** @param {string} newValue */
   setValue(newValue) {
+    if (this.#maxLength !== null && newValue.length > this.#maxLength) {
+      newValue = this.#maxLength < 1 ? "" : newValue.substring(0, this.#maxLength);
+    }
+
     if (this.isTransient()) {
       this.transientUpdate(newValue);
       return;
@@ -275,7 +420,7 @@ export class TextProperty extends Property {
   /** @param {string} newValue */
   transientUpdate(newValue) {
     this.#value = newValue;
-    this.updateDisplay(newValue);
+    this.updateDisplay(newValue, this.#value !== this.#default);
   }
 }
 

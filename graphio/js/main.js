@@ -31,5 +31,5 @@ window.addEventListener("beforeunload", e => {
 window["undoAction"] = undoAction;
 window["redoAction"] = redoAction;
 
-window["clear"] = () => showProperties("", null);
-window["settings"] = () => showProperties("Settings", settings);
+window["clearProps"] = () => showProperties("", null);
+window["openSettings"] = () => showProperties("Settings", settings);

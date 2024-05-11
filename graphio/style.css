@@ -29,6 +29,8 @@ html {
 body {
   margin: 0;
   min-width: 900px;
+  min-height: 600px;
+  height: 100vh;
 }
 
 nav {
@@ -100,7 +102,7 @@ a {
 
 main {
   display: flex;
-  height: 96vh;
+  height: calc(100% - 2rem - 1px);
 }
 
 #side-menu {
@@ -135,15 +137,18 @@ main {
   margin-top: 0.5rem;
 }
 
-#properties > div > label, #properties > div > input {
+#properties > div > label, #properties > div > input, #properties > div > button {
   margin-left: 0.5rem;
   margin-right: 0.5rem
 }
 
-#properties > div > input {
-  width: 100%;
+#properties > div > input, #properties > div > button {
   background-color: var(--color-bg-inputs);
   color: var(--color-text);
+}
+
+#properties > div > input {
+  width: 100%;
 }
 
 #graph {
