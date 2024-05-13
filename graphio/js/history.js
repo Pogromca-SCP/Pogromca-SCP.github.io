@@ -1,4 +1,5 @@
 // @ts-check
+import settings from "./settings.js";
 
 /**
  * @typedef {Object} Action
@@ -13,8 +14,6 @@ const hist = {
   undone: []
 };
 
-const maxActionsHistoryLength = 100;
-
 export const clearActionHistory = () => {
   hist.done = [];
   hist.undone = [];
@@ -24,7 +23,7 @@ export const clearActionHistory = () => {
 export const doAction = (ac) => {
   ac.do();
   
-  if (hist.done.length >= maxActionsHistoryLength) {
+  if (hist.done.length >= settings.MaxActionsHistorySize.getValue()) {
     hist.done.shift();
   }
 

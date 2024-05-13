@@ -24,6 +24,8 @@
           <li onclick="importGraph();">Import</li>
           <li onclick="exportGraph();">Export</li>
           <li></li>
+          <li onclick="openSettings();">Settings</li>
+          <li></li>
           <li style="padding: 0;"><a href="../index.html">Exit</a></li>
         </ul>
       </li>
@@ -32,8 +34,6 @@
         <ul>
           <li onclick="undoAction();">Undo</li>
           <li onclick="redoAction();">Redo</li>
-          <li></li>
-          <li onclick="openSettings();">Settings</li>
         </ul>
       </li>
       <noscript>
@@ -44,11 +44,86 @@
   <main>
     <div id="side-menu">
       <div id="explorer">
-        <button onclick="clearProps();">clear</button>
+        <ol>
+          <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+          <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+          <li>
+            <details>
+              <summary><img src="../logo.png" width="17" height="17" />test</summary>
+              <ol>
+                <li>
+                  <details>
+                    <summary><img src="../logo.png" width="17" height="17" />test</summary>
+                    <ol>
+                      <li>
+                        <details>
+                          <summary><img src="../logo.png" width="17" height="17" />test</summary>
+                          <ol>
+                            <li>
+                              <details>
+                                <summary><img src="../logo.png" width="17" height="17" />test</summary>
+                                <ol>
+                                  <li>
+                                    <details>
+                                      <summary><img src="../logo.png" width="17" height="17" />test</summary>
+                                      <ol>
+                                        <li>
+                                          <details>
+                                            <summary><img src="../logo.png" width="17" height="17" />test</summary>
+                                            <ol>
+                                              <li>
+                                                <details>
+                                                  <summary><img src="../logo.png" width="17" height="17" />test</summary>
+                                                  <ol>
+                                                    <li>
+                                                      <details>
+                                                        <summary><img src="../logo.png" width="17" height="17" />test</summary>
+                                                        <ol>
+                                                          <li>
+                                                            <details>
+                                                              <summary><img src="../logo.png" width="17" height="17" />test</summary>
+                                                              <ol>
+                                                                <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+                                                              </ol>
+                                                            </details>
+                                                          </li>
+                                                          <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+                                                        </ol>
+                                                      </details>
+                                                    </li>
+                                                    <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+                                                  </ol>
+                                                </details>
+                                              </li>
+                                              <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+                                            </ol>
+                                          </details>
+                                        </li>
+                                        <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+                                      </ol>
+                                    </details>
+                                  </li>
+                                  <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+                                </ol>
+                              </details>
+                            </li>
+                            <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+                          </ol>
+                        </details>
+                      </li>
+                      <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+                    </ol>
+                  </details>
+                </li>
+                <li class="explorer-item"><img src="../logo.png" width="17" height="17" />test</li>
+              </ol>
+            </details>
+          </li>
+        </ol>
       </div>
       <div id="properties"></div>
     </div>
-    <div id="graph"></div>
+    <div id="graph" onclick="clearProps();"></div>
   </main>
   <input id="file-upload" type="file" hidden />
   <script src="./js/main.js" type="module"></script>

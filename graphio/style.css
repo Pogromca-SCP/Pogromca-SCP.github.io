@@ -30,7 +30,7 @@ body {
   margin: 0;
   min-width: 900px;
   min-height: 600px;
-  height: 100vh;
+  height: 100dvh;
 }
 
 nav {
@@ -86,11 +86,17 @@ nav > ol > li:hover > ul {
 nav > ol > li > ul > li {
   text-align: start;
   padding: 0.5rem;
+  border-left: var(--nav-border);
+  border-right: var(--nav-border);
 }
 
 nav > ol > li > ul > li:empty {
   border-top: var(--nav-border);
   padding: 0;
+}
+
+nav > ol > li > ul > li:last-of-type {
+  border-bottom: var(--nav-border);
 }
 
 a {
@@ -119,6 +125,23 @@ main {
 
 #explorer {
   border-bottom: var(--nav-border);
+  overflow-x: auto;
+  overflow-y: auto;
+  font-size: 1.5rem;
+}
+
+#explorer > ol, details > ol {
+  list-style-type: none;
+  padding-left: 1rem;
+}
+
+.explorer-item:hover, summary:hover {
+  background-color: var(--color-bg-inputs);
+}
+
+li > img, summary > img {
+  border-radius: 100%;
+  margin-right: 0.5rem;
 }
 
 #properties {

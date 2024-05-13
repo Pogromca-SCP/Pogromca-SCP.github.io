@@ -1,7 +1,7 @@
 // @ts-check
 import { loadFile, saveFile } from "./files.js";
 import { undoAction, redoAction } from "./history.js";
-import { showProperties } from "./properties.js";
+import { showProperties, clearProperties } from "./properties.js";
 import settings from "./settings.js";
 
 window["newGraph"] = () => {
@@ -31,5 +31,5 @@ window.addEventListener("beforeunload", e => {
 window["undoAction"] = undoAction;
 window["redoAction"] = redoAction;
 
-window["clearProps"] = () => showProperties("", null);
+window["clearProps"] = clearProperties;
 window["openSettings"] = () => showProperties("Settings", settings);

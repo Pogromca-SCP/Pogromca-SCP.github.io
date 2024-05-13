@@ -1,15 +1,8 @@
 // @ts-check
-import { BooleanProperty, NumberProperty, NO_FLAGS, INTEGER, UNSIGNED, TextProperty } from "./properties.js";
+import { NumberProperty, INTEGER, UNSIGNED } from "./properties.js";
 
 const settings = {
-  Bool: new BooleanProperty(),
-  True: new BooleanProperty(true),
-  Number: new NumberProperty(100),
-  ClampedNumber: new NumberProperty(5, NO_FLAGS, 0, 10),
-  Integer: new NumberProperty(0, INTEGER),
-  Unsigned: new NumberProperty(0, UNSIGNED),
-  Text: new TextProperty(),
-  TextWithLength: new TextProperty("test", 10)
+  MaxActionsHistorySize: new NumberProperty(100, INTEGER | UNSIGNED, 1, 300, true)
 };
 
 export default settings;

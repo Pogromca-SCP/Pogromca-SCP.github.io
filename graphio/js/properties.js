@@ -420,3 +420,5 @@ export const showProperties = (title, obj) => {
     }
   }
 };
+
+export const clearProperties = () => showProperties("", null);
