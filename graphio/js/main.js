@@ -43,9 +43,6 @@ document.addEventListener("keydown", e => {
   e.stopPropagation();
 
   switch (e.key) {
-    case "n":
-      newProject();
-      break;
     case "o":
       loadFile(str => console.log(str), "application/json");
       break;
