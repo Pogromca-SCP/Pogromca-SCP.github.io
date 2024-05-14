@@ -55,6 +55,7 @@ export const newProject = () => {
   const loader = document.createElement("div");
   loader.hidden = true;
   element.appendChild(loader);
+  explorer.appendChild(element);
 };
 
 newProject();
