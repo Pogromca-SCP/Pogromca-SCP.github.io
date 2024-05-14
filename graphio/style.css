@@ -95,6 +95,10 @@ nav > ol > li > ul > li:empty {
   padding: 0;
 }
 
+nav > ol > li > ul > li:first-of-type {
+  border-top: var(--nav-border);
+}
+
 nav > ol > li > ul > li:last-of-type {
   border-bottom: var(--nav-border);
 }

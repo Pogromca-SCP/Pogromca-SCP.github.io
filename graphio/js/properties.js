@@ -209,11 +209,11 @@ class Property {
     input.id = id;
     input.type = this.getInputType();
     input.disabled = this.#readonly;
-    input.onchange = input.type === "checkbox" ? e => this.setValue(input.checked ? "on" : "") : e => this.setValue(input.value);
     this.#display = input;
     element.appendChild(input);
     
     if (!this.#readonly) {
+      input.onchange = input.type === "checkbox" ? e => this.setValue(input.checked ? "on" : "") : e => this.setValue(input.value);
       const button = document.createElement("button");
       button.innerText = "<";
       button.onclick = e => this.setDefault();

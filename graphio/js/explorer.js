@@ -3,6 +3,7 @@ import { clearProperties } from "./properties.js";
 import { clearActionHistory } from "./history.js";
 
 const explorer = /** @type {HTMLDivElement} */ (document.getElementById("explorer"));
+let isProjectActive = false;
 
 /**
  * @param {string} lang
@@ -26,7 +27,7 @@ const loadLang = async (lang, button, loader) => {
 };
 
 export const newProject = () => {
-  if (!confirm("Did you save your project?")) {
+  if (isProjectActive && !confirm("Did you save your project?")) {
     return;
   }
 
@@ -55,3 +56,5 @@ export const newProject = () => {
   loader.hidden = true;
   element.appendChild(loader);
 };
+
+newProject();
