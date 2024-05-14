@@ -1,3 +1,18 @@
 {
-  "test": "Hello world"
+  "elements": [{
+    "name": "Script",
+    "icon": "script",
+    "editable": false,
+    "removable": false,
+    "addable": false,
+    "graphable": true,
+    "allowedChildren": [],
+    "properties": {}
+  }],
+  "initial": [{
+    "element": "Script",
+    "name": {
+      "value": "Script"
+    }
+  }]
 }

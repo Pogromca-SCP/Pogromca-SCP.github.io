@@ -15,14 +15,6 @@ window["saveGraph"] = () => {
   saveFile("test.json", JSON.stringify({}));
 };
 
-window["importGraph"] = () => {
-  loadFile(str => console.log(str), ".sql");
-};
-
-window["exportGraph"] = () => {
-  saveFile("test.sql", JSON.stringify({}));
-};
-
 window.addEventListener("beforeunload", e => {
   e.preventDefault();
   return "";

@@ -1,9 +1,52 @@
 // @ts-check
-import { clearProperties } from "./properties.js";
+import { showProperties, clearProperties } from "./properties.js";
 import { clearActionHistory } from "./history.js";
 
 const explorer = /** @type {HTMLDivElement} */ (document.getElementById("explorer"));
 let isProjectActive = false;
+
+/**
+ * @typedef {"class" | "func" | "module" | "script" | "var"} ElementType
+ * 
+ * @typedef {Object} PropertyDefinition
+ * @property {boolean} [readonly]
+ * 
+ * @typedef {Object} BooleanValue
+ * @property {boolean} value
+ * 
+ * @typedef {Object} NumberValue
+ * @property {number} value
+ * @property {number} [min]
+ * @property {number} [max]
+ * @property {boolean} [integer]
+ * @property {boolean} [unsigned]
+ * @property {boolean} [allowNaN]
+ * 
+ * @typedef {Object} TextValue
+ * @property {string} value
+ * @property {number} [maxLength]
+ * 
+ * @typedef {PropertyDefinition & (BooleanValue | NumberValue | TextValue)} PropertyWithValue
+ * 
+ * @typedef {Object} LanguageElement
+ * @property {string} name
+ * @property {ElementType} icon
+ * @property {boolean} editable
+ * @property {boolean} removable
+ * @property {boolean} addable
+ * @property {boolean} graphable
+ * @property {string[]} allowedChildren
+ * @property {Record<string, PropertyWithValue>} properties
+ * 
+ * @typedef {Object} Element
+ * @property {string} element
+ * @property {PropertyDefinition & TextValue} name
+ * @property {Element[]} [children]
+ * 
+ * @typedef {Object} LanguageDefinition
+ * @property {LanguageElement[]} elements
+ * @property {Element[]} initial
+ */
 
 /**
  * @param {string} lang
@@ -21,9 +64,23 @@ const loadLang = async (lang, button, loader) => {
       throw new Error(res.url);
     }
 
-    const body = await res.json();
-    console.log(body);
+    const body = /** @type {LanguageDefinition} */ (await res.json());
     explorer.innerHTML = "";
+    isProjectActive = true;
+
+    for (const el of body.initial) {
+      const ol = document.createElement("ol");
+      const li = document.createElement("li");
+      const img = document.createElement("img");
+      img.src = `./assets/icons/${body.elements[0].icon}.png`;
+      img.alt = `${el.element} icon`;
+      img.width = 17;
+      img.height = 17;
+      li.appendChild(img);
+      li.innerText += el.name.value;
+      ol.appendChild(li);
+      explorer.appendChild(ol);
+    }
   } catch (err) {
     console.error(err);
     button.hidden = false;
@@ -36,6 +93,7 @@ export const newProject = () => {
     return;
   }
 
+  isProjectActive = false;
   explorer.innerHTML = "";
   clearProperties();
   clearActionHistory();
