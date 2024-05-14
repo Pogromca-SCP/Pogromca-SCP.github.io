@@ -15,7 +15,7 @@ const loadLang = async (lang, button, loader) => {
   loader.hidden = false;
 
   try {
-    const res = await fetch(`../assets/langs/${lang}.json`);
+    const res = await fetch(`./assets/langs/${lang}.json`);
 
     if (res.status !== 200) {
       throw new Error(res.url);
