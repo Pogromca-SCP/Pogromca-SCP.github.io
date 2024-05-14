@@ -16,7 +16,7 @@ const loadLang = async (lang, button, loader) => {
 
   try {
     const res = await fetch(`../assets/langs/${lang}.json`);
-    const body = await res.json();
+    const body = await res.text();
     console.log(body);
     explorer.innerHTML = "";
   } catch (err) {

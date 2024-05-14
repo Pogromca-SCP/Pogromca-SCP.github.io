@@ -39,6 +39,9 @@ document.addEventListener("keydown", e => {
     return;
   }
 
+  e.preventDefault();
+  e.stopPropagation();
+
   switch (e.key) {
     case "n":
       newProject();
