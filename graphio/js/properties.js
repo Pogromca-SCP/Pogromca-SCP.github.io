@@ -38,6 +38,8 @@ class ChangePropertyAction {
 class Property {
   /** @type {boolean} */
   #transient;
+  /** @type {boolean} */
+  #readonly;
   /** @type {HTMLInputElement | null} */
   #display;
   /** @type {HTMLButtonElement | null} */
@@ -46,25 +48,34 @@ class Property {
   #value;
   /** @type {T} */
   #default;
+  /** @type {((x: T) => void)[]} */
+  #listeners;
 
   /**
    * @param {T} defaultValue
    * @param {boolean} isTransient
+   * @param {boolean} isReadonly
    */
-  constructor(defaultValue, isTransient) {
+  constructor(defaultValue, isTransient, isReadonly) {
     if (this.constructor === Property) {
       throw new Error("Cannot instantiate abstract class 'Property'.");
     }
 
     this.#transient = isTransient;
+    this.#readonly = isReadonly;
     this.#display = null;
     this.#reset = null;
     this.#default = defaultValue;
     this.#value = defaultValue;
+    this.#listeners = [];
   }
 
   isTransient() {
     return this.#transient;
+  }
+
+  isReadonly() {
+    return this.#readonly;
   }
 
   getInputType() {
@@ -94,6 +105,10 @@ class Property {
 
   /** @param {string} newValue */
   setValue(newValue) {
+    if (this.#readonly) {
+      return;
+    }
+
     const val = this.processValue(newValue);
 
     if (this.isTransient() || this.#value === val) {
@@ -105,13 +120,42 @@ class Property {
   }
 
   setDefault() {
+    if (this.#readonly) {
+      return;
+    }
+
     this.setValue(this.toString(this.#default));
   }
 
   /** @param {T} newValue */
   transientUpdate(newValue) {
+    if (this.#readonly) {
+      return;
+    }
+
+    const notify = this.#value !== newValue;
     this.#value = newValue;
     this.updateDisplay();
+
+    if (notify) {
+      for (const listener of this.#listeners) {
+        listener(newValue);
+      }
+    }
+  }
+
+  /** @param {(x: T) => void} listener */
+  addChangeListener(listener) {
+    this.#listeners.push(listener);
+  }
+
+  /** @param {(x: T) => void} listener */
+  removeChangeListener(listener) {
+    this.#listeners = this.#listeners.filter(lis => lis !== listener);
+  }
+
+  clearChangeListeners() {
+    this.#listeners = [];
   }
 
   updateDisplay() {
@@ -164,14 +208,19 @@ class Property {
     const input = document.createElement("input");
     input.id = id;
     input.type = this.getInputType();
+    input.disabled = this.#readonly;
     input.onchange = input.type === "checkbox" ? e => this.setValue(input.checked ? "on" : "") : e => this.setValue(input.value);
     this.#display = input;
     element.appendChild(input);
-    const button = document.createElement("button");
-    button.innerText = "<";
-    button.onclick = e => this.setDefault();
-    this.#reset = button;
-    element.appendChild(button);
+    
+    if (!this.#readonly) {
+      const button = document.createElement("button");
+      button.innerText = "<";
+      button.onclick = e => this.setDefault();
+      this.#reset = button;
+      element.appendChild(button);
+    }
+
     props.appendChild(element);
     this.updateDisplay();
   }
@@ -203,8 +252,8 @@ class ChangeBooleanPropertyAction {
 
 /** @extends Property<boolean> */
 export class BooleanProperty extends Property {
-  constructor(defaultValue = false, isTransient = false) {
-    super(defaultValue, isTransient);
+  constructor(defaultValue = false, isTransient = false, isReadonly = false) {
+    super(defaultValue, isTransient, isReadonly);
   }
 
   getInputType() {
@@ -223,6 +272,10 @@ export class BooleanProperty extends Property {
 
   /** @param {string} newValue */
   setValue(newValue) {
+    if (this.isReadonly()) {
+      return;
+    }
+
     const val = this.processValue(newValue);
 
     if (this.isTransient() || this.getValue() === val) {
@@ -234,6 +287,10 @@ export class BooleanProperty extends Property {
   }
 
   toggle() {
+    if (this.isReadonly()) {
+      return;
+    }
+
     this.setValue(this.getValue() ? "" : "on");
   }
 }
@@ -307,9 +364,10 @@ export class NumberProperty extends Property {
    * @param {null | number} minValue
    * @param {null | number} maxValue
    * @param {boolean} isTransient
+   * @param {boolean} isReadonly
    */
-  constructor(defaultValue = 0, flags = 0, minValue = null, maxValue = null, isTransient = false) {
-    super(processNumber(defaultValue, flags, minValue, maxValue), isTransient);
+  constructor(defaultValue = 0, flags = 0, minValue = null, maxValue = null, isTransient = false, isReadonly = false) {
+    super(processNumber(defaultValue, flags, minValue, maxValue), isTransient, isReadonly);
     this.#flags = flags;
     this.#min = minValue;
     this.#max = maxValue;
@@ -342,10 +400,18 @@ export class NumberProperty extends Property {
   }
 
   inc() {
+    if (this.isReadonly()) {
+      return;
+    }
+
     this.setValue((this.getValue() + 1).toString());
   }
 
   dec() {
+    if (this.isReadonly()) {
+      return;
+    }
+
     this.setValue((this.getValue() - 1).toString());
   }
 }
@@ -371,9 +437,10 @@ export class TextProperty extends Property {
    * @param {string} defaultValue
    * @param {null | number} maxLength
    * @param {boolean} isTransient
+   * @param {boolean} isReadonly
    */
-  constructor(defaultValue = "", maxLength = null, isTransient = false) {
-    super(processText(defaultValue, maxLength), isTransient);
+  constructor(defaultValue = "", maxLength = null, isTransient = false, isReadonly = false) {
+    super(processText(defaultValue, maxLength), isTransient, isReadonly);
     this.#maxLength = maxLength;
   }
 

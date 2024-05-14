@@ -14,6 +14,12 @@ const hist = {
   undone: []
 };
 
+settings.MaxActionsHistorySize.addChangeListener(val => {
+  while (hist.done.length > val) {
+    hist.done.shift();
+  }
+});
+
 export const clearActionHistory = () => {
   hist.done = [];
   hist.undone = [];
@@ -22,13 +28,12 @@ export const clearActionHistory = () => {
 /** @param {Action} ac */
 export const doAction = (ac) => {
   ac.do();
-  
-  if (hist.done.length >= settings.MaxActionsHistorySize.getValue()) {
-    hist.done.shift();
-  }
-
   hist.done.push(ac);
   hist.undone = [];
+
+  if (hist.done.length > settings.MaxActionsHistorySize.getValue()) {
+    hist.done.shift();
+  }
 };
 
 export const undoAction = () => {
@@ -46,5 +51,9 @@ export const redoAction = () => {
   if (ac !== undefined) {
     ac.do();
     hist.done.push(ac);
+
+    if (hist.done.length > settings.MaxActionsHistorySize.getValue()) {
+      hist.done.shift();
+    }
   }
 };
