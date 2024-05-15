@@ -1,52 +1,127 @@
 // @ts-check
+import { loadElements, saveElements } from "./models/elements.js";
 import { showProperties, clearProperties } from "./properties.js";
 import { clearActionHistory } from "./history.js";
-
-const explorer = /** @type {HTMLDivElement} */ (document.getElementById("explorer"));
-let isProjectActive = false;
+import { loadFile, saveFile } from "./files.js";
 
 /**
+ * @typedef {import("./models/props").PropertyDefinition} PropertyDefinition
+ * @typedef {import("./models/elements").LangElement} LangElement
+ * @typedef {import("./models/elements").RuntimeLangElement} RuntimeLangElement
+ * @typedef {import("./properties").TextProperty} TextProperty
+ * 
  * @typedef {"class" | "func" | "module" | "script" | "var"} ElementType
  * 
- * @typedef {Object} PropertyDefinition
- * @property {boolean} [readonly]
- * 
- * @typedef {Object} BooleanValue
- * @property {boolean} value
- * 
- * @typedef {Object} NumberValue
- * @property {number} value
- * @property {number} [min]
- * @property {number} [max]
- * @property {boolean} [integer]
- * @property {boolean} [unsigned]
- * @property {boolean} [allowNaN]
- * 
- * @typedef {Object} TextValue
- * @property {string} value
- * @property {number} [maxLength]
- * 
- * @typedef {PropertyDefinition & (BooleanValue | NumberValue | TextValue)} PropertyWithValue
- * 
- * @typedef {Object} LanguageElement
- * @property {string} name
+ * @typedef {Object} ElementDefinition
+ * @property {string} id
  * @property {ElementType} icon
  * @property {boolean} editable
- * @property {boolean} removable
  * @property {boolean} addable
- * @property {boolean} graphable
  * @property {string[]} allowedChildren
- * @property {Record<string, PropertyWithValue>} properties
- * 
- * @typedef {Object} Element
- * @property {string} element
- * @property {PropertyDefinition & TextValue} name
- * @property {Element[]} [children]
+ * @property {Record<string, PropertyDefinition>} properties
  * 
  * @typedef {Object} LanguageDefinition
- * @property {LanguageElement[]} elements
- * @property {Element[]} initial
+ * @property {Record<string, ElementDefinition>} elements
+ * @property {Record<string, LangElement>} initial
+ * 
+ * @typedef {Object} Project
+ * @property {string} language
+ * @property {Record<string, LangElement>} elements
  */
+
+const explorer = /** @type {HTMLDivElement} */ (document.getElementById("explorer"));
+/** @type {Record<string, ElementDefinition>} */
+let language = {};
+/** @type {Record<string, RuntimeLangElement>} */
+let elements = {};
+let usedLanguage = "";
+
+/**
+ * @param {RuntimeLangElement} el
+ * @param {HTMLOListElement} list
+ */
+const addElement = (el, list) => {
+  el.root = document.createElement("li");
+
+  if (el.children === undefined) {
+    el.root.className = "explorer-item";
+    el.display = el.root;
+  } else {
+    const details = document.createElement("details");
+    el.display = document.createElement("summary");
+    details.appendChild(el.display);
+    el.list = document.createElement("ol");
+
+    for (const ch in el.children) {
+      addElement(el.children[ch], el.list);
+    }
+
+    details.appendChild(el.list);
+    el.root.appendChild(details);
+  }
+
+  const img = document.createElement("img");
+  img.width = 17;
+  img.height = 17;
+  img.alt = `${el.element.id} icon`;
+  img.src = `./assets/icons/${el.element.icon}.png`;
+  el.display.appendChild(img);
+  const name = el.Name;
+
+  name.addChangeListener(n => {
+    if (el.display === undefined) {
+      return;
+    }
+
+    el.display.innerHTML = "";
+    el.display.appendChild(img);
+    el.display.appendChild(document.createTextNode(n));
+  });
+
+  el.display.appendChild(document.createTextNode(name.getValue()));
+  list.appendChild(el.root);
+};
+
+/**
+ * @param {string} lang
+ * @param {LanguageDefinition} def
+ * @throws {Error}
+ */
+const initialize = (lang, def) => {
+  usedLanguage = lang;
+  language = def.elements;
+  elements = loadElements(def.initial, language);
+  const list = document.createElement("ol");
+
+  for (const name in elements) {
+    addElement(elements[name], list);
+  }
+
+  explorer.appendChild(list);
+};
+
+const clearProject = () => {
+  language = {};
+  elements = {};
+  usedLanguage = "";
+  explorer.innerHTML = "";
+  clearProperties();
+  clearActionHistory();
+};
+
+/**
+ * @param {string} lang
+ * @throws {Error}
+ */
+const loadLangDef = async lang => {
+  const res = await fetch(`./assets/langs/${lang}.json`);
+
+  if (res.status !== 200) {
+    throw new Error(res.url);
+  }
+
+  return /** @type {LanguageDefinition} */ (await res.json());
+};
 
 /**
  * @param {string} lang
@@ -58,29 +133,9 @@ const loadLang = async (lang, button, loader) => {
   loader.hidden = false;
 
   try {
-    const res = await fetch(`./assets/langs/${lang}.json`);
-
-    if (res.status !== 200) {
-      throw new Error(res.url);
-    }
-
-    const body = /** @type {LanguageDefinition} */ (await res.json());
+    const langDef = await loadLangDef(lang);
     explorer.innerHTML = "";
-    isProjectActive = true;
-
-    for (const el of body.initial) {
-      const ol = document.createElement("ol");
-      const li = document.createElement("li");
-      const img = document.createElement("img");
-      img.src = `./assets/icons/${body.elements[0].icon}.png`;
-      img.alt = `${el.element} icon`;
-      img.width = 17;
-      img.height = 17;
-      li.appendChild(img);
-      li.innerText += el.name.value;
-      ol.appendChild(li);
-      explorer.appendChild(ol);
-    }
+    initialize(lang, langDef);
   } catch (err) {
     console.error(err);
     button.hidden = false;
@@ -88,15 +143,24 @@ const loadLang = async (lang, button, loader) => {
   }
 };
 
+/** @param {string} str */
+const loadProject = async str => {
+  try {
+    const project = /** @type {Project} */ (JSON.parse(str));
+    const langDef = await loadLangDef(project.language);
+    clearProject();
+    initialize(project.language, langDef);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 export const newProject = () => {
-  if (isProjectActive && !confirm("Did you save your project?")) {
+  if (usedLanguage !== "" && !confirm("Did you save your project?")) {
     return;
   }
 
-  isProjectActive = false;
-  explorer.innerHTML = "";
-  clearProperties();
-  clearActionHistory();
+  clearProject();
   const id = "lang-select";
   const element = document.createElement("div");
   const label = document.createElement("label");
@@ -105,11 +169,15 @@ export const newProject = () => {
   element.appendChild(label);
   const select = document.createElement("select");
   select.id = id;
-  let option = document.createElement("option");
-  option.value = "javascript";
-  option.selected = true;
-  option.innerText = "JavaScript";
-  select.appendChild(option);
+
+  for (const lang of ["JavaScript", "Test", "Wrong"]) {
+    const option = document.createElement("option");
+    option.value = lang.toLowerCase();
+    option.selected = select.children.length === 0;
+    option.innerText = lang;
+    select.appendChild(option);
+  }
+
   element.appendChild(select);
   const button = document.createElement("button");
   button.innerText = "Start project";
@@ -121,4 +189,9 @@ export const newProject = () => {
   explorer.appendChild(element);
 };
 
-newProject();
+export const openProject = () => loadFile(loadProject, "application/json");
+
+export const saveProject = () => saveFile("MyProject.json", JSON.stringify({
+  language: usedLanguage,
+  elements: saveElements(elements)
+}));

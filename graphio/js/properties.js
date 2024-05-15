@@ -35,7 +35,7 @@ class ChangePropertyAction {
 }
 
 /** @template T */
-class Property {
+export class Property {
   /** @type {boolean} */
   #transient;
   /** @type {boolean} */

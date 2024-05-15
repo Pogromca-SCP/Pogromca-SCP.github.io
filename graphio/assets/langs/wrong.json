@@ -46,6 +46,29 @@
   "initial": {
     "Script": {
       "element": "Script",
+      "children": {
+        "Func1": {
+          "element": "Function",
+          "children": {
+            "Inner": {
+              "element": "Variable",
+              "properties": {
+                "Value": "hello"
+              }
+            }
+          },
+          "properties": {
+            "Name": "Func1"
+          }
+        },
+        "Var1": {
+          "element": "Variable",
+          "properties": {
+            "Name": "Var1",
+            "Value": "bruh"
+          }
+        }
+      },
       "properties": {
         "Name": "Script"
       }

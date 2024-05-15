@@ -1,19 +1,12 @@
 // @ts-check
-import { newProject } from "./explorer.js";
-import { loadFile, saveFile } from "./files.js";
+import { newProject, openProject, saveProject } from "./explorer.js";
 import { undoAction, redoAction } from "./history.js";
 import { showProperties, clearProperties } from "./properties.js";
 import settings from "./settings.js";
 
 window["newGraph"] = newProject;
-
-window["openGraph"] = () => {
-  loadFile(str => console.log(str), "application/json");
-};
-
-window["saveGraph"] = () => {
-  saveFile("test.json", JSON.stringify({}));
-};
+window["openGraph"] = openProject;
+window["saveGraph"] = saveProject;
 
 window.addEventListener("beforeunload", e => {
   e.preventDefault();
@@ -36,10 +29,10 @@ document.addEventListener("keydown", e => {
 
   switch (e.key) {
     case "o":
-      loadFile(str => console.log(str), "application/json");
+      openProject();
       break;
     case "s":
-      saveFile("test.json", JSON.stringify({}));
+      saveProject();
       break;
     case "z":
       undoAction();
@@ -51,3 +44,5 @@ document.addEventListener("keydown", e => {
       break;
   }
 });
+
+newProject();
