@@ -59,12 +59,12 @@ export const loadElements = (el, defs) => {
       res[key] = loadProperty(propDef, tmp.properties[key]);
     }
 
+    if (!(res.Name instanceof TextProperty)) {
+      throw new Error(`Cannot load element: Missing name property.`);
+    }
+
     // @ts-ignore
     result[name] = res;
-  }
-
-  if (!(result.Name instanceof TextProperty)) {
-    throw new Error(`Cannot load element: Missing name property.`);
   }
 
   return result;
