@@ -79,6 +79,7 @@ const addElement = (el, list) => {
   });
 
   el.display.appendChild(document.createTextNode(name.getValue()));
+  el.display.onclick = e => showProperties(el.element.id, el);
   list.appendChild(el.root);
 };
 
