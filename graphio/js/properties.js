@@ -538,6 +538,7 @@ export const showProperties = (title, obj) => {
     const value = obj[key];
 
     if (value instanceof Property) {
+      showedProps.push(value);
       value.draw(key);
     }
   }
