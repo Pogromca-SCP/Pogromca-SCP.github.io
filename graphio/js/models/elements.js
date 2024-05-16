@@ -1,10 +1,10 @@
 // @ts-check
+import { NameProperty } from "../properties.js";
 import { loadProperty, saveProperty } from "./props.js";
 
 /**
  * @typedef {import("./props").PropertyValue} PropertyValue
  * @typedef {import("../explorer").ElementDefinition} ElementDefinition
- * @typedef {import("../properties").NameProperty} NameProperty
  * 
  * @typedef {Object} LangElement
  * @property {string} element
@@ -21,7 +21,7 @@ import { loadProperty, saveProperty } from "./props.js";
  * @property {HTMLOListElement} [list]
  */
 
-const reserved = ["element", "parent", "children", "root", "display", "list"];
+const reserved = ["element", "Name", "parent", "children", "root", "display", "list"];
 
 /**
  * @param {Record<string, LangElement>} elements
@@ -41,7 +41,7 @@ export const loadElements = (elements, definitions, parent) => {
       throw new Error(`Cannot load element: Missing definition for '${element.element}'.`);
     }
     
-    const res = /** @type {RuntimeLangElement} */ ({ element: def });
+    const res = { element: def, Name: new NameProperty(name, false, false) };
 
     if (parent !== undefined) {
       res.parent = parent;
@@ -59,7 +59,7 @@ export const loadElements = (elements, definitions, parent) => {
         throw new Error(`Cannot load element: Missing '${key}' property value.`);
       }
 
-      res[key] = loadProperty(propDef, value, key === "Name");
+      res[key] = loadProperty(propDef, value);
     }
 
     result[name] = res;
