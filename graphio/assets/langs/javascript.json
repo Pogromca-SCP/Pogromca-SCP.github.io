@@ -6,26 +6,16 @@
       "icon": "script",
       "editable": false,
       "addable": false,
-      "allowedChildren": ["Function", "Variable"],
-      "properties": {
-        "Name": {
-          "value": "Script",
-          "readonly": true
-        }
-      }
+      "allowedChildren": ["Function", "Variable", "Class"],
+      "properties": {}
     },
     "Function": {
       "id": "Function",
       "icon": "func",
       "editable": true,
       "addable": true,
-      "allowedChildren": ["Function", "Variable"],
-      "properties": {
-        "Name": {
-          "value": "Function",
-          "maxLength": 50
-        }
-      }
+      "allowedChildren": ["Variable"],
+      "properties": {}
     },
     "Variable": {
       "id": "Variable",
@@ -34,15 +24,19 @@
       "addable": true,
       "allowedChildren": [],
       "properties": {
-        "Name": {
-          "value": "Variable",
-          "maxLength": 50
-        },
         "Value": {
           "value": "test"
         }
       }
+    },
+    "Class": {
+      "id": "Class",
+      "icon": "class",
+      "editable": true,
+      "addable": true,
+      "allowedChildren": ["Variable", "Function"],
+      "properties": {}
     }
   },
-  "allowedRootChildren": []
+  "allowedRootChildren": ["Function", "Variable", "Class", "Script"]
 }

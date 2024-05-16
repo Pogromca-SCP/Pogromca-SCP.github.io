@@ -32,7 +32,7 @@ import { loadFile, saveFile } from "./files.js";
  */
 
 const explorer = /** @type {HTMLDivElement} */ (document.getElementById("explorer"));
-const languages = ["JavaScript", "Test"];
+const languages = ["JavaScript"];
 
 const project = {
   /** @type {null | LanguageDefinition} */
