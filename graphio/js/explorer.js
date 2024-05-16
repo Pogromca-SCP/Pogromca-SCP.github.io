@@ -134,6 +134,7 @@ const initialize = def => {
   explorer.appendChild(project.root);
 
   explorer.oncontextmenu = e => {
+    e.preventDefault();
     const buttons = [];
 
     for (const txt of ["Copy", "Paste", "Cut"]) {
