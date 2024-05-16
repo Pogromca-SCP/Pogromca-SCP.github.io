@@ -48,7 +48,7 @@ export class Property {
   #value;
   /** @type {T} */
   #default;
-  /** @type {((x: T) => void)[]} */
+  /** @type {((oldVal: T, newVal: T) => void)[]} */
   #listeners;
 
   /**
@@ -133,23 +133,22 @@ export class Property {
       return;
     }
 
-    const notify = this.#value !== newValue;
-    this.#value = newValue;
-    this.updateDisplay();
-
-    if (notify) {
+    if (this.#value !== newValue) {
       for (const listener of this.#listeners) {
-        listener(newValue);
+        listener(this.#value, newValue);
       }
     }
+
+    this.#value = newValue;
+    this.updateDisplay();
   }
 
-  /** @param {(x: T) => void} listener */
+  /** @param {(oldVal: T, newVal: T) => void} listener */
   addChangeListener(listener) {
     this.#listeners.push(listener);
   }
 
-  /** @param {(x: T) => void} listener */
+  /** @param {(oldVal: T, newVal: T) => void} listener */
   removeChangeListener(listener) {
     this.#listeners = this.#listeners.filter(lis => lis !== listener);
   }
@@ -456,6 +455,56 @@ export class TextProperty extends Property {
   /** @param {string} x */
   processValue(x) {
     return processText(x, this.#maxLength);
+  }
+}
+
+const nameMaxLength = 50;
+
+/** @extends Property<string> */
+export class NameProperty extends Property {
+  /** @type {null | ((oldVal: string, newVal: string) => boolean)} */
+  validator;
+
+  /**
+   * @param {string} defaultValue
+   * @param {boolean} isTransient
+   * @param {boolean} isReadonly
+   */
+  constructor(defaultValue, isTransient = false, isReadonly = false) {
+    super(processText(defaultValue, nameMaxLength), isTransient, isReadonly);
+    this.validator = null;
+  }
+
+  /** @param {string} x */
+  toString(x) {
+    return x;
+  }
+
+  /** @param {string} x */
+  processValue(x) {
+    return processText(x, nameMaxLength);
+  }
+
+  /** @param {string} newValue */
+  setValue(newValue) {
+    if (this.isReadonly()) {
+      return;
+    }
+
+    const val = this.processValue(newValue);
+    const oldVal = this.getValue();
+
+    if (this.validator !== null && !this.validator(this.getValue(), val)) {
+      this.transientUpdate(oldVal);
+      return;
+    }
+
+    if (this.isTransient() || oldVal === val) {
+      this.transientUpdate(val);
+      return;
+    }
+
+    doAction(new ChangePropertyAction(this, oldVal, val));
   }
 }
 

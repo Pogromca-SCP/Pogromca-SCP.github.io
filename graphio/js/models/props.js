@@ -1,5 +1,5 @@
 // @ts-check
-import { BooleanProperty, NumberProperty, NO_FLAGS, INTEGER, UNSIGNED, ALLOW_NAN, TextProperty } from "../properties.js";
+import { BooleanProperty, NumberProperty, NO_FLAGS, INTEGER, UNSIGNED, ALLOW_NAN, TextProperty, NameProperty } from "../properties.js";
 
 /**
  * @typedef {Object} PropertySettings
@@ -69,11 +69,22 @@ const loadTextProperty = (prop, value) => {
 };
 
 /**
+ * @param {PropertySettings & TextValue} prop
+ * @param {string} value
+ */
+const loadNameProperty = (prop, value) => {
+  const result = new NameProperty(prop.value, false, prop.readonly ?? false);
+  result.transientUpdate(value);
+  return result;
+};
+
+/**
  * @param {PropertyDefinition} prop
  * @param {PropertyValue} value
+ * @param {boolean} isName
  * @throws {Error}
  */
-export const loadProperty = (prop, value) => {
+export const loadProperty = (prop, value, isName) => {
   const type = typeof(value);
 
   if (type !== typeof(prop.value)) {
@@ -86,7 +97,8 @@ export const loadProperty = (prop, value) => {
     case "number":
       return loadNumberProperty(/** @type {PropertySettings & NumberValue} */ (prop), /** @type {number} */ (value));
     case "string":
-      return loadTextProperty(/** @type {PropertySettings & TextValue} */ (prop), /** @type {string} */ (value));
+      return isName ? loadNameProperty(/** @type {PropertySettings & TextValue} */ (prop), /** @type {string} */ (value))
+        : loadTextProperty(/** @type {PropertySettings & TextValue} */ (prop), /** @type {string} */ (value));
     default:
       throw new Error("Cannot load property: Unsupported property type.");
   }

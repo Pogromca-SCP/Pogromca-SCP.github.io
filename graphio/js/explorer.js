@@ -11,6 +11,7 @@ import { loadFile, saveFile } from "./files.js";
  * @typedef {import("./properties").TextProperty} TextProperty
  * 
  * @typedef {"class" | "func" | "module" | "script" | "var"} ElementType
+ * @typedef {"javascript"} LanguageID
  * 
  * @typedef {Object} ElementDefinition
  * @property {string} id
@@ -21,8 +22,9 @@ import { loadFile, saveFile } from "./files.js";
  * @property {Record<string, PropertyDefinition>} properties
  * 
  * @typedef {Object} LanguageDefinition
+ * @property {LanguageID} id
  * @property {Record<string, ElementDefinition>} elements
- * @property {Record<string, LangElement>} initial
+ * @property {string[]} allowedRootChildren
  * 
  * @typedef {Object} Project
  * @property {string} language
@@ -30,11 +32,16 @@ import { loadFile, saveFile } from "./files.js";
  */
 
 const explorer = /** @type {HTMLDivElement} */ (document.getElementById("explorer"));
-/** @type {Record<string, ElementDefinition>} */
-let language = {};
-/** @type {Record<string, RuntimeLangElement>} */
-let elements = {};
-let usedLanguage = "";
+const languages = ["JavaScript", "Test"];
+
+const project = {
+  /** @type {null | LanguageDefinition} */
+  language: null,
+  /** @type {Record<string, RuntimeLangElement>} */
+  elements: {},
+  /** @type {null | HTMLOListElement} */
+  root: null
+};
 
 /**
  * @param {RuntimeLangElement} el
@@ -60,51 +67,80 @@ const addElement = (el, list) => {
     el.root.appendChild(details);
   }
 
+  const iconSize = 17;
   const img = document.createElement("img");
-  img.width = 17;
-  img.height = 17;
+  img.width = iconSize;
+  img.height = iconSize;
   img.alt = `${el.element.id} icon`;
   img.src = `./assets/icons/${el.element.icon}.png`;
   el.display.appendChild(img);
   const name = el.Name;
+  const text = document.createTextNode(name.getValue());
+  el.display.appendChild(text);
+  el.display.onclick = e => showProperties(el.element.id, el);
+  el.display = text;
 
-  name.addChangeListener(n => {
-    if (el.display === undefined) {
-      return;
+  name.validator = (old, nw) => {
+    const parent = el.parent?.children ?? project.elements;
+
+    if (parent[nw] !== undefined) {
+      return false;
     }
 
-    el.display.innerHTML = "";
-    el.display.appendChild(img);
-    el.display.appendChild(document.createTextNode(n));
-  });
+    const tmp = parent[old];
+    delete parent[old];
+    parent[nw] = tmp;
 
-  el.display.appendChild(document.createTextNode(name.getValue()));
-  el.display.onclick = e => showProperties(el.element.id, el);
+    if (el.display !== undefined) {
+      el.display.nodeValue = nw;
+    }
+
+    return true;
+  };
+
   list.appendChild(el.root);
 };
 
-/**
- * @param {string} lang
- * @param {LanguageDefinition} def
- * @throws {Error}
- */
-const initialize = (lang, def) => {
-  usedLanguage = lang;
-  language = def.elements;
-  elements = loadElements(def.initial, language);
-  const list = document.createElement("ol");
-
-  for (const name in elements) {
-    addElement(elements[name], list);
+/** @param {RuntimeLangElement} el */
+const clearElement = el => {
+  if (el.children !== undefined) {
+    for (const key in el.children) {
+      clearElement(el.children[key]);
+    }
   }
 
-  explorer.appendChild(list);
+  el.root = undefined;
+  el.display = undefined;
+  el.list = undefined;
+};
+
+/** @param {RuntimeLangElement} el */
+const removeElement = el => {
+  if (el.root === undefined) {
+    return;
+  }
+
+  const list = el.parent?.list ?? project.root;
+
+  if (list === null) {
+    return;
+  }
+  
+  list.removeChild(el.root);
+  clearElement(el);
+};
+
+/** @param {LanguageDefinition} def */
+const initialize = def => {
+  project.language = def;
+  project.root = document.createElement("ol");
+  explorer.appendChild(project.root);
 };
 
 const clearProject = () => {
-  language = {};
-  elements = {};
-  usedLanguage = "";
+  project.language = null;
+  project.elements = {};
+  project.root = null;
   explorer.innerHTML = "";
   clearProperties();
   clearActionHistory();
@@ -136,7 +172,7 @@ const loadLang = async (lang, button, loader) => {
   try {
     const langDef = await loadLangDef(lang);
     explorer.innerHTML = "";
-    initialize(lang, langDef);
+    initialize(langDef);
   } catch (err) {
     console.error(err);
     button.hidden = false;
@@ -147,17 +183,18 @@ const loadLang = async (lang, button, loader) => {
 /** @param {string} str */
 const loadProject = async str => {
   try {
-    const project = /** @type {Project} */ (JSON.parse(str));
-    const langDef = await loadLangDef(project.language);
+    const projData = /** @type {Project} */ (JSON.parse(str));
+    const langDef = await loadLangDef(projData.language);
     clearProject();
-    initialize(project.language, langDef);
+    initialize(langDef);
+    project.elements = loadElements(projData.elements, project.language?.elements ?? {});
   } catch (err) {
     console.error(err);
   }
 };
 
 export const newProject = () => {
-  if (usedLanguage !== "" && !confirm("Did you save your project?")) {
+  if (project.language !== null && !confirm("Did you save your project?")) {
     return;
   }
 
@@ -171,7 +208,7 @@ export const newProject = () => {
   const select = document.createElement("select");
   select.id = id;
 
-  for (const lang of ["JavaScript", "Test", "Wrong"]) {
+  for (const lang of languages) {
     const option = document.createElement("option");
     option.value = lang.toLowerCase();
     option.selected = select.children.length === 0;
@@ -193,6 +230,6 @@ export const newProject = () => {
 export const openProject = () => loadFile(loadProject, "application/json");
 
 export const saveProject = () => saveFile("MyProject.json", JSON.stringify({
-  language: usedLanguage,
-  elements: saveElements(elements)
+  language: project.language?.id ?? "",
+  elements: saveElements(project.elements)
 }));

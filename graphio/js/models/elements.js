@@ -1,10 +1,10 @@
 // @ts-check
 import { loadProperty, saveProperty } from "./props.js";
-import { TextProperty } from "../properties.js";
 
 /**
  * @typedef {import("./props").PropertyValue} PropertyValue
  * @typedef {import("../explorer").ElementDefinition} ElementDefinition
+ * @typedef {import("../properties").NameProperty} NameProperty
  * 
  * @typedef {Object} LangElement
  * @property {string} element
@@ -13,79 +13,77 @@ import { TextProperty } from "../properties.js";
  * 
  * @typedef {Object} RuntimeLangElement
  * @property {ElementDefinition} element
- * @property {TextProperty} Name
+ * @property {NameProperty} Name
+ * @property {RuntimeLangElement} [parent]
  * @property {Record<string, RuntimeLangElement>} [children]
  * @property {HTMLLIElement} [root]
- * @property {HTMLElement} [display]
+ * @property {HTMLElement | Text} [display]
  * @property {HTMLOListElement} [list]
  */
 
-const reserved = ["element", "children", "root", "display", "list"];
+const reserved = ["element", "parent", "children", "root", "display", "list"];
 
 /**
- * @param {Record<string, LangElement>} el
- * @param {Record<string, ElementDefinition>} defs
+ * @param {Record<string, LangElement>} elements
+ * @param {Record<string, ElementDefinition>} definitions
+ * @param {RuntimeLangElement} [parent]
  * @throws {Error}
  */
-export const loadElements = (el, defs) => {
+export const loadElements = (elements, definitions, parent) => {
   /** @type {Record<string, RuntimeLangElement>} */
   const result = {};
 
-  for (const name in el) {
-    const tmp = el[name];
-    const def = defs[tmp.element];
+  for (const name in elements) {
+    const element = elements[name];
+    const def = definitions[element.element];
 
     if (def === undefined) {
-      throw new Error(`Cannot load element: Missing definition for '${tmp.element}'.`);
+      throw new Error(`Cannot load element: Missing definition for '${element.element}'.`);
     }
     
-    const res = { element: def };
+    const res = /** @type {RuntimeLangElement} */ ({ element: def });
 
-    if (tmp.children !== undefined) {
-      res.children = loadElements(tmp.children, defs);
+    if (parent !== undefined) {
+      res.parent = parent;
     }
 
-    for (const key in tmp.properties ?? {}) {
-      if (reserved.includes(key)) {
-        throw new Error(`Cannot load property: Invalid property name '${key}' uses reserved word.`);
-      }
+    if (element.children !== undefined) {
+      res.children = loadElements(element.children, definitions, res);
+    }
 
+    for (const key in def.properties) {
       const propDef = def.properties[key];
+      const value = element.properties[key];
 
-      if (propDef === undefined) {
-        throw new Error(`Cannot load property: Missing definition for '${key}'.`);
+      if (value === undefined) {
+        throw new Error(`Cannot load element: Missing '${key}' property value.`);
       }
 
-      res[key] = loadProperty(propDef, tmp.properties[key]);
+      res[key] = loadProperty(propDef, value, key === "Name");
     }
 
-    if (!(res.Name instanceof TextProperty)) {
-      throw new Error(`Cannot load element: Missing name property.`);
-    }
-
-    // @ts-ignore
     result[name] = res;
   }
 
   return result;
 };
 
-/** @param {Record<string, RuntimeLangElement>} el */
-export const saveElements = el => {
+/** @param {Record<string, RuntimeLangElement>} elements */
+export const saveElements = elements => {
   /** @type {Record<string, LangElement>} */
   const result = {};
 
-  for (const name in el) {
-    const tmp = el[name];
-    const res = { element: tmp.element.id, properties: {} };
+  for (const name in elements) {
+    const element = elements[name];
+    const res = { element: element.element.id, properties: {} };
 
-    if (tmp.children !== undefined) {
-      res.children = saveElements(tmp.children);
+    if (element.children !== undefined) {
+      res.children = saveElements(element.children);
     }
 
-    for (const key in tmp) {
+    for (const key in element) {
       if (!reserved.includes(key)) {
-        res.properties[key] = saveProperty(tmp[key]);
+        res.properties[key] = saveProperty(element[key]);
       }
     }
 

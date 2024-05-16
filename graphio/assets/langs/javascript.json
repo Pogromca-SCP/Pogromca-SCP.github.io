@@ -1,4 +1,5 @@
 {
+  "id": "javascript",
   "elements": {
     "Script": {
       "id": "Script",
@@ -43,12 +44,5 @@
       }
     }
   },
-  "initial": {
-    "Script": {
-      "element": "Script",
-      "properties": {
-        "Name": "Script"
-      }
-    }
-  }
+  "allowedRootChildren": []
 }
