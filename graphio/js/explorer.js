@@ -79,14 +79,9 @@ const addElement = (el, list) => {
   el.display.appendChild(text);
   el.display.onclick = e => showProperties(el.element.id, el);
   el.display = text;
+  name.namespace = el.parent?.children ?? project.elements;
 
-  name.validator = (old, nw) => {
-    const parent = el.parent?.children ?? project.elements;
-
-    if (parent[nw] !== undefined) {
-      return false;
-    }
-
+  name.addChangeListener((old, nw) => {
     const tmp = parent[old];
     delete parent[old];
     parent[nw] = tmp;
@@ -94,9 +89,7 @@ const addElement = (el, list) => {
     if (el.display !== undefined) {
       el.display.nodeValue = nw;
     }
-
-    return true;
-  };
+  });
 
   list.appendChild(el.root);
 };

@@ -462,8 +462,8 @@ const nameMaxLength = 50;
 
 /** @extends Property<string> */
 export class NameProperty extends Property {
-  /** @type {null | ((oldVal: string, newVal: string) => boolean)} */
-  validator;
+  /** @type {null | Record<string, unknown>} */
+  namespace;
 
   /**
    * @param {string} defaultValue
@@ -472,7 +472,7 @@ export class NameProperty extends Property {
    */
   constructor(defaultValue, isTransient = false, isReadonly = false) {
     super(processText(defaultValue, nameMaxLength), isTransient, isReadonly);
-    this.validator = null;
+    this.namespace = null;
   }
 
   /** @param {string} x */
@@ -494,7 +494,7 @@ export class NameProperty extends Property {
     const val = this.processValue(newValue);
     const oldVal = this.getValue();
 
-    if (this.validator !== null && !this.validator(this.getValue(), val)) {
+    if (this.namespace !== null && this.namespace[val] !== undefined) {
       this.transientUpdate(oldVal);
       return;
     }
