@@ -82,6 +82,7 @@ const addElement = (el, list) => {
   name.namespace = el.parent?.children ?? project.elements;
 
   name.addChangeListener((old, nw) => {
+    const parent = el.parent?.children ?? project.elements;
     const tmp = parent[old];
     delete parent[old];
     parent[nw] = tmp;
@@ -102,6 +103,8 @@ const clearElement = el => {
     }
   }
 
+  el.Name.namespace = null;
+  el.Name.clearChangeListeners();
   el.root = undefined;
   el.display = undefined;
   el.list = undefined;
