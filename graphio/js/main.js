@@ -3,6 +3,7 @@ import { newProject, openProject, saveProject } from "./explorer.js";
 import { undoAction, redoAction } from "./history.js";
 import { showProperties, clearProperties } from "./properties.js";
 import settings from "./settings.js";
+import { closeContextMenu } from "./menu.js";
 
 window["newGraph"] = newProject;
 window["openGraph"] = openProject;
@@ -18,6 +19,7 @@ window["redoAction"] = redoAction;
 
 window["clearProps"] = clearProperties;
 window["openSettings"] = () => showProperties("Settings", settings);
+window["closeMenu"] = closeContextMenu;
 
 document.addEventListener("keydown", e => {
   if (!e.ctrlKey) {

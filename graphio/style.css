@@ -39,7 +39,7 @@ nav {
   border-bottom: var(--nav-border);
 }
 
-nav > ol, nav > ol > li > ul {
+nav > ol, nav > ol > li > ul, #context-menu {
   list-style-type: none;
   padding: 0;
   margin: 0;
@@ -65,11 +65,11 @@ noscript > li {
   background-color: #aa0000;
 }
 
-nav > ol > li, nav > ol > li > ul > li {
+nav > ol > li, nav > ol > li > ul > li, #context-menu > li {
   background-color: var(--color-bg-primary);
 }
 
-nav > ol > li:hover, nav > ol > li > ul > li:hover {
+nav > ol > li:hover, nav > ol > li > ul > li:hover, #context-menu > li:hover {
   background-color: var(--color-bg-inputs);
 }
 
@@ -83,23 +83,23 @@ nav > ol > li:hover > ul {
   display: block;
 }
 
-nav > ol > li > ul > li {
+nav > ol > li > ul > li, #context-menu > li {
   text-align: start;
   padding: 0.5rem;
   border-left: var(--nav-border);
   border-right: var(--nav-border);
 }
 
-nav > ol > li > ul > li:empty {
+nav > ol > li > ul > li:empty, #context-menu > li:empty {
   border-top: var(--nav-border);
   padding: 0;
 }
 
-nav > ol > li > ul > li:first-of-type {
+nav > ol > li > ul > li:first-of-type, #context-menu > li:first-of-type {
   border-top: var(--nav-border);
 }
 
-nav > ol > li > ul > li:last-of-type {
+nav > ol > li > ul > li:last-of-type, #context-menu > li:last-of-type {
   border-bottom: var(--nav-border);
 }
 
@@ -226,4 +226,9 @@ li > img, summary > img {
 
 #graph {
   width: 100%;
+}
+
+#context-menu {
+  position: fixed;
+  z-index: 50;
 }

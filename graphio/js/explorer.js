@@ -1,5 +1,6 @@
 // @ts-check
 import { loadElements, saveElements } from "./models/elements.js";
+import { showContextMenu } from "./menu.js";
 import { showProperties, clearProperties } from "./properties.js";
 import { clearActionHistory } from "./history.js";
 import { loadFile, saveFile } from "./files.js";
@@ -131,6 +132,18 @@ const initialize = def => {
   project.language = def;
   project.root = document.createElement("ol");
   explorer.appendChild(project.root);
+
+  explorer.oncontextmenu = e => {
+    const buttons = [];
+
+    for (const txt of ["Copy", "Paste", "Cut"]) {
+      const li = document.createElement("li");
+      li.innerText = txt;
+      buttons.push(li);
+    }
+
+    showContextMenu(e.clientX, e.clientY, buttons);
+  };
 };
 
 const clearProject = () => {
@@ -138,6 +151,7 @@ const clearProject = () => {
   project.elements = {};
   project.root = null;
   explorer.innerHTML = "";
+  explorer.oncontextmenu = null;
   clearProperties();
   clearActionHistory();
 };

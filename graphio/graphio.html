@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="./style.css" />
 </head>
 
-<body>
+<body onclick="closeMenu();">
   <nav>
     <ol>
       <li>
@@ -46,6 +46,7 @@
     <div id="graph" onclick="clearProps();"></div>
   </main>
   <input id="file-upload" type="file" hidden />
+  <ul id="context-menu" hidden></ul>
   <script src="./js/main.js" type="module"></script>
 </body>
 
