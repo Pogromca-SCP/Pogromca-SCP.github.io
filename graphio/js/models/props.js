@@ -1,9 +1,11 @@
 // @ts-check
-import { BooleanProperty, NumberProperty, NO_FLAGS, INTEGER, UNSIGNED, ALLOW_NAN, TextProperty } from "../properties.js";
+import { NO_FLAGS, TRANSIENT, READONLY, RESETABLE, BooleanProperty, NumberProperty, INTEGER, UNSIGNED, ALLOW_NAN, TextProperty } from "../properties.js";
 
 /**
  * @typedef {Object} PropertySettings
  * @property {boolean} [readonly]
+ * @property {boolean} [transient]
+ * @property {boolean} [resetable]
  * 
  * @typedef {Object} BooleanValue
  * @property {boolean} value
@@ -24,12 +26,31 @@ import { BooleanProperty, NumberProperty, NO_FLAGS, INTEGER, UNSIGNED, ALLOW_NAN
  * @typedef {boolean | number | string} PropertyValue
  */
 
+/** @param {PropertySettings} prop */
+const loadMetaflags = prop => {
+  let metaflags = NO_FLAGS;
+
+  if (prop.transient) {
+    metaflags |= TRANSIENT;
+  }
+
+  if (prop.readonly) {
+    metaflags |= READONLY;
+  }
+
+  if (prop.resetable) {
+    metaflags |= RESETABLE;
+  }
+
+  return metaflags;
+};
+
 /**
  * @param {PropertySettings & BooleanValue} prop
  * @param {boolean} value
  */
 const loadBooleanProperty = (prop, value) => {
-  const result = new BooleanProperty(prop.value, false, prop.readonly ?? false);
+  const result = new BooleanProperty(prop.value, loadMetaflags(prop));
   result.transientUpdate(value);
   return result;
 };
@@ -53,7 +74,7 @@ const loadNumberProperty = (prop, value) => {
     flags |= ALLOW_NAN;
   }
 
-  const result = new NumberProperty(prop.value, flags, prop.min ?? null, prop.max ?? null, false, prop.readonly ?? false);
+  const result = new NumberProperty(prop.value, flags, prop.min ?? null, prop.max ?? null, loadMetaflags(prop));
   result.transientUpdate(value);
   return result;
 };
@@ -63,7 +84,7 @@ const loadNumberProperty = (prop, value) => {
  * @param {string} value
  */
 const loadTextProperty = (prop, value) => {
-  const result = new TextProperty(prop.value, prop.maxLength ?? null, false, prop.readonly ?? false);
+  const result = new TextProperty(prop.value, prop.maxLength ?? null, loadMetaflags(prop));
   result.transientUpdate(value);
   return result;
 };

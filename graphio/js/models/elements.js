@@ -41,7 +41,7 @@ export const loadElements = (elements, definitions, parent) => {
       throw new Error(`Cannot load element: Missing definition for '${element.element}'.`);
     }
     
-    const res = { element: def, Name: new NameProperty(name, false, false) };
+    const res = { element: def, Name: new NameProperty(name) };
 
     if (parent !== undefined) {
       res.parent = parent;
