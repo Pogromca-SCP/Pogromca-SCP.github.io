@@ -187,7 +187,13 @@ const loadProject = async str => {
     const langDef = await loadLangDef(projData.language);
     clearProject();
     initialize(langDef);
-    project.elements = loadElements(projData.elements, project.language?.elements ?? {});
+    // @ts-ignore
+    project.elements = loadElements(projData.elements, project.language.elements);
+    
+    for (const name in project.elements) {
+      // @ts-ignore
+      addElement(project.elements[name], project.root);
+    }
   } catch (err) {
     console.error(err);
   }
