@@ -19,10 +19,7 @@ window["redoAction"] = redoAction;
 
 window["clearProps"] = clearProperties;
 window["openSettings"] = () => showProperties("Settings", settings);
-window["closeMenu"] = () => {
-  clearProperties();
-  closeContextMenu();
-};
+window["closeMenu"] = closeContextMenu;
 
 document.addEventListener("keydown", e => {
   if (!e.ctrlKey) {

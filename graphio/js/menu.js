@@ -2,15 +2,38 @@
 const menu = /** @type {HTMLUListElement} */ (document.getElementById("context-menu"));
 
 /**
+ * @typedef {Object} MenuElement
+ * @property {string} name
+ * @property {(e: MouseEvent) => void} handler
+ * 
+ * @typedef {Object} MenuSection
+ * @property {MenuElement[]} elements
+ */
+
+/**
  * @param {number} x 
  * @param {number} y 
- * @param  {HTMLLIElement[]} items
+ * @param  {MenuSection[]} items
  */
 export const showContextMenu = (x, y, items) => {
   menu.innerHTML = "";
+  let i = 0;
 
-  for (const item of items) {
-    menu.appendChild(item);
+  while (i < items.length) {
+    const section = items[i];
+
+    for (const element of section.elements) {
+      const li = document.createElement("li");
+      li.innerText = element.name;
+      li.onclick = element.handler;
+      menu.appendChild(li);
+    }
+
+    ++i;
+
+    if (i < items.length) {
+      menu.appendChild(document.createElement("li"));
+    }
   }
 
   menu.style.left = `${x}px`;

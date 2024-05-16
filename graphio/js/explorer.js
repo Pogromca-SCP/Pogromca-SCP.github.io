@@ -138,9 +138,12 @@ const initialize = def => {
     const buttons = [];
 
     for (const txt of ["Copy", "Paste", "Cut"]) {
-      const li = document.createElement("li");
-      li.innerText = txt;
-      buttons.push(li);
+      buttons.push({
+        elements: [{
+          name: txt,
+          handler: console.log
+        }]
+      });
     }
 
     showContextMenu(e.clientX, e.clientY, buttons);
