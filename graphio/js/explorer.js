@@ -1,5 +1,5 @@
 // @ts-check
-import { loadElements, saveElements } from "./models/elements.js";
+import { makeElement, loadElement, saveElement } from "./models/elements.js";
 import { showContextMenu } from "./menu.js";
 import { showProperties, clearProperties } from "./properties.js";
 import { clearActionHistory } from "./history.js";
@@ -134,19 +134,36 @@ const initialize = def => {
   explorer.appendChild(project.root);
 
   explorer.oncontextmenu = e => {
-    e.preventDefault();
-    const buttons = [];
-
-    for (const txt of ["Copy", "Paste", "Cut"]) {
-      buttons.push({
-        elements: [{
-          name: txt,
-          handler: console.log
-        }]
-      });
+    if (project.language === null) {
+      return;
     }
 
-    showContextMenu(e.clientX, e.clientY, buttons);
+    e.preventDefault();
+    const actions = [];
+
+    for (const name in project.language.elements) {
+      const el = project.language.elements[name];
+
+      const action = {
+        name: `Add ${name.toLowerCase()}}`
+      };
+
+      if (project.language.allowedRootChildren.includes(name)) {
+        action.handler = ev => {
+          if (project.root === null) {
+            return;
+          }
+
+          const tmp = makeElement(el);
+          project.elements[tmp.Name.getValue()] = tmp;
+          addElement(tmp, project.root);
+        };
+      }
+
+      actions.push(action);
+    }
+
+    showContextMenu(e.clientX, e.clientY, [actions]);
   };
 };
 
@@ -201,16 +218,29 @@ const loadProject = async str => {
     const langDef = await loadLangDef(projData.language);
     clearProject();
     initialize(langDef);
-    // @ts-ignore
-    project.elements = loadElements(projData.elements, project.language.elements);
-    
-    for (const name in project.elements) {
-      // @ts-ignore
-      addElement(project.elements[name], project.root);
+
+    if (project.language === null || project.root === null) {
+      throw new Error("Initialization failed.");
+    }
+
+    for (const name in projData.elements) {
+      const element = loadElement(projData.elements[name], project.language.elements, undefined, name);
+      project.elements[name] = element;
+      addElement(element, project.root);
     }
   } catch (err) {
     console.error(err);
   }
+};
+
+const saveProjectElements = () => {
+  const result = {};
+
+  for (const name in project.elements) {
+    result[name] = saveElement(project.elements[name]);
+  }
+
+  return result;
 };
 
 export const newProject = () => {
@@ -251,5 +281,5 @@ export const openProject = () => loadFile(loadProject, "application/json");
 
 export const saveProject = () => saveFile("MyProject.json", JSON.stringify({
   language: project.language?.id ?? "",
-  elements: saveElements(project.elements)
+  elements: saveProjectElements()
 }));

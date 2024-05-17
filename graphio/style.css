@@ -105,6 +105,9 @@ nav > ol > li > ul > li:last-of-type, #context-menu > li:last-of-type {
 
 nav > ol > li > ul > li > span {
   margin-left: 0.5rem;
+}
+
+nav > ol > li > ul > li > span, #context-menu > li > span {
   color: #666666;
 }
 

@@ -21,29 +21,25 @@ window["clearProps"] = clearProperties;
 window["openSettings"] = () => showProperties("Settings", settings);
 window["closeMenu"] = closeContextMenu;
 
+/** @type {Record<string, () => void>} */
+const binds = {
+  o: openProject,
+  s: saveProject,
+  z: undoAction,
+  y: redoAction
+};
+
 document.addEventListener("keydown", e => {
   if (!e.ctrlKey) {
     return;
   }
 
-  e.preventDefault();
-  e.stopPropagation();
+  const op = binds[e.key];
 
-  switch (e.key) {
-    case "o":
-      openProject();
-      break;
-    case "s":
-      saveProject();
-      break;
-    case "z":
-      undoAction();
-      break;
-    case "y":
-      redoAction();
-      break;
-    default:
-      break;
+  if (op !== undefined) {
+    e.preventDefault();
+    e.stopPropagation();
+    op();
   }
 });
 

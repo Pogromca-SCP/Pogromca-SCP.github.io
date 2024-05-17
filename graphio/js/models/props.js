@@ -45,21 +45,13 @@ const loadMetaflags = prop => {
   return metaflags;
 };
 
-/**
- * @param {PropertySettings & BooleanValue} prop
- * @param {boolean} value
- */
-const loadBooleanProperty = (prop, value) => {
-  const result = new BooleanProperty(prop.value, loadMetaflags(prop));
-  result.transientUpdate(value);
-  return result;
+/** @param {PropertySettings & BooleanValue} prop */
+const loadBooleanProperty = prop => {
+  return new BooleanProperty(prop.value, loadMetaflags(prop));
 };
 
-/**
- * @param {PropertySettings & NumberValue} prop
- * @param {number} value
- */
-const loadNumberProperty = (prop, value) => {
+/** @param {PropertySettings & NumberValue} prop */
+const loadNumberProperty = prop => {
   let flags = NO_FLAGS;
 
   if (prop.integer) {
@@ -74,19 +66,29 @@ const loadNumberProperty = (prop, value) => {
     flags |= ALLOW_NAN;
   }
 
-  const result = new NumberProperty(prop.value, flags, prop.min ?? null, prop.max ?? null, loadMetaflags(prop));
-  result.transientUpdate(value);
-  return result;
+  return new NumberProperty(prop.value, flags, prop.min ?? null, prop.max ?? null, loadMetaflags(prop));
+};
+
+/** @param {PropertySettings & TextValue} prop */
+const loadTextProperty = prop => {
+  return new TextProperty(prop.value, prop.maxLength ?? null, loadMetaflags(prop));
 };
 
 /**
- * @param {PropertySettings & TextValue} prop
- * @param {string} value
+ * @param {PropertyDefinition} prop
+ * @throws {Error}
  */
-const loadTextProperty = (prop, value) => {
-  const result = new TextProperty(prop.value, prop.maxLength ?? null, loadMetaflags(prop));
-  result.transientUpdate(value);
-  return result;
+export const makeProperty = prop => {
+  switch (typeof(prop.value)) {
+    case "boolean":
+      return loadBooleanProperty(/** @type {PropertySettings & BooleanValue} */ (prop));
+    case "number":
+      return loadNumberProperty(/** @type {PropertySettings & NumberValue} */ (prop));
+    case "string":
+      return loadTextProperty(/** @type {PropertySettings & TextValue} */ (prop));
+    default:
+      throw new Error("Cannot make property: Unsupported property type.");
+  }
 };
 
 /**
@@ -103,11 +105,17 @@ export const loadProperty = (prop, value) => {
 
   switch (type) {
     case "boolean":
-      return loadBooleanProperty(/** @type {PropertySettings & BooleanValue} */ (prop), /** @type {boolean} */ (value));
+      const bool = loadBooleanProperty(/** @type {PropertySettings & BooleanValue} */ (prop));
+      bool.transientUpdate(/** @type {boolean} */ (value));
+      return bool;
     case "number":
-      return loadNumberProperty(/** @type {PropertySettings & NumberValue} */ (prop), /** @type {number} */ (value));
+      const num = loadNumberProperty(/** @type {PropertySettings & NumberValue} */ (prop));
+      num.transientUpdate(/** @type {number} */ (value));
+      return num;
     case "string":
-      return loadTextProperty(/** @type {PropertySettings & TextValue} */ (prop), /** @type {string} */ (value));
+      const text = loadTextProperty(/** @type {PropertySettings & TextValue} */ (prop));
+      text.transientUpdate(/** @type {string} */ (value));
+      return text;
     default:
       throw new Error("Cannot load property: Unsupported property type.");
   }
@@ -116,6 +124,5 @@ export const loadProperty = (prop, value) => {
 /**
  * @template T
  * @param {import("../properties").Property<T>} prop 
- * @returns {T}
  */
 export const saveProperty = prop => prop.getValue();
