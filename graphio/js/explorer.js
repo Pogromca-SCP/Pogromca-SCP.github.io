@@ -221,8 +221,10 @@ const initialize = def => {
         }
 
         const tmp = makeElement(el);
-        addElement(tmp);
-        showElement(tmp, project.root);
+
+        if (addElement(tmp)) {
+          showElement(tmp, project.root);
+        }
       }
     });
   }
@@ -294,8 +296,10 @@ const loadProject = async str => {
 
     for (const name in projData.elements) {
       const element = loadElement(projData.elements[name], project.language.elements, undefined, name);
-      addElement(element);
-      showElement(element, project.root);
+
+      if (addElement(element)) {
+        showElement(element, project.root);
+      }
     }
   } catch (err) {
     console.error(err);
