@@ -4,7 +4,7 @@ const menu = /** @type {HTMLUListElement} */ (document.getElementById("context-m
 /**
  * @typedef {Object} MenuElement
  * @property {string} name
- * @property {(e: MouseEvent) => void} [handler]
+ * @property {(e: MouseEvent) => void} handler
  * 
  * @typedef {MenuElement[]} MenuSection
  */
@@ -15,6 +15,10 @@ const menu = /** @type {HTMLUListElement} */ (document.getElementById("context-m
  * @param  {MenuSection[]} items
  */
 export const showContextMenu = (x, y, items) => {
+  if (items.length < 1) {
+    return;
+  }
+
   menu.innerHTML = "";
   let i = 0;
 
@@ -23,16 +27,8 @@ export const showContextMenu = (x, y, items) => {
 
     for (const element of section) {
       const li = document.createElement("li");
-
-      if (element.handler === undefined) {
-        const span = document.createElement("span");
-        span.innerText = element.name;
-        li.appendChild(span);
-      } else {
-        li.innerText = element.name;
-        li.onclick = element.handler;
-      }
-
+      li.innerText = element.name;
+      li.onclick = element.handler;
       menu.appendChild(li);
     }
 

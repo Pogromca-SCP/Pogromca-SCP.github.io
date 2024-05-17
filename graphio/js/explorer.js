@@ -10,6 +10,7 @@ import { loadFile, saveFile } from "./files.js";
  * @typedef {import("./models/elements").LangElement} LangElement
  * @typedef {import("./models/elements").RuntimeLangElement} RuntimeLangElement
  * @typedef {import("./properties").TextProperty} TextProperty
+ * @typedef {import("./menu").MenuElement} MenuElement
  * 
  * @typedef {"class" | "func" | "module" | "script" | "var"} ElementType
  * @typedef {"javascript"} LanguageID
@@ -41,14 +42,20 @@ const project = {
   /** @type {Record<string, RuntimeLangElement>} */
   elements: {},
   /** @type {null | HTMLOListElement} */
-  root: null
+  root: null,
+  /** @type {MenuElement[][]} */
+  menu: []
 };
 
 /**
  * @param {RuntimeLangElement} el
  * @param {HTMLOListElement} list
  */
-const addElement = (el, list) => {
+const showElement = (el, list) => {
+  if (el.root !== undefined) {
+    return;
+  }
+
   el.root = document.createElement("li");
 
   if (el.children === undefined) {
@@ -61,7 +68,7 @@ const addElement = (el, list) => {
     el.list = document.createElement("ol");
 
     for (const ch in el.children) {
-      addElement(el.children[ch], el.list);
+      showElement(el.children[ch], el.list);
     }
 
     details.appendChild(el.list);
@@ -97,10 +104,10 @@ const addElement = (el, list) => {
 };
 
 /** @param {RuntimeLangElement} el */
-const clearElement = el => {
+const clearElementDisplay = el => {
   if (el.children !== undefined) {
     for (const key in el.children) {
-      clearElement(el.children[key]);
+      clearElementDisplay(el.children[key]);
     }
   }
 
@@ -112,7 +119,7 @@ const clearElement = el => {
 };
 
 /** @param {RuntimeLangElement} el */
-const removeElement = el => {
+const hideElement = el => {
   if (el.root === undefined) {
     return;
   }
@@ -124,7 +131,76 @@ const removeElement = el => {
   }
   
   list.removeChild(el.root);
-  clearElement(el);
+  clearElementDisplay(el);
+};
+
+/** @param {RuntimeLangElement} element */
+const addElement = element => {
+  if (project.language === null || project.root === null) {
+    return false;
+  }
+
+  const name = element.Name.getValue();
+
+  if (project.elements[name] !== undefined || !project.language.allowedRootChildren.includes(element.element.id)) {
+    return false;
+  }
+
+  project.elements[name] = element;
+  return true;
+};
+
+/** @param {RuntimeLangElement} element */
+const removeElement = element => {
+  const name = element.Name.getValue();
+
+  if (project.elements[name] !== element) {
+    return false;
+  }
+
+  delete project.elements[name];
+  return true;
+};
+
+/**
+ * @param {RuntimeLangElement} from
+ * @param {RuntimeLangElement} element
+ */
+const moveFromParent = (from, element) => {
+  if (project.language === null || project.root === null) {
+    return false;
+  }
+
+  const name = element.Name.getValue();
+
+  if (element.parent !== from || from.children === undefined || from.children[name] !== element || project.elements[name] !== undefined ||
+      !project.language.allowedRootChildren.includes(element.element.id)) {
+    return false;
+  }
+
+  project.elements[name] = element;
+  delete from.children[name];
+  element.parent = undefined;
+  return true;
+};
+
+/**
+ * @param {RuntimeLangElement} to
+ * @param {RuntimeLangElement} element
+ */
+const moveToParent = (to, element) => {
+  const name = element.Name.getValue();
+
+  if (element.parent !== undefined || project.elements[name] !== element || to.children?.[name] !== undefined ||
+      !to.element.allowedChildren.includes(element.element.id)) {
+    return false;
+  }
+
+  to.children ??= {};
+  to.children[name] = element;
+  delete project.elements[name];
+  element.parent = to;
+  return true;
 };
 
 /** @param {LanguageDefinition} def */
@@ -132,38 +208,30 @@ const initialize = def => {
   project.language = def;
   project.root = document.createElement("ol");
   explorer.appendChild(project.root);
+  const additions = [];
+
+  for (const name of project.language.allowedRootChildren) {
+    const el = project.language.elements[name];
+
+    additions.push({
+      name: `Add ${name.toLowerCase()}`,
+      handler: () => {
+        if (project.root === null) {
+          return;
+        }
+
+        const tmp = makeElement(el);
+        addElement(tmp);
+        showElement(tmp, project.root);
+      }
+    });
+  }
+
+  project.menu = [additions];
 
   explorer.oncontextmenu = e => {
-    if (project.language === null) {
-      return;
-    }
-
     e.preventDefault();
-    const actions = [];
-
-    for (const name in project.language.elements) {
-      const el = project.language.elements[name];
-
-      const action = {
-        name: `Add ${name.toLowerCase()}}`
-      };
-
-      if (project.language.allowedRootChildren.includes(name)) {
-        action.handler = ev => {
-          if (project.root === null) {
-            return;
-          }
-
-          const tmp = makeElement(el);
-          project.elements[tmp.Name.getValue()] = tmp;
-          addElement(tmp, project.root);
-        };
-      }
-
-      actions.push(action);
-    }
-
-    showContextMenu(e.clientX, e.clientY, [actions]);
+    showContextMenu(e.clientX, e.clientY, project.menu);
   };
 };
 
@@ -171,6 +239,7 @@ const clearProject = () => {
   project.language = null;
   project.elements = {};
   project.root = null;
+  project.menu = [];
   explorer.innerHTML = "";
   explorer.oncontextmenu = null;
   clearProperties();
@@ -225,8 +294,8 @@ const loadProject = async str => {
 
     for (const name in projData.elements) {
       const element = loadElement(projData.elements[name], project.language.elements, undefined, name);
-      project.elements[name] = element;
-      addElement(element, project.root);
+      addElement(element);
+      showElement(element, project.root);
     }
   } catch (err) {
     console.error(err);
