@@ -206,7 +206,7 @@ li > img, summary > img {
 
 #properties > div {
   display: flex;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
 }
 
 #properties > div > label, #properties > div > input, #properties > div > button {
