@@ -3,6 +3,7 @@ import { showProperties } from "../properties.js";
 import { showContextMenu } from "../menu.js";
 import { NameProperty } from "../properties.js";
 import { makeProperty, loadProperty, saveProperty } from "./props.js";
+import { doAction } from "../history.js";
 
 /**
  * @typedef {import("./props").PropertyValue} PropertyValue
@@ -175,6 +176,113 @@ const hideElement = el => {
   clearElementDisplay(el);
 };
 
+class AddRemoveChildAction {
+  /** @type {RuntimeLangElement} */
+  #parent;
+  /** @type {RuntimeLangElement} */
+  #child;
+  /** @type {boolean} */
+  #isRemove;
+
+  /**
+   * @param {RuntimeLangElement} parent
+   * @param {RuntimeLangElement} child
+   * @param {boolean} isRemove
+   */
+  constructor(parent, child, isRemove) {
+    this.#parent = parent;
+    this.#child = child;
+    this.#isRemove = isRemove;
+  }
+
+  do() {
+    if (this.#isRemove) {
+      this.#remove();
+    } else {
+      this.#add();
+    }
+  }
+
+  undo() {
+    if (this.#isRemove) {
+      this.#add();
+    } else {
+      this.#remove();
+    }
+  }
+
+  #add() {
+    this.#parent.children ??= {};
+    this.#parent.children[this.#child.name.getValue()] = this.#child;
+    this.#child.parent = this.#parent;
+    showElement(this.#child, this.#parent);
+  }
+
+  #remove() {
+    hideElement(this.#child);
+
+    if (this.#parent.children !== undefined) {
+      delete this.#parent.children[this.#child.name.getValue()];
+    }
+
+    this.#child.parent = undefined;
+
+    if (this.#parent.list === undefined) {
+      this.#parent.children = undefined;
+    }
+  }
+}
+
+class MoveChildAction {
+  /** @type {RuntimeLangElement} */
+  #from;
+  /** @type {RuntimeLangElement} */
+  #to;
+  /** @type {RuntimeLangElement} */
+  #element;
+
+  /**
+   * @param {RuntimeLangElement} from
+   * @param {RuntimeLangElement} to
+   * @param {RuntimeLangElement} element
+   */
+  constructor(from, to, element) {
+    this.#from = from;
+    this.#to = to;
+    this.#element = element;
+  }
+
+  do() {
+    this.#move(this.#from, this.#to);
+  }
+
+  undo() {
+    this.#move(this.#to, this.#from);
+  }
+
+  /**
+   * @param {RuntimeLangElement} from
+   * @param {RuntimeLangElement} to
+   */
+  #move(from, to) {
+    hideElement(this.#element);
+    const name = this.#element.name.getValue();
+    to.children ??= {};
+    to.children[name] = this.#element;
+
+    if (from.children !== undefined) {
+      delete from.children[name];
+    }
+
+    this.#element.parent = to;
+    showElement(this.#element, to);
+
+    if (from.list === undefined) {
+      from.children = undefined;
+    }
+  }
+}
+
 /**
  * @param {RuntimeLangElement} element
  * @param {LanguageDefinition} lang
@@ -244,10 +352,7 @@ export const addChild = (parent, element) => {
     return false;
   }
 
-  parent.children ??= {};
-  parent.children[name] = element;
-  element.parent = parent;
-  showElement(element, parent);
+  doAction(new AddRemoveChildAction(parent, element, false));
   return true;
 };
 
@@ -262,9 +367,7 @@ export const removeChild = (parent, element) => {
     return false;
   }
 
-  hideElement(element);
-  delete parent.children[name];
-  element.parent = undefined;
+  doAction(new AddRemoveChildAction(parent, element, true));
   return true;
 };
 
@@ -281,12 +384,7 @@ export const moveChild = (from, to, element) => {
     return false;
   }
 
-  hideElement(element);
-  to.children ??= {};
-  to.children[name] = element;
-  delete from.children[name];
-  element.parent = to;
-  showElement(element, to);
+  doAction(new MoveChildAction(from, to, element));
   return true;
 };
 
@@ -297,10 +395,10 @@ export const clearChildren = element => {
     return;
   }
 
+  removeList(element);
+
   for (const name in element.children) {
-    const el = element.children[name];
-    hideElement(el);
-    el.parent = undefined;
+    element.children[name].parent = undefined;
   }
 
   element.children = undefined;
