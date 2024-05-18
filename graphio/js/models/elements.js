@@ -74,6 +74,7 @@ const removeList = element => {
 
   element.root.innerHTML = "";
   element.root.className = "explorer-item";
+  element.list = undefined;
   makeDisplay(element, element.root);
 };
 
