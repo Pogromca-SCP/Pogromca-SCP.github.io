@@ -333,7 +333,7 @@ export const loadContextMenu = (element, lang) => {
       name: "Duplicate",
       handler: () => {
         if (element.parent !== undefined) {
-          addChild(element.parent, copyElement(element, lang, true));
+          addChild(element.parent, copyElement(element, lang));
         }
       },
       condition: () => isEditable(element)
@@ -448,11 +448,11 @@ export const clearChildren = element => {
 /**
  * @param {RuntimeLangElement} element
  * @param {LanguageDefinition} lang
- * @param {boolean} usePrompt
+ * @param {RuntimeLangElement} [parent]
  */
-export const copyElement = (element, lang, usePrompt) => {
+export const copyElement = (element, lang, parent) => {
   const orgName = element.name.getValue();
-  const input = usePrompt ? prompt("Name duplicate element:", orgName) : orgName;
+  const input = parent === undefined ? prompt("Name duplicate element:", orgName) : orgName;
 
   const result = {
     element: element.element,
@@ -463,6 +463,7 @@ export const copyElement = (element, lang, usePrompt) => {
 
   result.properties[nameKey] = result.name;
   loadContextMenu(result, lang);
+  result.parent = parent;
 
   if (result.name.getValue() === "") {
     result.name.transientUpdate(orgName);
@@ -472,7 +473,7 @@ export const copyElement = (element, lang, usePrompt) => {
     result.children = {};
 
     for (const childName in element.children) {
-      result.children[childName] = copyElement(element.children[childName], lang, false);
+      result.children[childName] = copyElement(element.children[childName], lang, parent);
     }
   }
 
