@@ -90,6 +90,7 @@ const showElement = (element, list) => {
 
   element.root.oncontextmenu = e => {
     e.preventDefault();
+    e.stopPropagation();
     showContextMenu(e.clientX, e.clientY, element.menu);
   };
 
