@@ -57,7 +57,12 @@ const makeDisplay = (element, display) => {
   display.appendChild(img);
   const text = document.createTextNode(element.name.getValue());
   display.appendChild(text);
-  display.onclick = e => showProperties(element.element.id, element.properties, !isEditable(element));
+
+  display.onclick = e => {
+    e.preventDefault();
+    showProperties(element.element.id, element.properties, !isEditable(element))
+  };
+
   element.display = text;
 };
 
@@ -333,7 +338,7 @@ export const loadContextMenu = (element, lang) => {
       name: "Duplicate",
       handler: () => {
         if (element.parent !== undefined) {
-          addChild(element.parent, copyElement(element, lang));
+          addChild(element.parent, copyElement(element, lang, true));
         }
       },
       condition: () => isEditable(element)
@@ -448,13 +453,15 @@ export const clearChildren = element => {
 /**
  * @param {RuntimeLangElement} element
  * @param {LanguageDefinition} lang
+ * @param {boolean} usePrompt
  */
-export const copyElement = (element, lang) => {
-  const input = prompt("Name duplicate element:", element.element.id);
+export const copyElement = (element, lang, usePrompt) => {
+  const orgName = element.name.getValue();
+  const input = usePrompt ? prompt("Name duplicate element:", orgName) : orgName;
 
   const result = {
     element: element.element,
-    name: new NameProperty(input ?? element.element.id),
+    name: new NameProperty(input ?? orgName),
     properties: {},
     menu: []
   };
@@ -463,14 +470,14 @@ export const copyElement = (element, lang) => {
   loadContextMenu(result, lang);
 
   if (result.name.getValue() === "") {
-    result.name.transientUpdate(element.element.id);
+    result.name.transientUpdate(orgName);
   }
 
   if (element.children !== undefined) {
     result.children = {};
 
     for (const childName in element.children) {
-      result.children[childName] = copyElement(element.children[childName], lang);
+      result.children[childName] = copyElement(element.children[childName], lang, false);
     }
   }
 
