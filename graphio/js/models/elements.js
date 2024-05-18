@@ -32,9 +32,56 @@ const nameKey = "Name";
 
 /**
  * @param {RuntimeLangElement} element
- * @param {HTMLOListElement} list
+ * @param {HTMLElement} display
  */
-const showElement = (element, list) => {
+const makeDisplay = (element, display) => {
+  const iconSize = 17;
+  const img = document.createElement("img");
+  img.width = iconSize;
+  img.height = iconSize;
+  img.alt = `${element.element.id} icon`;
+  img.src = `./assets/icons/${element.element.icon}.png`;
+  display.appendChild(img);
+  const text = document.createTextNode(element.name.getValue());
+  display.appendChild(text);
+  display.onclick = e => showProperties(element.element.id, element.properties);
+  element.display = text;
+};
+
+/** @param {RuntimeLangElement} element */
+const addList = element => {
+  if (element.root === undefined) {
+    return;
+  }
+
+  element.root.innerHTML = "";
+  element.root.className = "";
+  element.root.onclick = null;
+  const details = document.createElement("details");
+  element.display = document.createElement("summary");
+  details.appendChild(element.display);
+  element.list = document.createElement("ol");
+  details.appendChild(element.list);
+  element.root.appendChild(details);
+  makeDisplay(element, element.display);
+};
+
+/** @param {RuntimeLangElement} element */
+const removeList = element => {
+  if (element.root === undefined) {
+    return;
+  }
+
+  element.root.innerHTML = "";
+  element.root.className = "explorer-item";
+  makeDisplay(element, element.root);
+};
+
+/**
+ * @param {RuntimeLangElement} element
+ * @param {RuntimeLangElement} parent
+ */
+const showElement = (element, parent) => {
   if (element.root !== undefined) {
     return;
   }
@@ -51,25 +98,14 @@ const showElement = (element, list) => {
     element.list = document.createElement("ol");
 
     for (const ch in element.children) {
-      showElement(element.children[ch], element.list);
+      showElement(element.children[ch], element);
     }
 
     details.appendChild(element.list);
     element.root.appendChild(details);
   }
 
-  const iconSize = 17;
-  const img = document.createElement("img");
-  img.width = iconSize;
-  img.height = iconSize;
-  img.alt = `${element.element.id} icon`;
-  img.src = `./assets/icons/${element.element.icon}.png`;
-  element.display.appendChild(img);
   const name = element.name;
-  const text = document.createTextNode(name.getValue());
-  element.display.appendChild(text);
-  element.display.onclick = e => showProperties(element.element.id, element.properties);
-  element.display = text;
   name.namespace = element.parent?.children ?? null;
 
   name.addChangeListener((old, nw) => {
@@ -94,7 +130,11 @@ const showElement = (element, list) => {
     showContextMenu(e.clientX, e.clientY, element.menu);
   };
 
-  list.appendChild(element.root);
+  if (parent.list === undefined) {
+    addList(parent);
+  }
+
+  parent.list?.appendChild(element.root);
 };
 
 /** @param {RuntimeLangElement} el */
@@ -125,6 +165,11 @@ const hideElement = el => {
   }
   
   list.removeChild(el.root);
+
+  if (el.parent !== undefined && list.children.length < 1) {
+    removeList(el.parent);
+  }
+
   clearElementDisplay(el);
 };
 
@@ -200,11 +245,7 @@ export const addChild = (parent, element) => {
   parent.children ??= {};
   parent.children[name] = element;
   element.parent = parent;
-  
-  if (parent.list !== undefined) {
-    showElement(element, parent.list);
-  }
-
+  showElement(element, parent);
   return true;
 };
 
@@ -243,11 +284,7 @@ export const moveChild = (from, to, element) => {
   to.children[name] = element;
   delete from.children[name];
   element.parent = to;
-
-  if (to.list !== undefined) {
-    showElement(element, to.list);
-  }
-
+  showElement(element, to);
   return true;
 };
 
