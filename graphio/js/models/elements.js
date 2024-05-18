@@ -284,6 +284,18 @@ class MoveChildAction {
 }
 
 /**
+ * @param {AddRemoveChildAction | MoveChildAction} ac
+ * @param {boolean} transient
+ */
+const action = (ac, transient) => {
+  if (transient) {
+    ac.do();
+  } else {
+    doAction(ac);
+  }
+};
+
+/**
  * @param {RuntimeLangElement} element
  * @param {LanguageDefinition} lang
  */
@@ -344,30 +356,32 @@ export const makeElement = (def, lang) => {
 /**
  * @param {RuntimeLangElement} parent
  * @param {RuntimeLangElement} element
+ * @param {boolean} transient
  */
-export const addChild = (parent, element) => {
+export const addChild = (parent, element, transient = false) => {
   const name = element.name.getValue();
 
   if (element.parent !== undefined || parent.children?.[name] !== undefined || !parent.element.allowedChildren.includes(element.element.id)) {
     return false;
   }
 
-  doAction(new AddRemoveChildAction(parent, element, false));
+  action(new AddRemoveChildAction(parent, element, false), transient);
   return true;
 };
 
 /**
  * @param {RuntimeLangElement} parent
  * @param {RuntimeLangElement} element
+ * @param {boolean} transient
  */
-export const removeChild = (parent, element) => {
+export const removeChild = (parent, element, transient = false) => {
   const name = element.name.getValue();
 
   if (parent.children === undefined || parent.children[name] !== element) {
     return false;
   }
 
-  doAction(new AddRemoveChildAction(parent, element, true));
+  action(new AddRemoveChildAction(parent, element, true), transient);
   return true;
 };
 
@@ -375,8 +389,9 @@ export const removeChild = (parent, element) => {
  * @param {RuntimeLangElement} from
  * @param {RuntimeLangElement} to
  * @param {RuntimeLangElement} element
+ * @param {boolean} transient
  */
-export const moveChild = (from, to, element) => {
+export const moveChild = (from, to, element, transient = false) => {
   const name = element.name.getValue();
 
   if (element.parent !== from || from.children === undefined || from.children[name] !== element || to.children?.[name] !== undefined ||
@@ -384,7 +399,7 @@ export const moveChild = (from, to, element) => {
     return false;
   }
 
-  doAction(new MoveChildAction(from, to, element));
+  action(new MoveChildAction(from, to, element), transient);
   return true;
 };
 
@@ -428,7 +443,7 @@ export const loadElement = (element, lang, parent, name) => {
   result.properties[nameKey] = result.name;
   loadContextMenu(result, lang);
 
-  if (!addChild(parent, result)) {
+  if (!addChild(parent, result, true)) {
     throw new Error(`Cannot load element (${result.Name.getValue()}): Failed attach to parent.`);
   }
 
