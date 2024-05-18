@@ -329,7 +329,7 @@ export const saveElement = element => {
     }
   }
 
-  for (const key in element) {
+  for (const key in element.properties) {
     if (key !== nameKey) {
       result.properties[key] = saveProperty(element.properties[key]);
     }
