@@ -105,6 +105,7 @@ const showElement = (element, parent) => {
     element.root.appendChild(details);
   }
 
+  makeDisplay(element, element.display);
   const name = element.name;
   name.namespace = element.parent?.children ?? null;
 
