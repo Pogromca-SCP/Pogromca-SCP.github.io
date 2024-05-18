@@ -71,6 +71,10 @@ export class Property {
     this.#listeners = [];
   }
 
+  getMetaflags() {
+    return this.#meta;
+  }
+
   isTransient() {
     return (this.#meta & TRANSIENT) !== 0;
   }
@@ -208,9 +212,13 @@ export class Property {
     this.#reset = null;
   }
 
-  /** @param {string} name */
-  draw(name) {
+  /**
+   * @param {string} name
+   * @param {boolean} readonly
+   */
+  draw(name, readonly) {
     this.clearDisplay();
+    const isReadonly = this.isReadonly() || readonly;
     const id = `prop-${name}`;
     const element = document.createElement("div");
     const label = document.createElement("label");
@@ -220,11 +228,11 @@ export class Property {
     const input = document.createElement("input");
     input.id = id;
     input.type = this.getInputType();
-    input.disabled = this.isReadonly();
+    input.disabled = isReadonly;
     this.#display = input;
     element.appendChild(input);
     
-    if (!this.isReadonly()) {
+    if (!isReadonly) {
       input.onchange = input.type === "checkbox" ? e => this.setValue(input.checked ? "on" : "") : e => this.setValue(input.value);
 
       if (this.isResetable()) {
@@ -238,6 +246,11 @@ export class Property {
 
     props.appendChild(element);
     this.updateDisplay();
+  }
+
+  /** @returns {Property<T>} */
+  copy() {
+    throw new Error("Method 'copy' is not implemented.");
   }
 }
 
@@ -307,6 +320,12 @@ export class BooleanProperty extends Property {
     }
 
     this.setValue(this.getValue() ? "" : "on");
+  }
+
+  copy() {
+    const cp =  new BooleanProperty(this.getDefaultValue(), this.getMetaflags());
+    cp.transientUpdate(this.getValue());
+    return cp;
   }
 }
 
@@ -427,6 +446,12 @@ export class NumberProperty extends Property {
 
     this.setValue((this.getValue() - 1).toString());
   }
+
+  copy() {
+    const cp =  new NumberProperty(this.getDefaultValue(), this.getFlags(), this.getMinValue(), this.getMaxValue(), this.getMetaflags());
+    cp.transientUpdate(this.getValue());
+    return cp;
+  }
 }
 
 /**
@@ -469,9 +494,16 @@ export class TextProperty extends Property {
   processValue(x) {
     return processText(x, this.#maxLength);
   }
+
+  copy() {
+    const cp =  new TextProperty(this.getDefaultValue(), this.getMaxLength(), this.getMetaflags());
+    cp.transientUpdate(this.getValue());
+    return cp;
+  }
 }
 
 const nameMaxLength = 50;
+const namePattern = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
 /** @extends Property<string> */
 export class NameProperty extends Property {
@@ -482,7 +514,11 @@ export class NameProperty extends Property {
   constructor(value) {
     super("", NO_FLAGS);
     this.namespace = null;
-    this.transientUpdate(value);
+    value = this.processValue(value);
+
+    if (namePattern.test(value)) {
+      this.transientUpdate(value);
+    }
   }
 
   /** @param {string} x */
@@ -500,7 +536,7 @@ export class NameProperty extends Property {
     const val = this.processValue(newValue);
     const oldVal = this.getValue();
 
-    if (this.namespace !== null && this.namespace[val] !== undefined) {
+    if (!namePattern.test(val) || (this.namespace !== null && this.namespace[val] !== undefined)) {
       this.transientUpdate(oldVal);
       return;
     }
@@ -517,8 +553,9 @@ export class NameProperty extends Property {
 /**
  * @param {string} title
  * @param {unknown} obj
+ * @param {boolean} readonly
  */
-export const showProperties = (title, obj) => {
+export const showProperties = (title, obj, readonly = false) => {
   for (const prop of showedProps) {
     prop.clearDisplay();
   }
@@ -539,7 +576,7 @@ export const showProperties = (title, obj) => {
 
     if (value instanceof Property) {
       showedProps.push(value);
-      value.draw(key);
+      value.draw(key, readonly);
     }
   }
 };

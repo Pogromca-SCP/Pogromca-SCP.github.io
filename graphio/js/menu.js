@@ -5,6 +5,7 @@ const menu = /** @type {HTMLUListElement} */ (document.getElementById("context-m
  * @typedef {Object} MenuElement
  * @property {string} name
  * @property {(e: MouseEvent) => void} handler
+ * @property {() => boolean} [condition]
  * 
  * @typedef {MenuElement[]} MenuSection
  */
@@ -25,7 +26,7 @@ export const showContextMenu = (x, y, items) => {
   while (i < items.length) {
     const section = items[i];
 
-    for (const element of section) {
+    for (const element of section.filter(s => s.condition === undefined || s.condition())) {
       const li = document.createElement("li");
       li.innerText = element.name;
       li.onclick = element.handler;

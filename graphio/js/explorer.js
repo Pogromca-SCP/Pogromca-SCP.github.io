@@ -44,7 +44,7 @@ const project = {
     element: {
       id: "Root",
       icon: "script",
-      editable: false,
+      editable: true,
       addable: false,
       allowedChildren: [],
       properties: {}

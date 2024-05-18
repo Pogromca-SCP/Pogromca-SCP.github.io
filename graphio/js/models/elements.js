@@ -31,6 +31,18 @@ import { doAction } from "../history.js";
 
 const nameKey = "Name";
 
+/** @param {RuntimeLangElement} element */
+const isEditable = element => {
+  let result = element.element.editable;
+
+  while (result && element.parent !== undefined) {
+    element = element.parent;
+    result = element.element.editable;
+  }
+
+  return result;
+};
+
 /**
  * @param {RuntimeLangElement} element
  * @param {HTMLElement} display
@@ -45,7 +57,7 @@ const makeDisplay = (element, display) => {
   display.appendChild(img);
   const text = document.createTextNode(element.name.getValue());
   display.appendChild(text);
-  display.onclick = e => showProperties(element.element.id, element.properties);
+  display.onclick = e => showProperties(element.element.id, element.properties, isEditable(element));
   element.display = text;
 };
 
@@ -318,6 +330,14 @@ export const loadContextMenu = (element, lang) => {
 
   if (element.element.addable) {
     menu.push([{
+      name: "Duplicate",
+      handler: () => {
+        if (element.parent !== undefined) {
+          addChild(element.parent, copyElement(element, lang));
+        }
+      },
+      condition: () => isEditable(element)
+    }, {
       name: "Delete",
       handler: () => {
         if (element.parent !== undefined) {
@@ -336,9 +356,11 @@ export const loadContextMenu = (element, lang) => {
  * @throws {Error}
  */
 export const makeElement = (def, lang) => {
+  const input = prompt("Name new element:", def.id);
+
   const result = {
     element: def,
-    name: new NameProperty(def.id),
+    name: new NameProperty(input ?? def.id),
     properties: {},
     menu: []
   };
@@ -417,6 +439,40 @@ export const clearChildren = element => {
   }
 
   element.children = undefined;
+};
+
+/**
+ * @param {RuntimeLangElement} element
+ * @param {LanguageDefinition} lang
+ */
+export const copyElement = (element, lang) => {
+  const input = prompt("Name duplicate element:", element.element.id);
+
+  const result = {
+    element: element.element,
+    name: new NameProperty(input ?? element.element.id),
+    properties: {},
+    menu: []
+  };
+
+  result.properties[nameKey] = result.name;
+  loadContextMenu(result, lang);
+
+  if (element.children !== undefined) {
+    result.children = {};
+
+    for (const childName in element.children) {
+      result.children[childName] = copyElement(element.children[childName], lang);
+    }
+  }
+
+  for (const key in element.properties) {
+    if (key !== nameKey) {
+      result.properties[key] = element.properties[key].copy();
+    }
+  }
+
+  return result;
 };
 
 /**
