@@ -57,7 +57,7 @@ const makeDisplay = (element, display) => {
   display.appendChild(img);
   const text = document.createTextNode(element.name.getValue());
   display.appendChild(text);
-  display.onclick = e => showProperties(element.element.id, element.properties, isEditable(element));
+  display.onclick = e => showProperties(element.element.id, element.properties, !isEditable(element));
   element.display = text;
 };
 
