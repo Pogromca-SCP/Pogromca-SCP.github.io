@@ -1,7 +1,7 @@
 // @ts-check
-import { makeElement, loadElement, saveElement } from "./models/elements.js";
+import { loadContextMenu, clearChildren, loadElement, saveElement } from "./models/elements.js";
 import { showContextMenu } from "./menu.js";
-import { showProperties, clearProperties } from "./properties.js";
+import { NameProperty, clearProperties } from "./properties.js";
 import { clearActionHistory } from "./history.js";
 import { loadFile, saveFile } from "./files.js";
 
@@ -39,209 +39,41 @@ const languages = ["JavaScript"];
 const project = {
   /** @type {null | LanguageDefinition} */
   language: null,
-  /** @type {Record<string, RuntimeLangElement>} */
-  elements: {},
-  /** @type {null | HTMLOListElement} */
-  root: null,
-  /** @type {MenuElement[][]} */
-  menu: []
-};
-
-/**
- * @param {RuntimeLangElement} el
- * @param {HTMLOListElement} list
- */
-const showElement = (el, list) => {
-  if (el.root !== undefined) {
-    return;
+  /** @type {RuntimeLangElement} */
+  root: {
+    element: {
+      id: "Root",
+      icon: "script",
+      editable: false,
+      addable: false,
+      allowedChildren: [],
+      properties: {}
+    },
+    name: new NameProperty("Root"),
+    properties: {},
+    menu: []
   }
-
-  el.root = document.createElement("li");
-
-  if (el.children === undefined) {
-    el.root.className = "explorer-item";
-    el.display = el.root;
-  } else {
-    const details = document.createElement("details");
-    el.display = document.createElement("summary");
-    details.appendChild(el.display);
-    el.list = document.createElement("ol");
-
-    for (const ch in el.children) {
-      showElement(el.children[ch], el.list);
-    }
-
-    details.appendChild(el.list);
-    el.root.appendChild(details);
-  }
-
-  const iconSize = 17;
-  const img = document.createElement("img");
-  img.width = iconSize;
-  img.height = iconSize;
-  img.alt = `${el.element.id} icon`;
-  img.src = `./assets/icons/${el.element.icon}.png`;
-  el.display.appendChild(img);
-  const name = el.Name;
-  const text = document.createTextNode(name.getValue());
-  el.display.appendChild(text);
-  el.display.onclick = e => showProperties(el.element.id, el);
-  el.display = text;
-  name.namespace = el.parent?.children ?? project.elements;
-
-  name.addChangeListener((old, nw) => {
-    const parent = el.parent?.children ?? project.elements;
-    const tmp = parent[old];
-    delete parent[old];
-    parent[nw] = tmp;
-
-    if (el.display !== undefined) {
-      el.display.nodeValue = nw;
-    }
-  });
-
-  list.appendChild(el.root);
-};
-
-/** @param {RuntimeLangElement} el */
-const clearElementDisplay = el => {
-  if (el.children !== undefined) {
-    for (const key in el.children) {
-      clearElementDisplay(el.children[key]);
-    }
-  }
-
-  el.Name.namespace = null;
-  el.Name.clearChangeListeners();
-  el.root = undefined;
-  el.display = undefined;
-  el.list = undefined;
-};
-
-/** @param {RuntimeLangElement} el */
-const hideElement = el => {
-  if (el.root === undefined) {
-    return;
-  }
-
-  const list = el.parent?.list ?? project.root;
-
-  if (list === null) {
-    return;
-  }
-  
-  list.removeChild(el.root);
-  clearElementDisplay(el);
-};
-
-/** @param {RuntimeLangElement} element */
-const addElement = element => {
-  if (project.language === null || project.root === null) {
-    return false;
-  }
-
-  const name = element.Name.getValue();
-
-  if (project.elements[name] !== undefined || !project.language.allowedRootChildren.includes(element.element.id)) {
-    return false;
-  }
-
-  project.elements[name] = element;
-  return true;
-};
-
-/** @param {RuntimeLangElement} element */
-const removeElement = element => {
-  const name = element.Name.getValue();
-
-  if (project.elements[name] !== element) {
-    return false;
-  }
-
-  delete project.elements[name];
-  return true;
-};
-
-/**
- * @param {RuntimeLangElement} from
- * @param {RuntimeLangElement} element
- */
-const moveFromParent = (from, element) => {
-  if (project.language === null || project.root === null) {
-    return false;
-  }
-
-  const name = element.Name.getValue();
-
-  if (element.parent !== from || from.children === undefined || from.children[name] !== element || project.elements[name] !== undefined ||
-      !project.language.allowedRootChildren.includes(element.element.id)) {
-    return false;
-  }
-
-  project.elements[name] = element;
-  delete from.children[name];
-  element.parent = undefined;
-  return true;
-};
-
-/**
- * @param {RuntimeLangElement} to
- * @param {RuntimeLangElement} element
- */
-const moveToParent = (to, element) => {
-  const name = element.Name.getValue();
-
-  if (element.parent !== undefined || project.elements[name] !== element || to.children?.[name] !== undefined ||
-      !to.element.allowedChildren.includes(element.element.id)) {
-    return false;
-  }
-
-  to.children ??= {};
-  to.children[name] = element;
-  delete project.elements[name];
-  element.parent = to;
-  return true;
 };
 
 /** @param {LanguageDefinition} def */
 const initialize = def => {
   project.language = def;
-  project.root = document.createElement("ol");
-  explorer.appendChild(project.root);
-  const additions = [];
-
-  for (const name of project.language.allowedRootChildren) {
-    const el = project.language.elements[name];
-
-    additions.push({
-      name: `Add ${name.toLowerCase()}`,
-      handler: () => {
-        if (project.root === null) {
-          return;
-        }
-
-        const tmp = makeElement(el);
-
-        if (addElement(tmp)) {
-          showElement(tmp, project.root);
-        }
-      }
-    });
-  }
-
-  project.menu = [additions];
+  project.root.list = document.createElement("ol");
+  project.root.element.allowedChildren = project.language.allowedRootChildren;
+  explorer.appendChild(project.root.list);
+  loadContextMenu(project.root, project.language);
 
   explorer.oncontextmenu = e => {
     e.preventDefault();
-    showContextMenu(e.clientX, e.clientY, project.menu);
+    showContextMenu(e.clientX, e.clientY, project.root.menu);
   };
 };
 
 const clearProject = () => {
   project.language = null;
-  project.elements = {};
-  project.root = null;
-  project.menu = [];
+  project.root.element.allowedChildren = [];
+  clearChildren(project.root);
+  project.root.menu = [];
   explorer.innerHTML = "";
   explorer.oncontextmenu = null;
   clearProperties();
@@ -290,16 +122,12 @@ const loadProject = async str => {
     clearProject();
     initialize(langDef);
 
-    if (project.language === null || project.root === null) {
+    if (project.language === null) {
       throw new Error("Initialization failed.");
     }
 
     for (const name in projData.elements) {
-      const element = loadElement(projData.elements[name], project.language.elements, undefined, name);
-
-      if (addElement(element)) {
-        showElement(element, project.root);
-      }
+      loadElement(projData.elements[name], project.language, project.root, name);
     }
   } catch (err) {
     console.error(err);
@@ -309,8 +137,10 @@ const loadProject = async str => {
 const saveProjectElements = () => {
   const result = {};
 
-  for (const name in project.elements) {
-    result[name] = saveElement(project.elements[name]);
+  if (project.root.children !== undefined) {
+    for (const name in project.root.children) {
+      result[name] = saveElement(project.root.children[name]);
+    }
   }
 
   return result;
