@@ -367,6 +367,10 @@ export const makeElement = (def, lang) => {
 
   result.properties[nameKey] = result.name;
   loadContextMenu(result, lang);
+  
+  if (result.name.getValue() === "") {
+    result.name.transientUpdate(def.id);
+  }
 
   for (const key in def.properties) {
     result.properties[key] = makeProperty(def.properties[key]);
@@ -458,6 +462,10 @@ export const copyElement = (element, lang) => {
   result.properties[nameKey] = result.name;
   loadContextMenu(result, lang);
 
+  if (result.name.getValue() === "") {
+    result.name.transientUpdate(element.element.id);
+  }
+
   if (element.children !== undefined) {
     result.children = {};
 
@@ -498,6 +506,10 @@ export const loadElement = (element, lang, parent, name) => {
 
   result.properties[nameKey] = result.name;
   loadContextMenu(result, lang);
+
+  if (result.name.getValue() === "") {
+    result.name.transientUpdate(def.id);
+  }
 
   if (!addChild(parent, result, true)) {
     throw new Error(`Cannot load element (${result.Name.getValue()}): Failed attach to parent.`);
