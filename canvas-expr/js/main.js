@@ -16,6 +16,7 @@ const output = /** @type {HTMLDivElement} */ (document.getElementById("console")
 const runButton = /** @type {HTMLButtonElement} */ (document.getElementById("run"));
 const pixelsCount = /** @type {HTMLInputElement} */ (document.getElementById("count"));
 const pixelsSize = /** @type {HTMLInputElement} */ (document.getElementById("size"));
+const HIDDEN_CLASS = "hidden";
 
 /**
  * @typedef {Object} Pixel
@@ -115,13 +116,13 @@ const run = () => {
 const clearConsole = () => output.innerHTML = "";
 
 const showRef = () => {
-  popupContainer.hidden = false;
-  popupCover.hidden = false;
+  popupContainer.className = "";
+  popupCover.className = "";
 };
 
 const hideRef = () => {
-  popupContainer.hidden = true;
-  popupCover.hidden = true;
+  popupContainer.className = HIDDEN_CLASS;
+  popupCover.className = HIDDEN_CLASS;
 };
 
 /**

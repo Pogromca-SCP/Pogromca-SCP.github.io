@@ -13,7 +13,7 @@
 
 <body>
   <noscript><h1>JavaScript is disabled or not supported!</h1></noscript>
-  <div id="popup-container" hidden>
+  <div id="popup-container" class="hidden">
     <h1>Expression Reference</h1>
     <h2>Outputs</h2>
     <p>The outputs are the variables that control the look and behaviour of each individual element.</p>
@@ -264,7 +264,7 @@
       </tr>
     </table>
   </div>
-  <div id="popup-cover" hidden onclick="hideRef();"></div>
+  <div id="popup-cover" class="hidden" onclick="hideRef();"></div>
   <div id="code">
     <div id="lines">1</div>
     <textarea id="input" wrap="off" spellcheck="false" oninput="displayLineNumbers();" onscroll="updateLinesScroll();">x' = x; y' = y;</textarea>
