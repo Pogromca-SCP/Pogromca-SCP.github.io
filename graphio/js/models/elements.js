@@ -29,7 +29,7 @@ import { doAction } from "../history.js";
  * @property {HTMLOListElement} [list]
  */
 
-const nameKey = "Name";
+const NAME_KEY = "Name";
 
 /** @param {RuntimeLangElement} element */
 const isEditable = element => {
@@ -365,7 +365,7 @@ export const makeElement = (def, lang) => {
     menu: []
   };
 
-  result.properties[nameKey] = result.name;
+  result.properties[NAME_KEY] = result.name;
   loadContextMenu(result, lang);
   
   if (result.name.getValue() === "") {
@@ -461,7 +461,7 @@ export const copyElement = (element, lang, parent) => {
     menu: []
   };
 
-  result.properties[nameKey] = result.name;
+  result.properties[NAME_KEY] = result.name;
   loadContextMenu(result, lang);
   result.parent = parent;
 
@@ -478,7 +478,7 @@ export const copyElement = (element, lang, parent) => {
   }
 
   for (const key in element.properties) {
-    if (key !== nameKey) {
+    if (key !== NAME_KEY) {
       result.properties[key] = element.properties[key].copy();
     }
   }
@@ -507,7 +507,7 @@ export const loadElement = (element, lang, parent, name) => {
     menu: []
   };
 
-  result.properties[nameKey] = result.name;
+  result.properties[NAME_KEY] = result.name;
   loadContextMenu(result, lang);
 
   if (result.name.getValue() === "") {
@@ -554,7 +554,7 @@ export const saveElement = element => {
   }
 
   for (const key in element.properties) {
-    if (key !== nameKey) {
+    if (key !== NAME_KEY) {
       result.properties[key] = saveProperty(element.properties[key]);
     }
   }

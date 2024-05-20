@@ -502,7 +502,7 @@ export class TextProperty extends Property {
   }
 }
 
-const nameMaxLength = 50;
+const NAME_MAX_LENGTH = 50;
 const namePattern = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
 /** @extends Property<string> */
@@ -528,7 +528,7 @@ export class NameProperty extends Property {
 
   /** @param {string} x */
   processValue(x) {
-    return processText(x, nameMaxLength);
+    return processText(x, NAME_MAX_LENGTH);
   }
 
   /** @param {string} newValue */
