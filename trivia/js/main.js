@@ -56,8 +56,8 @@ const gameState = {
   correct: rowsIds[0]
 };
 
-const roundTime = 20;
-const resultsTime = 3;
+const ROUND_TIME = 20;
+const RESULTS_TIME = 3;
 
 /** @param {string} str */
 const decode = (str) => {
@@ -199,7 +199,7 @@ const gameLoop = () => {
   if (gameState.state === gameStates.question) {
     gameState.state = gameStates.results;
     question.innerText = `Time's up. Correct answer was ${gameState.correct}`;
-    updateTimer(resultsTime);
+    updateTimer(RESULTS_TIME);
     return;
   }
 
@@ -229,7 +229,7 @@ const gameLoop = () => {
   }
 
   gameState.state = gameStates.question;
-  updateTimer(roundTime);
+  updateTimer(ROUND_TIME);
 };
 
 /** @param {RowId} id */
@@ -240,7 +240,7 @@ const answer = (id) => {
 
   gameState.state = gameStates.results;
   const isCorrect = id === gameState.correct;
-  updateTimer(resultsTime, false);
+  updateTimer(RESULTS_TIME, false);
   question.innerText = isCorrect ? "Correct answer." : `Incorrect. Correct answer was ${gameState.correct}`;
 
   if (isCorrect) {

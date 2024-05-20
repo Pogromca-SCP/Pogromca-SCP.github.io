@@ -13,7 +13,7 @@ const hist = {
   undone: []
 };
 
-const actionsHistoryLimit = 100;
+const ACTIONS_HISTORY_LIMIT = 100;
 
 export const clearActionHistory = () => {
   hist.done = [];
@@ -26,7 +26,7 @@ export const doAction = (ac) => {
   hist.done.push(ac);
   hist.undone = [];
 
-  if (hist.done.length > actionsHistoryLimit) {
+  if (hist.done.length > ACTIONS_HISTORY_LIMIT) {
     hist.done.shift();
   }
 };
