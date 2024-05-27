@@ -103,6 +103,10 @@ nav > ol > li > ul > li:last-of-type, #context-menu > li:last-of-type {
   border-bottom: var(--nav-border);
 }
 
+nav > ol > li > ul > li:has(a) {
+  padding: 0;
+}
+
 nav > ol > li > ul > li > span {
   margin-left: 0.5rem;
   color: #666666;
