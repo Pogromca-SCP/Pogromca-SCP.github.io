@@ -9,13 +9,13 @@ import stdFunctions from "./std-lib.js";
 const popupContainer = /** @type {HTMLDivElement} */ (document.getElementById("popup-container"));
 const popupCover = /** @type {HTMLDivElement} */ (document.getElementById("popup-cover"));
 const lines = /** @type {HTMLDivElement} */ (document.getElementById("lines"));
-const input = /** @type {HTMLTextAreaElement} */ (document.getElementById("input"));
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas"));
+const input = /** @type {Readonly<HTMLTextAreaElement>} */ (document.getElementById("input"));
+const canvas = /** @type {Readonly<HTMLCanvasElement>} */ (document.getElementById("canvas"));
 const context = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
 const output = /** @type {HTMLDivElement} */ (document.getElementById("console"));
 const runButton = /** @type {HTMLButtonElement} */ (document.getElementById("run"));
-const pixelsCount = /** @type {HTMLInputElement} */ (document.getElementById("count"));
-const pixelsSize = /** @type {HTMLInputElement} */ (document.getElementById("size"));
+const pixelsCount = /** @type {Readonly<HTMLInputElement>} */ (document.getElementById("count"));
+const pixelsSize = /** @type {Readonly<HTMLInputElement>} */ (document.getElementById("size"));
 const HIDDEN_CLASS = "hidden";
 
 /**
@@ -32,7 +32,7 @@ const vm = {
   /** @type {(number | string)[]} */
   chunk: [],
 
-  /** @type {(number | string | StdFuncBody)[]} */
+  /** @type {(number | string | Readonly<StdFuncBody>)[]} */
   stack: [],
   started: new Date(),
 
@@ -212,7 +212,7 @@ const updatePixel = (pixel, i) => {
         break;
       case opCodes.get: {
         op = vm.chunk[index++];
-        /** @type {StdFuncBody | number[] | number | undefined} */
+        /** @type {StdFuncBody | readonly number[] | number | undefined} */
         let value = stdFunctions[op]?.func;
 
         if (value === undefined) {

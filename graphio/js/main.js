@@ -21,7 +21,7 @@ window["clearProps"] = clearProperties;
 window["openSettings"] = () => showProperties("Settings", settings);
 window["closeMenu"] = closeContextMenu;
 
-/** @type {Record<string, () => void>} */
+/** @type {Readonly<Record<string, () => void>>} */
 const binds = {
   o: openProject,
   s: saveProject,

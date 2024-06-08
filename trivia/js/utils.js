@@ -1,13 +1,13 @@
 // @ts-check
 
-/** @param {HTMLElement[]} items */
+/** @param {readonly HTMLElement[]} items */
 export const show = (...items) => {
   for (const item of items) {
     item.className = "";
   }
 };
 
-/** @param {HTMLElement[]} items */
+/** @param {readonly HTMLElement[]} items */
 export const hide = (...items) => {
   for (const item of items) {
     item.className = "hidden";
@@ -20,7 +20,7 @@ export const hide = (...items) => {
  */
 export const randRange = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
 
-/** @param {string[]} arr */
+/** @param {readonly string[]} arr */
 export const shuffle = (arr) => {
   const result = [...arr];
 

@@ -7,9 +7,9 @@
  */
 
 const hist = {
-  /** @type {Action[]} */
+  /** @type {Readonly<Action>[]} */
   done: [],
-  /** @type {Action[]} */
+  /** @type {Readonly<Action>[]} */
   undone: []
 };
 
@@ -20,7 +20,7 @@ export const clearActionHistory = () => {
   hist.undone = [];
 };
 
-/** @param {Action} ac */
+/** @param {Readonly<Action>} ac */
 export const doAction = (ac) => {
   ac.do();
   hist.done.push(ac);

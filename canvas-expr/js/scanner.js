@@ -9,24 +9,27 @@ import { tokenTypes } from "./enums.js";
  */
 
 export default class Scanner {
-  /** @type {string} */
-  source;
+  /**
+   * @type {string}
+   * @readonly
+   */
+  #source;
 
   /** @type {number} */
-  start;
+  #start;
 
   /** @type {number} */
-  current;
+  #current;
 
   /** @type {number} */
-  line;
+  #line;
 
   /** @param {string} source */
   constructor(source) {
-    this.source = source;
-    this.start = 0;
-    this.current = 0;
-    this.line = 1;
+    this.#source = source;
+    this.#start = 0;
+    this.#current = 0;
+    this.#line = 1;
   }
 
   /** @param {string} ch */
@@ -44,33 +47,33 @@ export default class Scanner {
   }
 
   get isAtEnd() {
-    return this.current >= this.source.length;
+    return this.#current >= this.#source.length;
   }
 
   get peek() {
-    return this.source.charAt(this.current);
+    return this.#source.charAt(this.#current);
   }
 
   get peekNext() {
-    return this.source.charAt(this.current + 1);
+    return this.#source.charAt(this.#current + 1);
   }
 
   get peekPrevious() {
-    return this.source.charAt(this.current - 1);
+    return this.#source.charAt(this.#current - 1);
   }
 
-  advance() {
-    ++this.current;
+  #advance() {
+    ++this.#current;
     return this.peekPrevious;
   }
 
   /** @param {string} expected */
-  match(expected) {
+  #match(expected) {
     if (this.peek !== expected) {
       return false;
     }
 
-    ++this.current;
+    ++this.#current;
     return true;
   }
 
@@ -78,11 +81,11 @@ export default class Scanner {
    * @param {number} type
    * @returns {Token}
    */
-  makeToken(type) {
+  #makeToken(type) {
     return {
       type: type,
-      lexeme: this.source.substring(this.start, this.current),
-      line: this.line
+      lexeme: this.#source.substring(this.#start, this.#current),
+      line: this.#line
     };
   }
 
@@ -90,89 +93,89 @@ export default class Scanner {
    * @param {string} message
    * @returns {Token}
    */
-  errorToken(message) {
+  #errorToken(message) {
     return {
       type: tokenTypes.error,
       lexeme: message,
-      line: this.line
+      line: this.#line
     };
   }
 
   scanToken() {
-    this.skipWhitespace();
-    this.start = this.current;
+    this.#skipWhitespace();
+    this.#start = this.#current;
 
     if (this.isAtEnd) {
-      return this.makeToken(tokenTypes.end);
+      return this.#makeToken(tokenTypes.end);
     }
 
-    const ch = this.advance();
+    const ch = this.#advance();
 
     if (Scanner.isAlpha(ch)) {
-      return this.identifier();
+      return this.#identifier();
     }
 
     if (Scanner.isDigit(ch)) {
-      return this.number();
+      return this.#number();
     }
 
     switch (ch) {
       case "(":
-        return this.makeToken(tokenTypes.leftParen);
+        return this.#makeToken(tokenTypes.leftParen);
       case ")":
-        return this.makeToken(tokenTypes.rightParen);
+        return this.#makeToken(tokenTypes.rightParen);
       case ";":
-        return this.makeToken(tokenTypes.semicolon);
+        return this.#makeToken(tokenTypes.semicolon);
       case ",":
-        return this.makeToken(tokenTypes.comma);
+        return this.#makeToken(tokenTypes.comma);
       case "=":
-        return this.makeToken(this.match("=") ? tokenTypes.equalEqual : tokenTypes.equal);
+        return this.#makeToken(this.#match("=") ? tokenTypes.equalEqual : tokenTypes.equal);
       case "+":
-        return this.makeToken(tokenTypes.plus);
+        return this.#makeToken(tokenTypes.plus);
       case "-":
-        return this.makeToken(tokenTypes.minus);
+        return this.#makeToken(tokenTypes.minus);
       case "*":
-        return this.makeToken(tokenTypes.star);
+        return this.#makeToken(tokenTypes.star);
       case "^":
-        return this.makeToken(tokenTypes.exp);
+        return this.#makeToken(tokenTypes.exp);
       case "/":
-        return this.makeToken(tokenTypes.slash);
+        return this.#makeToken(tokenTypes.slash);
       case "%":
-        return this.makeToken(tokenTypes.modulo);
+        return this.#makeToken(tokenTypes.modulo);
       case "<":
-        return this.makeToken(this.match("=") ? tokenTypes.lessEqual : tokenTypes.less);
+        return this.#makeToken(this.#match("=") ? tokenTypes.lessEqual : tokenTypes.less);
       case ">":
-        return this.makeToken(this.match("=") ? tokenTypes.greaterEqual : tokenTypes.greater);
+        return this.#makeToken(this.#match("=") ? tokenTypes.greaterEqual : tokenTypes.greater);
       case "&":
-        return this.makeToken(tokenTypes.and);
+        return this.#makeToken(tokenTypes.and);
       case "|":
-        return this.makeToken(tokenTypes.or);
+        return this.#makeToken(tokenTypes.or);
       case "!":
-        return this.makeToken(this.match("=") ? tokenTypes.bangEqual : tokenTypes.bang);
+        return this.#makeToken(this.#match("=") ? tokenTypes.bangEqual : tokenTypes.bang);
       case "#":
         while (!this.isAtEnd && this.peek !== "\n") {
-          ++this.current;
+          ++this.#current;
         }
 
         return null;
       case ".":
         if (Scanner.isDigit(this.peek)) {
-          return this.number();
+          return this.#number();
         }
       default:
-        return this.errorToken(`Unexpected character: ${ch}.`);
+        return this.#errorToken(`Unexpected character: ${ch}.`);
     }
   }
 
-  skipWhitespace() {
+  #skipWhitespace() {
     while (true) {
       switch (this.peek) {
         case "\n":
-          ++this.line;
+          ++this.#line;
         case " ":
         case "\r":
         case "\t":
-          ++this.current;
+          ++this.#current;
           break;
         default:
           return;
@@ -180,30 +183,30 @@ export default class Scanner {
     }
   }
 
-  number() {
+  #number() {
     while (Scanner.isDigit(this.peek)) {
-      ++this.current;
+      ++this.#current;
     }
 
     if (this.peek === "." && Scanner.isDigit(this.peekNext)) {
-      ++this.current;
+      ++this.#current;
     }
 
     while (Scanner.isDigit(this.peek)) {
-      ++this.current;
+      ++this.#current;
     }
 
-    return this.makeToken(tokenTypes.number);
+    return this.#makeToken(tokenTypes.number);
   }
 
-  identifier() {
+  #identifier() {
     let ch = this.peek;
 
     while (Scanner.isAlpha(ch) || Scanner.isDigit(ch)) {
-      ++this.current;
+      ++this.#current;
       ch = this.peek;
     }
 
-    return this.makeToken(tokenTypes.identifier);
+    return this.#makeToken(tokenTypes.identifier);
   }
 }

@@ -26,7 +26,7 @@ import { NO_FLAGS, TRANSIENT, READONLY, RESETABLE, BooleanProperty, NumberProper
  * @typedef {boolean | number | string} PropertyValue
  */
 
-/** @param {PropertySettings} prop */
+/** @param {Readonly<PropertySettings>} prop */
 const loadMetaflags = prop => {
   let metaflags = NO_FLAGS;
 
@@ -45,12 +45,12 @@ const loadMetaflags = prop => {
   return metaflags;
 };
 
-/** @param {PropertySettings & BooleanValue} prop */
+/** @param {Readonly<PropertySettings & BooleanValue>} prop */
 const loadBooleanProperty = prop => {
   return new BooleanProperty(prop.value, loadMetaflags(prop));
 };
 
-/** @param {PropertySettings & NumberValue} prop */
+/** @param {Readonly<PropertySettings & NumberValue>} prop */
 const loadNumberProperty = prop => {
   let flags = NO_FLAGS;
 
@@ -69,13 +69,13 @@ const loadNumberProperty = prop => {
   return new NumberProperty(prop.value, flags, prop.min ?? null, prop.max ?? null, loadMetaflags(prop));
 };
 
-/** @param {PropertySettings & TextValue} prop */
+/** @param {Readonly<PropertySettings & TextValue>} prop */
 const loadTextProperty = prop => {
   return new TextProperty(prop.value, prop.maxLength ?? null, loadMetaflags(prop));
 };
 
 /**
- * @param {PropertyDefinition} prop
+ * @param {Readonly<PropertyDefinition>} prop
  * @throws {Error}
  */
 export const makeProperty = prop => {
@@ -92,8 +92,8 @@ export const makeProperty = prop => {
 };
 
 /**
- * @param {PropertyDefinition} prop
- * @param {PropertyValue} value
+ * @param {Readonly<PropertyDefinition>} prop
+ * @param {Readonly<PropertyValue>} value
  * @throws {Error}
  */
 export const loadProperty = (prop, value) => {

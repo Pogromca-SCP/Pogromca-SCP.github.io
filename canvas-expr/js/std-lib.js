@@ -20,7 +20,7 @@ const makeStdFunction = (func, arity) => ({
   func: func
 });
 
-/** @type {Record<string, StdFunction | undefined>} */
+/** @type {Readonly<Record<string, Readonly<StdFunction>>>} */
 const stdFunctions = {
   rand: makeStdFunction(() => Math.random(), 0),
   sin: makeStdFunction(/** @param {number} x */ (x) => Math.sin(x), 1),

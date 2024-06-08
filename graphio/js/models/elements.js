@@ -31,7 +31,7 @@ import { doAction } from "../history.js";
 
 const NAME_KEY = "Name";
 
-/** @param {RuntimeLangElement} element */
+/** @param {Readonly<RuntimeLangElement>} element */
 const isEditable = element => {
   let result = element.element.editable;
 
@@ -189,11 +189,20 @@ const hideElement = el => {
 };
 
 class AddRemoveChildAction {
-  /** @type {RuntimeLangElement} */
+  /**
+   * @type {RuntimeLangElement}
+   * @readonly
+   */
   #parent;
-  /** @type {RuntimeLangElement} */
+  /**
+   * @type {RuntimeLangElement}
+   * @readonly
+   */
   #child;
-  /** @type {boolean} */
+  /**
+   * @type {boolean}
+   * @readonly
+   */
   #isRemove;
 
   /**
@@ -246,11 +255,20 @@ class AddRemoveChildAction {
 }
 
 class MoveChildAction {
-  /** @type {RuntimeLangElement} */
+  /**
+   * @type {RuntimeLangElement}
+   * @readonly
+   */
   #from;
-  /** @type {RuntimeLangElement} */
+  /**
+   * @type {RuntimeLangElement}
+   * @readonly
+   */
   #to;
-  /** @type {RuntimeLangElement} */
+  /**
+   * @type {RuntimeLangElement}
+   * @readonly
+   */
   #element;
 
   /**
@@ -296,7 +314,7 @@ class MoveChildAction {
 }
 
 /**
- * @param {AddRemoveChildAction | MoveChildAction} ac
+ * @param {Readonly<AddRemoveChildAction | MoveChildAction>} ac
  * @param {boolean} transient
  */
 const action = (ac, transient) => {
@@ -309,7 +327,7 @@ const action = (ac, transient) => {
 
 /**
  * @param {RuntimeLangElement} element
- * @param {LanguageDefinition} lang
+ * @param {Readonly<LanguageDefinition>} lang
  */
 export const loadContextMenu = (element, lang) => {
   const menu = [];
@@ -351,8 +369,8 @@ export const loadContextMenu = (element, lang) => {
 };
 
 /**
- * @param {ElementDefinition} def
- * @param {LanguageDefinition} lang
+ * @param {Readonly<ElementDefinition>} def
+ * @param {Readonly<LanguageDefinition>} lang
  * @throws {Error}
  */
 export const makeElement = (def, lang) => {
@@ -446,8 +464,8 @@ export const clearChildren = element => {
 };
 
 /**
- * @param {RuntimeLangElement} element
- * @param {LanguageDefinition} lang
+ * @param {Readonly<RuntimeLangElement>} element
+ * @param {Readonly<LanguageDefinition>} lang
  * @param {RuntimeLangElement} [parent]
  */
 export const copyElement = (element, lang, parent) => {
@@ -487,8 +505,8 @@ export const copyElement = (element, lang, parent) => {
 };
 
 /**
- * @param {LangElement} element
- * @param {LanguageDefinition} lang
+ * @param {Readonly<LangElement>} element
+ * @param {Readonly<LanguageDefinition>} lang
  * @param {RuntimeLangElement} parent
  * @param {string} [name]
  * @throws {Error}
@@ -538,7 +556,7 @@ export const loadElement = (element, lang, parent, name) => {
   return result;
 };
 
-/** @param {RuntimeLangElement} element */
+/** @param {Readonly<RuntimeLangElement>} element */
 export const saveElement = element => {
   const result = {
     element: element.element.id,

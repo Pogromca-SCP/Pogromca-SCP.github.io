@@ -13,7 +13,7 @@ const menu = /** @type {HTMLUListElement} */ (document.getElementById("context-m
 /**
  * @param {number} x 
  * @param {number} y 
- * @param  {MenuSection[]} items
+ * @param  {readonly Readonly<MenuSection>[]} items
  */
 export const showContextMenu = (x, y, items) => {
   if (items.length < 1) {

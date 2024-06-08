@@ -12,11 +12,20 @@ export const RESETABLE = 4;
 
 /** @template T */
 class ChangePropertyAction {
-  /** @type {Property<T>} */
+  /**
+   * @type {Property<T>}
+   * @readonly
+   */
   #target;
-  /** @type {T} */
+  /**
+   * @type {T}
+   * @readonly
+   */
   #oldValue;
-  /** @type {T} */
+  /**
+   * @type {T}
+   * @readonly
+   */
   #newValue;
 
   /**
@@ -41,7 +50,10 @@ class ChangePropertyAction {
 
 /** @template T */
 export class Property {
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   #meta;
   /** @type {HTMLInputElement | null} */
   #display;
@@ -49,7 +61,10 @@ export class Property {
   #reset;
   /** @type {T} */
   #value;
-  /** @type {T} */
+  /**
+   * @type {T}
+   * @readonly
+   */
   #default;
   /** @type {((oldVal: T, newVal: T) => void)[]} */
   #listeners;
@@ -255,9 +270,15 @@ export class Property {
 }
 
 class ChangeBooleanPropertyAction {
-  /** @type {BooleanProperty} */
+  /**
+   * @type {BooleanProperty}
+   * @readonly
+   */
   #target;
-  /** @type {boolean} */
+  /**
+   * @type {boolean}
+   * @readonly
+   */
   #newValue;
 
   /**
@@ -384,11 +405,20 @@ const processNumber = (x, flags, min, max) => {
 
 /** @extends Property<number> */
 export class NumberProperty extends Property {
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   #flags;
-  /** @type {null | number} */
+  /**
+   * @type {null | number}
+   * @readonly
+   */
   #min;
-  /** @type {null | number} */
+  /**
+   * @type {null | number}
+   * @readonly
+   */
   #max;
 
   /**
@@ -468,7 +498,10 @@ const processText = (x, maxLength) => {
 
 /** @extends Property<string> */
 export class TextProperty extends Property {
-  /** @type {null | number} */
+  /**
+   * @type {null | number}
+   * @readonly
+   */
   #maxLength;
 
   /**

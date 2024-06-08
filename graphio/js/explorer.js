@@ -34,6 +34,8 @@ import { loadFile, saveFile } from "./files.js";
  */
 
 const explorer = /** @type {HTMLDivElement} */ (document.getElementById("explorer"));
+
+/** @type {readonly string[]} */
 const languages = ["JavaScript"];
 
 const project = {

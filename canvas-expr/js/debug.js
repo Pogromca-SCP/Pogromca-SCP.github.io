@@ -13,7 +13,7 @@ const simple = (name, offset) => {
 };
 
 /**
- * @param {(number | string)[]} chunk
+ * @param {readonly (number | string)[]} chunk
  * @param {string} name
  * @param {number} offset
  */
@@ -23,7 +23,7 @@ const constant = (chunk, name, offset) => {
 };
 
 /**
- * @param {(number | string)[]} chunk
+ * @param {readonly (number | string)[]} chunk
  * @param {number} offset
  */
 const showInstruction = (chunk, offset) => {
@@ -70,7 +70,7 @@ const showInstruction = (chunk, offset) => {
   }
 };
 
-/** @param {(number | string)[]} chunk */
+/** @param {readonly (number | string)[]} chunk */
 const showChunk = (chunk) => {
   debugMessage = "Compiled chunk:";
 

@@ -12,10 +12,10 @@ const compiler = {
   /** @type {Scanner} */
   scanner: Scanner.emptyScanner,
 
-  /** @type {Token | null} */
+  /** @type {Readonly<Token> | null} */
   current: null,
 
-  /** @type {Token | null} */
+  /** @type {Readonly<Token> | null} */
   previous: null,
 
   /** @type {(number | string)[]} */
@@ -25,13 +25,13 @@ const compiler = {
   /** @type {Record<string, number>} */
   variables: {},
 
-  /** @type {StdFunction[]} */
+  /** @type {Readonly<StdFunction>[]} */
   callStack: [],
 
-  /** @type {Record<string, number | number[] | (() => number)>} */
+  /** @type {Readonly<Record<string, number | readonly number[] | (() => number)>>} */
   inputVars: {},
 
-  /** @type {string[]} */
+  /** @type {readonly string[]} */
   outputs: [],
 
   /** @type {(message: string) => void} */
@@ -110,7 +110,7 @@ const compiler = {
   },
 
   /**
-   * @param {Token | null} token
+   * @param {Readonly<Token> | null} token
    * @param {string} message
    */
   errorAt(token, message) {
@@ -189,8 +189,8 @@ const compiler = {
 
 /**
  * @param {string} src
- * @param {Record<string, number | number[] | (() => number)>} inputVars
- * @param {string[]} outputs
+ * @param {Readonly<Record<string, number | readonly number[] | (() => number)>>} inputVars
+ * @param {Readonly<string[]>} outputs
  * @param {(message: string) => void} onError
  */
 const compile = (src, inputVars, outputs, onError) => {
@@ -327,7 +327,7 @@ const argumentsList = () => {
 };
 
 /**
- * @param {Token | null} name
+ * @param {Readonly<Token> | null} name
  * @param {boolean} canAssign
  */
 const namedVariable = (name, canAssign) => {
@@ -369,7 +369,7 @@ const namedVariable = (name, canAssign) => {
   }
 };
 
-/** @type {PrecedenceRule[]} */
+/** @type {readonly Readonly<PrecedenceRule>[]} */
 const parseRules = [
   { prefix: null, infix: null, precedence: precedenceLevels.none }, // Equal
   { prefix: null, infix: binary, precedence: precedenceLevels.term }, // Plus

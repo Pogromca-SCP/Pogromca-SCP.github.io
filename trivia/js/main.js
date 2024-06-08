@@ -2,9 +2,9 @@
 import { gameStates, responseCodes } from "./enums.js";
 import { hide, show, randRange, shuffle } from "./utils.js";
 
-const amount = /** @type {HTMLInputElement} */ (document.getElementById("amount"));
+const amount = /** @type {Readonly<HTMLInputElement>} */ (document.getElementById("amount"));
 const category = /** @type {HTMLSelectElement} */ (document.getElementById("category"));
-const difficulty = /** @type {HTMLSelectElement} */ (document.getElementById("difficulty"));
+const difficulty = /** @type {Readonly<HTMLSelectElement>} */ (document.getElementById("difficulty"));
 const errors = /** @type {HTMLUListElement} */ (document.getElementById("errors"));
 const loader = /** @type {HTMLDivElement} */ (document.getElementById("loader"));
 const timer = /** @type {HTMLHeadingElement} */ (document.getElementById("timer"));
@@ -25,7 +25,7 @@ const getRow = (id) => /** @type {Row} */ ({
   display: document.getElementById(`${id}-text`)
 });
 
-/** @type {Record<RowId, Row>} */
+/** @type {Readonly<Record<RowId, Row>>} */
 const rows = {
   A: getRow("A"),
   B: getRow("B"),
@@ -33,7 +33,7 @@ const rows = {
   D: getRow("D")
 };
 
-/** @type {RowId[]} */
+/** @type {readonly RowId[]} */
 const rowsIds = ["A", "B", "C", "D"];
 
 /** @param {string} message */
