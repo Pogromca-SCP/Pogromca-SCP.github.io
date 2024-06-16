@@ -17,17 +17,17 @@
 const explorer = /** @type {HTMLDivElement} */ (document.getElementById("explorer"));
 const ICON_SIZE = 17;
 
-export const DATA_FORMAT = "application/json";
+export const DATA_FORMAT = "text/plain";
 
-/** @type {ItemsDefinitions | null} */
-let globalItems = null;
+/** @type {ItemsDefinitions} */
+let globalItems;
 
 /** @param {Readonly<ElementDefinition>} element */
 const makeElement = element => {
   const root = document.createElement("li");
   root.className = "explorer-item";
   root.draggable = true;
-  root.ondragstart = e => e.dataTransfer?.setData(DATA_FORMAT, JSON.stringify(element));
+  root.ondragstart = e => e.dataTransfer?.setData(DATA_FORMAT, element.name);
   const img = document.createElement("img");
   img.width = ICON_SIZE;
   img.height = ICON_SIZE;

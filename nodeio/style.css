@@ -220,6 +220,12 @@ li > img, summary > img {
 
 #graph {
   width: 100%;
+  overflow: hidden;
+}
+
+#graph > * {
+  position: relative;
+  display: block;
 }
 
 #context-menu {

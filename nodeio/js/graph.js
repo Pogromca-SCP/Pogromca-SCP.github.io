@@ -1,5 +1,7 @@
 // @ts-check
 import { DATA_FORMAT, getItems } from "./explorer.js";
+import { clearActionHistory } from "./history.js";
+import { closeContextMenu } from "./menu.js";
 import { makeProperty } from "./models/props.js";
 import { showProperties } from "./properties.js";
 import { NameProperty } from "./properties/text.js";
@@ -12,7 +14,7 @@ import { NameProperty } from "./properties/text.js";
 
 const graph = /** @type {HTMLDivElement} */ (document.getElementById("graph"));
 
-export class Node {
+class Node {
   /**
    * @type {ElementDefinition}
    * @readonly
@@ -51,10 +53,12 @@ export class Node {
   draw() {
     const root = document.createElement("div");
     root.innerText = this.#element.name;
+    root.style.top = `${this.#x}px`;
+    root.style.left = `${this.#y}px`;
 
     root.onclick = e => {
       e.stopPropagation();
-      showProperties(this.#element.name, this.#props, true);
+      showProperties(this.#element.name, this.#props);
     };
 
     graph.appendChild(root);
@@ -70,12 +74,16 @@ export const addNode = e => {
     return;
   }
 
-  const node = new Node(/** @type {ElementDefinition} */ JSON.parse(data), e.movementX, e.movementY);
+  const node = new Node(getItems().elements[data], e.clientX, e.clientY);
   node.draw();
 };
 
 export const newProject = () => {
-  graph.innerHTML = "";
+  if (confirm("Are you sure?")) {
+    graph.innerHTML = "";
+    clearActionHistory();
+    closeContextMenu();
+  }
 };
 
 export const openProject = () => {
