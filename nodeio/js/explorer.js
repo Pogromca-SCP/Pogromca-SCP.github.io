@@ -1,190 +1,100 @@
 // @ts-check
-import { loadContextMenu, clearChildren, loadElement, saveElement } from "./models/elements.js";
-import { showContextMenu } from "./menu.js";
-import { NameProperty, clearProperties } from "./properties.js";
-import { clearActionHistory } from "./history.js";
-import { loadFile, saveFile } from "./files.js";
 
 /**
  * @typedef {import("./models/props").PropertyDefinition} PropertyDefinition
- * @typedef {import("./models/elements").LangElement} LangElement
- * @typedef {import("./models/elements").RuntimeLangElement} RuntimeLangElement
- * @typedef {import("./properties").TextProperty} TextProperty
- * @typedef {import("./menu").MenuElement} MenuElement
- * 
- * @typedef {"class" | "func" | "module" | "script" | "var"} ElementType
- * @typedef {"javascript"} LanguageID
  * 
  * @typedef {Object} ElementDefinition
- * @property {string} id
- * @property {ElementType} icon
- * @property {boolean} editable
- * @property {boolean} addable
- * @property {string[]} allowedChildren
+ * @property {string} name
+ * @property {string} icon
  * @property {Record<string, PropertyDefinition>} properties
+ * @property {string[]} categories
  * 
- * @typedef {Object} LanguageDefinition
- * @property {LanguageID} id
+ * @typedef {Object} ItemsDefinitions
  * @property {Record<string, ElementDefinition>} elements
- * @property {string[]} allowedRootChildren
- * 
- * @typedef {Object} Project
- * @property {string} language
- * @property {Record<string, LangElement>} elements
+ * @property {Record<string, string[]>} categories 
  */
 
 const explorer = /** @type {HTMLDivElement} */ (document.getElementById("explorer"));
+const ICON_SIZE = 17;
 
-/** @type {readonly string[]} */
-const languages = ["JavaScript"];
+/** @type {ItemsDefinitions | null} */
+let globalItems = null;
 
-const project = {
-  /** @type {null | LanguageDefinition} */
-  language: null,
-  /** @type {RuntimeLangElement} */
-  root: {
-    element: {
-      id: "Root",
-      icon: "script",
-      editable: true,
-      addable: false,
-      allowedChildren: [],
-      properties: {}
-    },
-    name: new NameProperty("Root"),
-    properties: {},
-    menu: []
-  }
-};
-
-/** @param {LanguageDefinition} def */
-const initialize = def => {
-  project.language = def;
-  project.root.list = document.createElement("ol");
-  project.root.element.allowedChildren = project.language.allowedRootChildren;
-  explorer.appendChild(project.root.list);
-  loadContextMenu(project.root, project.language);
-
-  explorer.oncontextmenu = e => {
-    e.preventDefault();
-    showContextMenu(e.clientX, e.clientY, project.root.menu);
-  };
-};
-
-const clearProject = () => {
-  project.language = null;
-  project.root.element.allowedChildren = [];
-  clearChildren(project.root);
-  project.root.menu = [];
-  explorer.innerHTML = "";
-  explorer.oncontextmenu = null;
-  clearProperties();
-  clearActionHistory();
+/** @param {Readonly<ElementDefinition>} element */
+const makeElement = element => {
+  const root = document.createElement("li");
+  root.className = "explorer-item";
+  const img = document.createElement("img");
+  img.width = ICON_SIZE;
+  img.height = ICON_SIZE;
+  img.alt = `${element.name} icon`;
+  img.src = `./assets/icons/${element.icon}.png`;
+  root.appendChild(img);
+  root.appendChild(document.createTextNode(element.name));
+  return root;
 };
 
 /**
- * @param {string} lang
- * @throws {Error}
+ * @param {string} name
+ * @param {readonly string[]} categories
+ * @param {Readonly<ItemsDefinitions>} defs
  */
-const loadLangDef = async lang => {
-  const res = await fetch(`./assets/langs/${lang}.json`);
+const makeCategory = (name, categories, defs) => {
+  const root = document.createElement("li");
+  const details = document.createElement("details");
+  const display = document.createElement("summary");
+  display.appendChild(document.createTextNode(name));
+  details.appendChild(display);
+  const list = document.createElement("ol");
+
+  for (const category of categories) {
+    root.appendChild(makeCategory(category, [], defs));
+  }
+
+  for (const element in defs.elements) {
+    const tmp = defs.elements[element];
+
+    if (tmp.categories.includes(name)) {
+      root.appendChild(makeElement(tmp));
+    }
+  }
+
+  details.appendChild(list);
+  root.appendChild(details);
+  return root;
+};
+
+/** @param {Readonly<ItemsDefinitions>} defs */
+const initialize = defs => {
+  const root = document.createElement("ol");
+
+  for (const categories in defs.categories) {
+    root.appendChild(makeCategory(categories, defs.categories[categories], defs));
+  }
+
+  explorer.appendChild(root);
+};
+
+/** @throws {Error} */
+const loadItemsDefs = async () => {
+  const res = await fetch("./assets/items.json");
 
   if (res.status !== 200) {
     throw new Error(res.url);
   }
 
-  return /** @type {LanguageDefinition} */ (await res.json());
+  return /** @type {ItemsDefinitions} */ (await res.json());
 };
 
-/**
- * @param {string} lang
- * @param {HTMLButtonElement} button
- * @param {HTMLDivElement} loader
- */
-const loadLang = async (lang, button, loader) => {
-  button.hidden = true;
-  loader.hidden = false;
-
+export const loadItems = async () => {
   try {
-    const langDef = await loadLangDef(lang);
+    const items = await loadItemsDefs();
+    globalItems = items;
     explorer.innerHTML = "";
-    initialize(langDef);
-  } catch (err) {
-    console.error(err);
-    button.hidden = false;
-    loader.hidden = true;
-  }
-};
-
-/** @param {string} str */
-const loadProject = async str => {
-  try {
-    const projData = /** @type {Project} */ (JSON.parse(str));
-    const langDef = await loadLangDef(projData.language);
-    clearProject();
-    initialize(langDef);
-
-    if (project.language === null) {
-      throw new Error("Initialization failed.");
-    }
-
-    for (const name in projData.elements) {
-      loadElement(projData.elements[name], project.language, project.root, name);
-    }
+    initialize(items);
   } catch (err) {
     console.error(err);
   }
 };
 
-const saveProjectElements = () => {
-  const result = {};
-
-  if (project.root.children !== undefined) {
-    for (const name in project.root.children) {
-      result[name] = saveElement(project.root.children[name]);
-    }
-  }
-
-  return result;
-};
-
-export const newProject = () => {
-  if (project.language !== null && !confirm("Did you save your project?")) {
-    return;
-  }
-
-  clearProject();
-  const id = "lang-select";
-  const element = document.createElement("div");
-  const label = document.createElement("label");
-  label.htmlFor = id;
-  label.innerText = "Select project language:";
-  element.appendChild(label);
-  const select = document.createElement("select");
-  select.id = id;
-
-  for (const lang of languages) {
-    const option = document.createElement("option");
-    option.value = lang.toLowerCase();
-    option.selected = select.children.length === 0;
-    option.innerText = lang;
-    select.appendChild(option);
-  }
-
-  element.appendChild(select);
-  const button = document.createElement("button");
-  button.innerText = "Start project";
-  button.onclick = e => loadLang(select.value, button, loader);
-  element.appendChild(button);
-  const loader = document.createElement("div");
-  loader.hidden = true;
-  element.appendChild(loader);
-  explorer.appendChild(element);
-};
-
-export const openProject = () => loadFile(loadProject, "application/json");
-
-export const saveProject = () => saveFile("MyProject.json", JSON.stringify({
-  language: project.language?.id ?? "",
-  elements: saveProjectElements()
-}));
+export const getItems = () => globalItems;

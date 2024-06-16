@@ -1,0 +1,26 @@
+{
+  "elements": {
+    "Button": {
+      "name": "Button",
+      "icon": "var",
+      "properties": {},
+      "categories": ["Buttons"]
+    },
+    "XOR": {
+      "name": "XOR",
+      "icon": "func",
+      "properties": {},
+      "categories": ["Logical", "Gates"]
+    },
+    "BRUH": {
+      "name": "BRUH",
+      "icon": "func",
+      "properties": {},
+      "categories": ["Logical", "Other"]
+    }
+  },
+  "categories": {
+    "Logical": ["Gates", "Other"],
+    "Buttons": []
+  }
+}

@@ -1,5 +1,8 @@
 // @ts-check
-import { NO_FLAGS, TRANSIENT, READONLY, RESETABLE, BooleanProperty, NumberProperty, INTEGER, UNSIGNED, ALLOW_NAN, TextProperty } from "../properties.js";
+import { NO_FLAGS, TRANSIENT, READONLY, RESETABLE } from "../properties.js";
+import BooleanProperty from "../properties/bool.js";
+import { ALLOW_NAN, INTEGER, NumberProperty, UNSIGNED } from "../properties/number.js";
+import { TextProperty } from "../properties/text.js";
 
 /**
  * @typedef {Object} PropertySettings

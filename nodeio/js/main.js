@@ -1,9 +1,10 @@
 // @ts-check
-import { newProject, openProject, saveProject } from "./explorer.js";
-import { undoAction, redoAction } from "./history.js";
-import { showProperties, clearProperties } from "./properties.js";
-import settings from "./settings.js";
+import { loadItems } from "./explorer.js";
+import { newProject, openProject, saveProject } from "./graph.js";
+import { redoAction, undoAction } from "./history.js";
 import { closeContextMenu } from "./menu.js";
+import { clearProperties, showProperties } from "./properties.js";
+import settings from "./settings.js";
 
 window["newGraph"] = newProject;
 window["openGraph"] = openProject;
@@ -43,4 +44,4 @@ document.addEventListener("keydown", e => {
   }
 });
 
-newProject();
+loadItems();

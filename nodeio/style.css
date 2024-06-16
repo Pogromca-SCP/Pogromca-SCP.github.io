@@ -153,16 +153,6 @@ main {
   height: 100%;
 }
 
-#explorer > div > select, #explorer > div > button {
-  margin-top: 0.5rem;
-}
-
-#explorer > div > button {
-  border-radius: 6px;
-  background-color: #0880f0;
-  color: #ffffff;
-}
-
 #explorer > div > div {
   border: 2px solid transparent;
   border-top: 2px solid var(--color-text);
