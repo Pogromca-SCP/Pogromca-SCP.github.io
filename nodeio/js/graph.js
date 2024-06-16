@@ -1,6 +1,7 @@
 // @ts-check
-import { getItems } from "./explorer.js";
+import { DATA_FORMAT, getItems } from "./explorer.js";
 import { makeProperty } from "./models/props.js";
+import { showProperties } from "./properties.js";
 import { NameProperty } from "./properties/text.js";
 
 /**
@@ -46,9 +47,35 @@ export class Node {
 
     this.#menu = [];
   }
+
+  draw() {
+    const root = document.createElement("div");
+    root.innerText = this.#element.name;
+
+    root.onclick = e => {
+      e.stopPropagation();
+      showProperties(this.#element.name, this.#props, true);
+    };
+
+    graph.appendChild(root);
+  }
 }
 
+/** @param {DragEvent} e */
+export const addNode = e => {
+  e.preventDefault();
+  const data = e.dataTransfer?.getData(DATA_FORMAT);
+
+  if (data === undefined) {
+    return;
+  }
+
+  const node = new Node(/** @type {ElementDefinition} */ JSON.parse(data), e.movementX, e.movementY);
+  node.draw();
+};
+
 export const newProject = () => {
+  graph.innerHTML = "";
 };
 
 export const openProject = () => {

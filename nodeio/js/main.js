@@ -1,6 +1,6 @@
 // @ts-check
 import { loadItems } from "./explorer.js";
-import { newProject, openProject, saveProject } from "./graph.js";
+import { addNode, newProject, openProject, saveProject } from "./graph.js";
 import { redoAction, undoAction } from "./history.js";
 import { closeContextMenu } from "./menu.js";
 import { clearProperties, showProperties } from "./properties.js";
@@ -21,6 +21,7 @@ window["redoAction"] = redoAction;
 window["clearProps"] = clearProperties;
 window["openSettings"] = () => showProperties("Settings", settings);
 window["closeMenu"] = closeContextMenu;
+window["addNode"] = addNode;
 
 /** @type {Readonly<Record<string, () => void>>} */
 const binds = {

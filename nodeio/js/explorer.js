@@ -17,6 +17,8 @@
 const explorer = /** @type {HTMLDivElement} */ (document.getElementById("explorer"));
 const ICON_SIZE = 17;
 
+export const DATA_FORMAT = "application/json";
+
 /** @type {ItemsDefinitions | null} */
 let globalItems = null;
 
@@ -24,6 +26,8 @@ let globalItems = null;
 const makeElement = element => {
   const root = document.createElement("li");
   root.className = "explorer-item";
+  root.draggable = true;
+  root.ondragstart = e => e.dataTransfer?.setData(DATA_FORMAT, JSON.stringify(element));
   const img = document.createElement("img");
   img.width = ICON_SIZE;
   img.height = ICON_SIZE;
