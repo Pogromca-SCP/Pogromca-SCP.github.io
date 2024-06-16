@@ -48,14 +48,14 @@ const makeCategory = (name, categories, defs) => {
   const list = document.createElement("ol");
 
   for (const category of categories) {
-    root.appendChild(makeCategory(category, [], defs));
+    list.appendChild(makeCategory(category, [], defs));
   }
 
   for (const element in defs.elements) {
     const tmp = defs.elements[element];
 
     if (tmp.categories.includes(name)) {
-      root.appendChild(makeElement(tmp));
+      list.appendChild(makeElement(tmp));
     }
   }
 
