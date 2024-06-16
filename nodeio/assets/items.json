@@ -4,7 +4,7 @@
       "name": "Button",
       "icon": "var",
       "properties": {},
-      "categories": ["Buttons"]
+      "categories": ["Buttons", "Other"]
     },
     "XOR": {
       "name": "XOR",
