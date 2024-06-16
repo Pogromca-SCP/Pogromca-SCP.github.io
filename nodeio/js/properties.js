@@ -205,10 +205,6 @@ export class Property {
     }
     
     this.#display.onchange = tmp;
-
-    if (this.#reset !== null) {
-      this.#reset.hidden = this.equals(this.#value, this.#default);
-    }
   }
 
   clearDisplay() {
