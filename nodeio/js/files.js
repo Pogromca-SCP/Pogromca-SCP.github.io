@@ -3,7 +3,7 @@ const upload = /** @type {HTMLInputElement} */ (document.getElementById("file-up
 /** @type {(str: string) => void} */
 let onLoad = str => {};
 
-upload.onchange = e => {
+upload.addEventListener("change", e => {
   if (upload.files === null || upload.files.length < 1) {
     return;
   }
@@ -18,7 +18,7 @@ upload.onchange = e => {
   };
 
   reader.readAsText(upload.files[0], "UTF-8");
-};
+});
 
 /**
  * @param {(str: string) => void} callback

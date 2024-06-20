@@ -1,27 +1,23 @@
 // @ts-check
 import { loadItems } from "./explorer.js";
-import { addNode, newProject, openProject, saveProject } from "./graph.js";
+import { newProject, openProject, saveProject } from "./graph.js";
 import { redoAction, undoAction } from "./history.js";
 import { closeContextMenu } from "./menu.js";
-import { clearProperties, showProperties } from "./properties.js";
+import { showProperties } from "./properties.js";
 import settings from "./settings.js";
 
+window["closeMenu"] = closeContextMenu;
 window["newGraph"] = newProject;
 window["openGraph"] = openProject;
 window["saveGraph"] = saveProject;
+window["openSettings"] = () => showProperties("Settings", settings);
+window["undoAction"] = undoAction;
+window["redoAction"] = redoAction;
 
 window.addEventListener("beforeunload", e => {
   e.preventDefault();
   return "";
 });
-
-window["undoAction"] = undoAction;
-window["redoAction"] = redoAction;
-
-window["clearProps"] = clearProperties;
-window["openSettings"] = () => showProperties("Settings", settings);
-window["closeMenu"] = closeContextMenu;
-window["addNode"] = addNode;
 
 /** @type {Readonly<Record<string, () => void>>} */
 const binds = {

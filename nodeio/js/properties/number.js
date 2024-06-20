@@ -79,7 +79,7 @@ export class NumberProperty extends Property {
    * @param {null | number} maxValue
    * @param {number} metaflags
    */
-  constructor(defaultValue = 0, flags = 0, minValue = null, maxValue = null, metaflags = NO_FLAGS) {
+  constructor(defaultValue = 0, flags = NO_FLAGS, minValue = null, maxValue = null, metaflags = NO_FLAGS) {
     super(processNumber(defaultValue, flags, minValue, maxValue), metaflags);
     this.#flags = flags;
     this.#min = minValue;

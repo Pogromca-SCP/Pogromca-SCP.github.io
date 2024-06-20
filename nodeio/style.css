@@ -208,7 +208,7 @@ li > img, summary > img {
   margin-right: 0.5rem
 }
 
-#properties > div > input, #properties > div > button, #explorer > div > select {
+#properties > div > input, #properties > div > button {
   border-radius: 6px;
   background-color: var(--color-bg-inputs);
   color: var(--color-text);

@@ -1,6 +1,14 @@
 // @ts-check
 import { doAction } from "./history.js";
 
+/**
+ * @template T
+ * @callback PropertyChangeHandler<T>
+ * @param {T} oldValue
+ * @param {T} newValue
+ * @returns {void}
+ */
+
 const props = /** @type {HTMLDivElement} */ (document.getElementById("properties"));
 /** @type {Property[]} */
 let showedProps = [];
@@ -11,7 +19,7 @@ export const READONLY = 2;
 export const RESETABLE = 4;
 
 /** @template T */
-export class ChangePropertyAction {
+class ChangePropertyAction {
   /**
    * @type {Property<T>}
    * @readonly
@@ -66,7 +74,7 @@ export class Property {
    * @readonly
    */
   #default;
-  /** @type {((oldVal: T, newVal: T) => void)[]} */
+  /** @type {PropertyChangeHandler<T>[]} */
   #listeners;
 
   /**
@@ -175,12 +183,12 @@ export class Property {
     this.updateDisplay();
   }
 
-  /** @param {(oldVal: T, newVal: T) => void} listener */
+  /** @param {PropertyChangeHandler<T>} listener */
   addChangeListener(listener) {
     this.#listeners.push(listener);
   }
 
-  /** @param {(oldVal: T, newVal: T) => void} listener */
+  /** @param {PropertyChangeHandler<T>} listener */
   removeChangeListener(listener) {
     this.#listeners = this.#listeners.filter(lis => lis !== listener);
   }

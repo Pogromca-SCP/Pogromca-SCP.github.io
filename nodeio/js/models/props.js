@@ -1,8 +1,8 @@
 // @ts-check
 import { NO_FLAGS, TRANSIENT, READONLY, RESETABLE } from "../properties.js";
 import BooleanProperty from "../properties/bool.js";
-import { ALLOW_NAN, INTEGER, NumberProperty, UNSIGNED } from "../properties/number.js";
-import { TextProperty } from "../properties/text.js";
+import { ALLOW_NAN, INTEGER, UNSIGNED, NumberProperty } from "../properties/number.js";
+import TextProperty from "../properties/text.js";
 
 /**
  * @typedef {Object} PropertySettings
@@ -49,9 +49,7 @@ const loadMetaflags = prop => {
 };
 
 /** @param {Readonly<PropertySettings & BooleanValue>} prop */
-const loadBooleanProperty = prop => {
-  return new BooleanProperty(prop.value, loadMetaflags(prop));
-};
+const loadBooleanProperty = prop => new BooleanProperty(prop.value, loadMetaflags(prop));
 
 /** @param {Readonly<PropertySettings & NumberValue>} prop */
 const loadNumberProperty = prop => {
@@ -73,9 +71,7 @@ const loadNumberProperty = prop => {
 };
 
 /** @param {Readonly<PropertySettings & TextValue>} prop */
-const loadTextProperty = prop => {
-  return new TextProperty(prop.value, prop.maxLength ?? null, loadMetaflags(prop));
-};
+const loadTextProperty = prop => new TextProperty(prop.value, prop.maxLength ?? null, loadMetaflags(prop));
 
 /**
  * @param {Readonly<PropertyDefinition>} prop
