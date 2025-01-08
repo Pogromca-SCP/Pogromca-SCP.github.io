@@ -19,7 +19,7 @@ const pixelsSize = /** @type {Readonly<HTMLInputElement>} */ (document.getElemen
 const HIDDEN_CLASS = "hidden";
 
 /**
- * @typedef {Object} Pixel
+ * @typedef {object} Pixel
  * @property {number} x
  * @property {number} y
  * @property {number} h
@@ -39,7 +39,7 @@ const vm = {
   /** @type {Pixel[]} */
   pixels: [],
   pixelSize: 0,
-  halfSize: 0
+  halfSize: 0,
 };
 
 const inputVars = {
@@ -62,7 +62,7 @@ const inputVars = {
   simulationTime: () => new Date(Date.now() - vm.started.getTime()).getTime() / 1000,
   simulationStartTime: () => vm.started.getTime() / 1000,
   width: () => canvas.width,
-  height: () => canvas.height
+  height: () => canvas.height,
 };
 
 const outputs = ["x'", "y'", "h", "s", "l", "a"];
@@ -167,7 +167,7 @@ const preparePixels = () => {
       h: 0,
       s: 0,
       l: 0,
-      a: 0
+      a: 0,
     });
   }
 

@@ -2,8 +2,8 @@
 import { tokenTypes } from "./enums.js";
 
 /**
- * @typedef {Object} Token
- * @property {number} type
+ * @typedef {object} Token
+ * @property {tokenTypes} type
  * @property {string} lexeme
  * @property {number} line
  */
@@ -77,27 +77,21 @@ export default class Scanner {
     return true;
   }
 
-  /**
-   * @param {number} type
-   * @returns {Token}
-   */
+  /** @param {tokenTypes} type */
   #makeToken(type) {
     return {
       type: type,
       lexeme: this.#source.substring(this.#start, this.#current),
-      line: this.#line
+      line: this.#line,
     };
   }
 
-  /**
-   * @param {string} message
-   * @returns {Token}
-   */
+  /** @param {string} message */
   #errorToken(message) {
     return {
       type: tokenTypes.error,
       lexeme: message,
-      line: this.#line
+      line: this.#line,
     };
   }
 

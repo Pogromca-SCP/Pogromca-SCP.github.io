@@ -1,5 +1,6 @@
 // @ts-check
 
+/** @enum {number} */
 export const gameStates = {
   /** @readonly */
   initial: 0,
@@ -10,9 +11,10 @@ export const gameStates = {
   /** @readonly */
   question: 3,
   /** @readonly */
-  results: 4
+  results: 4,
 };
 
+/** @enum {number} */
 export const responseCodes = {
   /** @readonly */
   success: 0,
@@ -25,5 +27,5 @@ export const responseCodes = {
   /** @readonly */
   tokenEmpty: 4,
   /** @readonly */
-  rateLimit: 5
+  rateLimit: 5,
 };

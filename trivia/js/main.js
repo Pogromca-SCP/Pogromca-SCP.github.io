@@ -12,7 +12,7 @@ const question = /** @type {HTMLHeadingElement} */ (document.getElementById("que
 const decoder = document.createElement("textarea");
 
 /**
- * @typedef {Object} Row
+ * @typedef {object} Row
  * @property {HTMLDivElement} root
  * @property {HTMLHeadingElement} display
  * 
@@ -20,9 +20,9 @@ const decoder = document.createElement("textarea");
  */
 
 /** @param {RowId} id */
-const getRow = (id) => /** @type {Row} */ ({
-  root: document.getElementById(`${id}-row`),
-  display: document.getElementById(`${id}-text`)
+const getRow = (id) => ({
+  root: /** @type {HTMLDivElement} */ (document.getElementById(`${id}-row`)),
+  display: /** @type {HTMLHeadingElement} */ (document.getElementById(`${id}-text`)),
 });
 
 /** @type {Readonly<Record<RowId, Row>>} */
@@ -30,7 +30,7 @@ const rows = {
   A: getRow("A"),
   B: getRow("B"),
   C: getRow("C"),
-  D: getRow("D")
+  D: getRow("D"),
 };
 
 /** @type {readonly RowId[]} */
@@ -46,14 +46,14 @@ const addError = (message) => {
 const clearErrors = () => errors.innerHTML = "";
 
 const gameState = {
+  /** @type {gameStates} */
   state: gameStates.initial,
   /** @type {Question[]} */
   questions: [],
   score: 0,
   time: 0,
   rounds: 0,
-  /** @type {RowId} */
-  correct: rowsIds[0]
+  correct: rowsIds[0],
 };
 
 const ROUND_TIME = 20;
@@ -68,14 +68,14 @@ const decode = (str) => {
 };
 
 /**
- * @typedef {Object} TriviaCategory
+ * @typedef {object} TriviaCategory
  * @property {number} id
  * @property {string} name
  * 
- * @typedef {Object} TriviaCategories
+ * @typedef {object} TriviaCategories
  * @property {TriviaCategory[]} trivia_categories
  * 
- * @typedef {Object} Question
+ * @typedef {object} Question
  * @property {string} category
  * @property {string} correct_answer
  * @property {"easy" | "medium" | "hard"} difficulty
@@ -83,8 +83,8 @@ const decode = (str) => {
  * @property {string} question
  * @property {"boolean" | "multiple"} type
  * 
- * @typedef {Object} QuestionResponse
- * @property {0 | 1 | 2 | 3 | 4 | 5} response_code
+ * @typedef {object} QuestionResponse
+ * @property {responseCodes} response_code
  * @property {Question[]} results
  */
 
@@ -169,8 +169,8 @@ const loadQuestions = async () => {
 };
 
 /**
- * @param {number | null} seconds 
- * @param {boolean} doSetup 
+ * @param {number | null} seconds
+ * @param {boolean} doSetup
  */
 const updateTimer = (seconds = null, doSetup = true) => {
   if (seconds === null) {
@@ -220,7 +220,7 @@ const gameLoop = () => {
   current.incorrect_answers = shuffle(current.incorrect_answers);
   gameState.correct = isBoolean ? (current.correct_answer === "True" ? rowsIds[0] : rowsIds[1]) : rowsIds[randRange(0, rowsIds.length - 1)];
   question.innerText = decode(current.question);
-  const rowSrc = /** @type {RowId[]} */ (isBoolean ? [rowsIds[0], rowsIds[1]] : shuffle(rowsIds));
+  const rowSrc = isBoolean ? [rowsIds[0], rowsIds[1]] : shuffle(rowsIds);
 
   for (const row of rowSrc) {
     const tmp = rows[row];

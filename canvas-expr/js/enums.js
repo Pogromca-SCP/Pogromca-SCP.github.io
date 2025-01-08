@@ -1,5 +1,6 @@
 // @ts-check
 
+/** @enum {number} */
 export const tokenTypes = {
   // Operators
   /** @readonly */
@@ -53,9 +54,10 @@ export const tokenTypes = {
   /** @readonly */
   error: 22,
   /** @readonly */
-  end: 23
+  end: 23,
 };
 
+/** @enum {number} */
 export const opCodes = {
   /** @readonly */
   constant: 0,
@@ -92,9 +94,10 @@ export const opCodes = {
   /** @readonly */
   and: 16,
   /** @readonly */
-  or: 17
+  or: 17,
 };
 
+/** @enum {number} */
 export const precedenceLevels = {
   /** @readonly */
   none: 0,
@@ -119,5 +122,5 @@ export const precedenceLevels = {
   /** @readonly */
   call: 10,
   /** @readonly */
-  primary: 11
+  primary: 11,
 };

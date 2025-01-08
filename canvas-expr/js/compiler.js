@@ -6,10 +6,11 @@ import stdFunctions from "./std-lib.js";
 /**
  * @typedef {import("./scanner.js").Token} Token
  * @typedef {import("./std-lib.js").StdFunction} StdFunction
+ * 
+ * @typedef {number | readonly number[] | (() => number)} VariableValue
  */
 
 const compiler = {
-  /** @type {Scanner} */
   scanner: Scanner.emptyScanner,
 
   /** @type {Readonly<Token> | null} */
@@ -28,14 +29,15 @@ const compiler = {
   /** @type {Readonly<StdFunction>[]} */
   callStack: [],
 
-  /** @type {Readonly<Record<string, number | readonly number[] | (() => number)>>} */
+  /** @type {Readonly<Record<string, VariableValue>>} */
   inputVars: {},
 
   /** @type {readonly string[]} */
   outputs: [],
 
-  /** @type {(message: string) => void} */
-  onError: (message) => {},
+  /** @param {string} message */
+  onError: message => {},
+
   advance() {
     this.previous = this.current;
 
@@ -52,7 +54,7 @@ const compiler = {
     }
   },
 
-  /** @param {number} type */
+  /** @param {tokenTypes} type */
   match(type) {
     if (!this.check(type)) {
       return false;
@@ -62,13 +64,13 @@ const compiler = {
     return true;
   },
 
-  /** @param {number} type */
+  /** @param {tokenTypes} type */
   check(type) {
     return this.current?.type === type;
   },
 
   /**
-   * @param {number} type
+   * @param {tokenTypes} type
    * @param {string} message
    */
   consume(type, message) {
@@ -132,7 +134,7 @@ const compiler = {
     this.hadError = true;
   },
 
-  /** @param {number} precedence */
+  /** @param {tokenTypes} precedence */
   parsePrecedence(precedence) {
     this.advance();
     const prefixRule = parseRules[this.previous?.type ?? tokenTypes.error].prefix;
@@ -171,25 +173,23 @@ const compiler = {
     if (canAssign && this.match(tokenTypes.equal)) {
       this.error("Invalid assignment target.");
     }
-  }
+  },
 };
 
 /**
  * @callback ParseFn
  * @param {boolean} canAssign
  * @returns {void}
- */
-
-/**
- * @typedef {Object} PrecedenceRule
+ *
+ * @typedef {object} PrecedenceRule
  * @property {ParseFn | null} prefix
  * @property {ParseFn | null} infix
- * @property {number} precedence
+ * @property {tokenTypes} precedence
  */
 
 /**
  * @param {string} src
- * @param {Readonly<Record<string, number | readonly number[] | (() => number)>>} inputVars
+ * @param {Readonly<Record<string, VariableValue>>} inputVars
  * @param {Readonly<string[]>} outputs
  * @param {(message: string) => void} onError
  */
