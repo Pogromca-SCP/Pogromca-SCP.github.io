@@ -302,7 +302,7 @@ const binary = () => {
 };
 
 /** @param {boolean} canAssign */
-const variable = (canAssign) => namedVariable(compiler.previous, canAssign);
+const variable = canAssign => namedVariable(compiler.previous, canAssign);
 
 const call = () => compiler.emitNums(opCodes.call, argumentsList());
 

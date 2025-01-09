@@ -20,7 +20,7 @@ const decoder = document.createElement("textarea");
  */
 
 /** @param {RowId} id */
-const getRow = (id) => ({
+const getRow = id => ({
   root: /** @type {HTMLDivElement} */ (document.getElementById(`${id}-row`)),
   display: /** @type {HTMLHeadingElement} */ (document.getElementById(`${id}-text`)),
 });
@@ -37,7 +37,7 @@ const rows = {
 const rowsIds = ["A", "B", "C", "D"];
 
 /** @param {string} message */
-const addError = (message) => {
+const addError = message => {
   const element = document.createElement("li");
   element.innerText = message;
   errors.appendChild(element);
@@ -60,7 +60,7 @@ const ROUND_TIME = 20;
 const RESULTS_TIME = 3;
 
 /** @param {string} str */
-const decode = (str) => {
+const decode = str => {
   decoder.innerHTML = str;
   const result = decoder.value;
   decoder.innerHTML = "";
@@ -233,7 +233,7 @@ const gameLoop = () => {
 };
 
 /** @param {RowId} id */
-const answer = (id) => {
+const answer = id => {
   if (gameState.state !== gameStates.question) {
     return;
   }

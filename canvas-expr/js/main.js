@@ -137,13 +137,13 @@ const addMessage = (message, className) => {
 };
 
 /** @param {string} message */
-const addInfo = (message) => addMessage(message, "info");
+const addInfo = message => addMessage(message, "info");
 
 /** @param {string} message */
-const addError = (message) => addMessage(message, "error");
+const addError = message => addMessage(message, "error");
 
 /** @param {string} message */
-const addSuccess = (message) => addMessage(message, "success");
+const addSuccess = message => addMessage(message, "success");
 
 const preparePixels = () => {
   if (inputVars.count < 1) {
@@ -221,7 +221,7 @@ const updatePixel = (pixel, i) => {
           if (value === undefined) {
             value = data[op];
           } else if (typeof(value) === "function") {
-            value = /** @type {number} */ (value());
+            value = value();
           } else if (typeof(value) !== "number") {
             value = value[i];
           }
@@ -336,10 +336,10 @@ const updatePixel = (pixel, i) => {
 };
 
 /** @param {number} x */
-const clamp = (x) => x < 0 ? 0 : (x > 1 ? 1 : x);
+const clamp = x => x < 0 ? 0 : (x > 1 ? 1 : x);
 
 /** @param {number} argNum */
-const runFunctionCall = (argNum) => {
+const runFunctionCall = argNum => {
   switch (argNum) {
     case 0: {
       const func = /** @type {StdFuncBody} */ (vm.stack.pop());

@@ -24,7 +24,7 @@ export const randRange = (min, max) => Math.floor(Math.random() * (max - min + 1
  * @template T
  * @param {readonly T[]} arr
  */
-export const shuffle = (arr) => {
+export const shuffle = arr => {
   const result = [...arr];
 
   for (let i = result.length - 1; i > 0; --i) {
