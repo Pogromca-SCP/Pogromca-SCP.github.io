@@ -1,7 +1,7 @@
 // @ts-check
 
 /**
- * @typedef {Object} Action
+ * @typedef {object} Action
  * @property {() => void} do
  * @property {() => void} undo
  */
@@ -10,7 +10,7 @@ const hist = {
   /** @type {Readonly<Action>[]} */
   done: [],
   /** @type {Readonly<Action>[]} */
-  undone: []
+  undone: [],
 };
 
 const ACTIONS_HISTORY_LIMIT = 100;
@@ -21,7 +21,7 @@ export const clearActionHistory = () => {
 };
 
 /** @param {Readonly<Action>} ac */
-export const doAction = (ac) => {
+export const doAction = ac => {
   ac.do();
   hist.done.push(ac);
   hist.undone = [];

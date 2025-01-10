@@ -1,8 +1,9 @@
 // @ts-check
+
 const menu = /** @type {HTMLUListElement} */ (document.getElementById("context-menu"));
 
 /**
- * @typedef {Object} MenuElement
+ * @typedef {object} MenuElement
  * @property {string} name
  * @property {(e: MouseEvent) => void} handler
  * @property {() => boolean} [condition]

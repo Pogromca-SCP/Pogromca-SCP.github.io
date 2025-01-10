@@ -1,6 +1,7 @@
 // @ts-check
+
 const upload = /** @type {HTMLInputElement} */ (document.getElementById("file-upload"));
-/** @type {(str: string) => void} */
+/** @param {string} str */
 let onLoad = str => {};
 
 upload.addEventListener("change", e => {

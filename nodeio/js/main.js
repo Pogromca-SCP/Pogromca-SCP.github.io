@@ -1,16 +1,17 @@
 // @ts-check
-import { loadItems } from "./explorer.js";
-import { newProject, openProject, saveProject } from "./graph.js";
 import { redoAction, undoAction } from "./history.js";
+import { addNodeType, initialize } from "./library.js";
 import { closeContextMenu } from "./menu.js";
-import { showProperties } from "./properties.js";
-import settings from "./settings.js";
+
+
+
+
+const emptyOp = () => {};
 
 window["closeMenu"] = closeContextMenu;
-window["newGraph"] = newProject;
-window["openGraph"] = openProject;
-window["saveGraph"] = saveProject;
-window["openSettings"] = () => showProperties("Settings", settings);
+window["newGraph"] = () => addNodeType("Test");
+window["openGraph"] = emptyOp;
+window["saveGraph"] = emptyOp;
 window["undoAction"] = undoAction;
 window["redoAction"] = redoAction;
 
@@ -21,10 +22,10 @@ window.addEventListener("beforeunload", e => {
 
 /** @type {Readonly<Record<string, () => void>>} */
 const binds = {
-  o: openProject,
-  s: saveProject,
+  o: emptyOp,
+  s: emptyOp,
   z: undoAction,
-  y: redoAction
+  y: redoAction,
 };
 
 document.addEventListener("keydown", e => {
@@ -41,4 +42,4 @@ document.addEventListener("keydown", e => {
   }
 });
 
-loadItems();
+initialize();

@@ -21,8 +21,6 @@
           <li onclick="openGraph();">Open<span>Ctrl+O</span></li>
           <li onclick="saveGraph();">Save<span>Ctrl+S</span></li>
           <li></li>
-          <li onclick="openSettings();">Settings</li>
-          <li></li>
           <li><a href="../index.html">Exit</a></li>
         </ul>
       </li>
@@ -39,13 +37,9 @@
     </ol>
   </nav>
   <main>
-    <div id="side-menu">
-      <div id="explorer">
-        <div>
-          <div></div>
-        </div>
-      </div>
-      <div id="properties"></div>
+    <div id="explorer">
+      <input id="search" type="text" placeholder="Search..." />
+      <ol id="library"></ol>
     </div>
     <div id="graph"></div>
   </main>
