@@ -18,6 +18,7 @@
 
 :root {
   --nav-border: var(--color-text) solid 1px;
+  --dot-size: 1.2rem;
 }
 
 html {
@@ -139,8 +140,6 @@ main {
   overflow-x: auto;
   overflow-y: auto;
   list-style-type: none;
-  padding-left: 1rem;
-  padding-right: 1rem;
 }
 
 #library > li:hover {
@@ -149,44 +148,76 @@ main {
 
 #search {
   margin: 0.5rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
   font-size: 1.5rem;
-}
-
-#properties > p {
-  font-size: large;
-  text-align: center;
-}
-
-#properties > div {
-  display: flex;
-  margin-top: 1rem;
-}
-
-#properties > div > label, #properties > div > input, #properties > div > button {
-  margin-left: 0.5rem;
-  margin-right: 0.5rem
-}
-
-#properties > div > input, #properties > div > button, #search {
-  border-radius: 6px;
   background-color: var(--color-bg-inputs);
   color: var(--color-text);
 }
 
-#properties > div > input {
-  width: 100%;
+#library, #search {
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 #graph {
   width: 100%;
-  position: absolute;
   overflow: hidden;
+  position: relative;
 }
 
-#graph > * {
+.node {
   position: absolute;
+  display: flex;
+  flex-direction: column;
+  background-color: #333333;
+  border: transparent solid 1px;
+  min-width: 150px;
+}
+
+.node > p {
+  color: #ffffff;
+  text-align: center;
+}
+
+.node > div {
+  display: flex;
+  margin: 0;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+  background-color: #000000;
+}
+
+.node > div:has(div:last-child) {
+  justify-content: end;
+}
+
+.node > div > div {
+  min-width: var(--dot-size);
+  min-height: var(--dot-size);
+  margin-top: 0.6rem;
+  margin-bottom: 0.6rem;
+  background-color: var(--color-text);
+  border-radius: var(--dot-size);
+}
+
+.node > div > div:first-child {
+  margin-left: calc(var(--dot-size) / 2 * -1);
+}
+
+.node > div > div:last-child {
+  margin-right: calc(var(--dot-size) / 2 * -1);
+}
+
+.node > div > label {
+  margin: 0.6rem;
+}
+
+.node > div > input, .node > div > select {
+  width: 100%;
+}
+
+.selected {
+  border: var(--nav-border);
 }
 
 #context-menu {

@@ -1,6 +1,6 @@
 // @ts-check
 import { redoAction, undoAction } from "./history.js";
-import { addNodeType, initialize } from "./library.js";
+import { initialize } from "./library.js";
 import { closeContextMenu } from "./menu.js";
 
 
@@ -9,7 +9,7 @@ import { closeContextMenu } from "./menu.js";
 const emptyOp = () => {};
 
 window["closeMenu"] = closeContextMenu;
-window["newGraph"] = () => addNodeType("Test");
+window["newGraph"] = emptyOp;
 window["openGraph"] = emptyOp;
 window["saveGraph"] = emptyOp;
 window["undoAction"] = undoAction;
