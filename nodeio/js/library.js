@@ -49,7 +49,7 @@ export const addNode = (id, node) => {
 };
 
 export const initialize = () => {
-  addNodeType("Socket", [
+  addNode("Socket", [
     { type: "select", name: "", def: "output", options: ["input", "output"] },
     { type: "", name: "Channel" },
     { type: "number", name: "Slot", connective: false, def: 1, min: 1, max: 100, step: 1 },
@@ -58,20 +58,20 @@ export const initialize = () => {
     { type: "named", name: "Data" },
   ]);
 
-  addNodeType("Type", [
+  addNode("Type", [
     { type: "named", name: "Channel" },
     { type: "select", name: "", def: "not default", options: ["default", "not default"] },
     { type: "select", name: "", def: "connective", options: ["connective", "not connective"] },
     { type: "", name: "Data" },
   ]);
 
-  addNodeType("Option", [
+  addNode("Option", [
     { type: "named", name: "When" },
     { type: "text", name: "", connective: false, def: "", min: 0, max: 50, valid: "" },
     { type: "", name: "Then" },
   ]);
 
-  addNodeType("Condition", [
+  addNode("Condition", [
     { type: "select", name: "Input", def: "number", options: ["number", "text", "bool", "type"] },
     { type: "select", name: "Operation", def: "equals", options: ["equals", "not equals", "less than", "greater than"] },
     { type: "number", name: "", connective: true, def: 0, min: -100, max: 100, step: 1 },
@@ -80,7 +80,7 @@ export const initialize = () => {
     { type: "", name: "False" },
   ]);
 
-  addNodeType("Settings", [
+  addNode("Settings", [
     { type: "", name: "Output" },
     { type: "text", name: "Name", connective: true, def: "", min: 0, max: 50, valid: "" },
     { type: "text", name: "Color", connective: true, def: "", min: 6, max: 6, valid: "0123456789abcdef" },
