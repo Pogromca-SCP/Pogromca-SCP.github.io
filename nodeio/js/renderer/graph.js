@@ -1,5 +1,5 @@
 // @ts-check
-import { renderNode } from "./nodes.ts";
+import { renderNode } from "./nodes.js";
 
 const graph = /** @type {HTMLDivElement} */ (document.getElementById("graph"));
 
