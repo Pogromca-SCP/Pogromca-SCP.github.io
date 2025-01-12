@@ -214,12 +214,8 @@ main {
   padding: 0.25rem;
 }
 
-.node > div:has(div:first-child) > label {
+.node > div > label:first-child {
   margin-left: calc(var(--dot-size) / 2);
-}
-
-.node > div:has(div:last-child) > label {
-  margin-right: calc(var(--dot-size) / 2);
 }
 
 .node > div > input, .node > div > select {
