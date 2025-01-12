@@ -1,58 +1,54 @@
 // @ts-check
-import { renderNamedSocket, renderNumberSocket, renderOutputSocket, renderSelectSocket, renderSwitchSocket, renderTextSocket } from "./sockets.js";
-
-/** @type {Map<string, any[]>} */
-const nodes = new Map();
-
-/** @param {string} id */
-export const removeNodeType = id => nodes.delete(id);
 
 /**
- * @param {string} id
- * @param {any[]} def
+ * @typedef {import("./sockets.js").SocketBase} SocketBase
  */
-export const addNodeType = (id, def) => nodes.set(id, def);
 
-/**
- * @param {HTMLElement} parent
- * @param {string} id
- */
-export const renderNode = (parent, id) => {
-  const def = nodes.get(id);
+export class EditorNode {
+  /** @type {number} */
+  #x;
+  /** @type {number} */
+  #y;
+  /** @type {string} */
+  #name;
+  /** @type {string} */
+  #color;
+  /** @type {SocketBase[]} */
+  #sockets;
+  /** @type {HTMLDivElement | null} */
+  #root;
 
-  if (def === undefined) {
-    return;
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {string} name
+   * @param {string} color
+   * @param {SocketBase[]} sockets
+   */
+  constructor(x, y, name, color, sockets) {
+    this.#x = x;
+    this.#y = y;
+    this.#name = name;
+    this.#color = color;
+    this.#sockets = sockets;
+    this.#root = null;
   }
 
-  const root = document.createElement("div");
-  root.className = "node";
-  root.ondblclick = e => parent.removeChild(root);
-  const name = document.createElement("p");
-  name.innerText = id;
-  root.appendChild(name);
+  /** @param {HTMLElement} parent */
+  render(parent) {
+    this.#root = document.createElement("div");
+    this.#root.className = "node";
+    this.#root.style.left = `${this.#x}px`;
+    this.#root.style.top = `${this.#y}px`;
+    this.#root.style.backgroundColor = this.#color;
+    const name = document.createElement("p");
+    name.innerText = this.#name;
+    this.#root.appendChild(name);
 
-  for (const socket of def) {
-    switch (socket.type) {
-      case "named":
-        renderNamedSocket(root, socket);
-        break;
-      case "number":
-        renderNumberSocket(root, socket);
-        break;
-      case "select":
-        renderSelectSocket(root, socket);
-        break;
-      case "switch":
-        renderSwitchSocket(root, socket);
-        break;
-      case "text":
-        renderTextSocket(root, socket);
-        break;
-      default:
-        renderOutputSocket(root, socket);
-        break;
+    for (const socket of this.#sockets) {
+      socket.render(this.#root);
     }
-  }
 
-  parent.appendChild(root);
-};
+    parent.appendChild(this.#root);
+  }
+}
