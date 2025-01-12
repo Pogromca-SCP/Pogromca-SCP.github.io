@@ -19,6 +19,7 @@
 :root {
   --nav-border: var(--color-text) solid 1px;
   --dot-size: 1.2rem;
+  --dot-color: #888888;
 }
 
 html {
@@ -197,7 +198,7 @@ main {
 .node > div > div {
   min-width: var(--dot-size);
   min-height: var(--dot-size);
-  background-color: var(--color-text);
+  background-color: var(--dot-color);
   border-radius: var(--dot-size);
 }
 
@@ -213,6 +214,14 @@ main {
   padding: 0.25rem;
 }
 
+.node > div:has(div:first-child) > label {
+  margin-left: calc(var(--dot-size) / 2);
+}
+
+.node > div:has(div:last-child) > label {
+  margin-right: calc(var(--dot-size) / 2);
+}
+
 .node > div > input, .node > div > select {
   width: 100%;
 }
@@ -226,7 +235,7 @@ main {
 }
 
 .selected {
-  border: var(--nav-border);
+  border: var(--dot-color) solid 1px;
 }
 
 #context-menu {
