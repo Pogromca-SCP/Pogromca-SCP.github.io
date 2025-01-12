@@ -231,7 +231,7 @@ main {
 }
 
 .selected {
-  border: var(--dot-color) solid 1px;
+  border: #aa0000 solid 1px;
 }
 
 #context-menu {
