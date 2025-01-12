@@ -20,6 +20,7 @@
   --nav-border: var(--color-text) solid 1px;
   --dot-size: 1.2rem;
   --dot-color: #888888;
+  --selection-size: 5px;
 }
 
 html {
@@ -169,7 +170,7 @@ main {
   position: absolute;
   display: flex;
   flex-direction: column;
-  border: transparent solid 1px;
+  border: transparent solid var(--selection-size);
   padding-bottom: 1rem;
   min-width: 150px;
 }
@@ -231,7 +232,7 @@ main {
 }
 
 .selected {
-  border: #aa0000 solid 1px;
+  border: #aa0000 solid var(--selection-size);
 }
 
 #context-menu {
