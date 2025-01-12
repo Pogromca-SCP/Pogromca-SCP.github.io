@@ -175,8 +175,6 @@ main {
 
 .node > p {
   margin-bottom: 1rem;
-  margin-left: 1px;
-  margin-right: 1px;
   color: #000000;
   background-color: #ffffff;
   border: #000000 solid 1px;
@@ -221,6 +219,10 @@ main {
 
 .node > div > select {
   text-align: center;
+}
+
+.node > div:has(label) > input, .node > div:has(label) > select {
+  margin-left: 1rem;
 }
 
 .selected {
