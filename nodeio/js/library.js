@@ -6,64 +6,43 @@ import { DRAG_DROP_DATA_FORMAT } from "./renderer/graph.js";
 const search = /** @type {HTMLInputElement} */ (document.getElementById("search"));
 const library = /** @type {HTMLOListElement} */ (document.getElementById("library"));
 
-/** @type {HTMLLIElement[]} */
-let elements = [];
-
 search.addEventListener("change", e => {
   const filter = search.value;
+  const children = /** @type {Iterable<HTMLElement>} */ (library.children);
 
   if (filter === "") {
-    for (const el of elements) {
-      el.hidden = false;
+    for (const child of children) {
+      child.hidden = false;
     }
   } else {
-    for (const el of elements) {
-      el.hidden = !el.innerText.includes(filter);
+    for (const child of children) {
+      child.hidden = !child.innerText.includes(filter);
     }
   }
 });
 
 /**
- * @param {CompiledNode} node
- * @param {boolean} hide
+ * @param {HTMLLIElement} element
+ * @param {boolean} show
  */
-const createLibraryElement = (node, hide) => {
-  const id = node.id;
-
-  if (id === null) {
+const updateLibraryElement = (element, show) => {
+  if (!show) {
+    library.removeChild(element);
     return;
   }
 
-  const element = document.createElement("li");
-
-  if (!(node instanceof RootNode)) {
-    element.draggable = true;
+  if (element.draggable) {
+    const id = element.innerText;
     element.ondragstart = e => e.dataTransfer?.setData(DRAG_DROP_DATA_FORMAT, id);
   }
 
-  element.innerText = id;
-  element.hidden = hide;
-  library.appendChild(element);
-  elements.push(element);
-};
-
-const renderLibrary = () => {
-  library.innerHTML = "";
-  elements = [];
   const filter = search.value;
-
-  if (filter === "") {
-    for (const node of CompiledNode.allNodes) {
-      createLibraryElement(node, false);
-    }
-  } else {
-    for (const node of CompiledNode.allNodes) {
-      createLibraryElement(node, !node.id?.includes(filter));
-    }
-  }
+  element.hidden = filter !== "" && !element.innerText.includes(filter);
+  library.appendChild(element);
 };
 
 export const initialize = () => {
+  CompiledNode.rendererCallback = updateLibraryElement;
   /** @type {CompiledNode} */
   let node = new RootNode();
   node.transientChangeId("Root");
@@ -77,6 +56,4 @@ export const initialize = () => {
   node.transientChangeId("Condition");
   node = new SettingsNode();
   node.transientChangeId("Settings");
-  renderLibrary();
-  CompiledNode.rendererCallback = renderLibrary;
 };

@@ -40,10 +40,18 @@ class ChangeIdAction {
 
 /** @abstract */
 export class CompiledNode {
-  /** @type {() => void} */
-  static rendererCallback = () => {};
-  /** @type {Map<string, CompiledNode>} */
+  /** @type {(element: HTMLLIElement, show: boolean) => void} */
+  static rendererCallback = (element, show) => {};
+  /**
+   * @type {Map<string, CompiledNode>}
+   * @readonly
+   */
   static #nodes = new Map();
+  /**
+   * @type {HTMLLIElement}
+   * @readonly
+   */
+  #display;
   /** @type {string | null} */
   #id;
 
@@ -52,6 +60,8 @@ export class CompiledNode {
       throw new Error("Cannot instantiate an abstract class: CompiledNode");
     }
 
+    this.#display = document.createElement("li");
+    this.#display.draggable = this.dragEnabled;
     this.#id = null;
   }
 
@@ -61,6 +71,10 @@ export class CompiledNode {
 
   get id() {
     return this.#id;
+  }
+
+  get dragEnabled() {
+    return true;
   }
 
   /** @param {string} id */
@@ -87,15 +101,16 @@ export class CompiledNode {
   transientChangeId(id) {
     if (this.#id !== null) {
       CompiledNode.#nodes.delete(this.#id);
+      CompiledNode.rendererCallback(this.#display, false);
     }
 
     this.#id = id;
     
     if (this.#id !== null) {
       CompiledNode.#nodes.set(this.#id, this);
+      this.#display.innerText = this.#id;
+      CompiledNode.rendererCallback(this.#display, true);
     }
-
-    CompiledNode.rendererCallback();
   }
 
   /**
@@ -109,5 +124,7 @@ export class CompiledNode {
 }
 
 export class RootNode extends CompiledNode {
-  
+  get dragEnabled() {
+    return false;
+  }
 }

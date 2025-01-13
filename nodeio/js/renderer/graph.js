@@ -14,5 +14,5 @@ graph.addEventListener("drop", e => {
     return;
   }
 
-  node.spawnNode(e.pageX, e.pageY).render(graph);
+  node.spawnNode(e.clientX - graph.offsetLeft, e.clientY - graph.offsetTop).render(graph);
 });
