@@ -4,6 +4,41 @@
  * @typedef {import("./sockets.js").SocketBase} SocketBase
  */
 
+/** @type {EditorNode | null} */
+let moved = null;
+
+/** @type {[number, number, number, number]} */
+const coords = [0, 0, 0, 0];
+
+/** @param {MouseEvent} e */
+const continueDrag = e => {
+  e.preventDefault();
+  coords[0] = coords[2] - e.clientX;
+  coords[1] = coords[3] - e.clientY;
+  coords[2] = e.clientX;
+  coords[3] = e.clientY;
+  moved?.move(coords[0], coords[1]);
+};
+
+/** @param {MouseEvent} e */
+const endDrag = e => {
+  moved = null;
+  document.onmousemove = null;
+  document.onmouseup = null;
+};
+
+/**
+ * @param {MouseEvent} e
+ * @param {EditorNode} node
+ */
+const startDrag = (e, node) => {
+  moved = node;
+  coords[2] = e.clientX;
+  coords[3] = e.clientY;
+  document.onmousemove = continueDrag;
+  document.onmouseup = endDrag;
+};
+
 export class EditorNode {
   /** @type {number} */
   #x;
@@ -15,7 +50,7 @@ export class EditorNode {
   #color;
   /** @type {SocketBase[]} */
   #sockets;
-  /** @type {HTMLDivElement | null} */
+  /** @type {HTMLDivElement} */
   #root;
 
   /**
@@ -31,12 +66,11 @@ export class EditorNode {
     this.#name = name;
     this.#color = color;
     this.#sockets = sockets;
-    this.#root = null;
+    this.#root = document.createElement("div");
   }
 
   /** @param {HTMLElement} parent */
   render(parent) {
-    this.#root = document.createElement("div");
     this.#root.className = "node";
     this.#root.style.left = `${this.#x}px`;
     this.#root.style.top = `${this.#y}px`;
@@ -50,5 +84,19 @@ export class EditorNode {
     }
 
     parent.appendChild(this.#root);
+
+    this.#root.onmousedown = e => {
+      e.preventDefault();
+      startDrag(e, this);
+    };
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   */
+  move(x, y) {
+    this.#root.style.left = `${this.#x}px`;
+    this.#root.style.top = `${this.#y}px`;
   }
 }
