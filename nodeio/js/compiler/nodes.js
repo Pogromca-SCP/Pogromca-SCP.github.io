@@ -60,8 +60,9 @@ export class CompiledNode {
       throw new Error("Cannot instantiate an abstract class: CompiledNode");
     }
 
-    this.#display = document.createElement("li");
-    this.#display.draggable = this.dragEnabled;
+    const display = document.createElement("li");
+    display.draggable = this.dragEnabled;
+    this.#display = display;
     this.#id = null;
   }
 
@@ -116,10 +117,10 @@ export class CompiledNode {
   /**
    * @param {number} x
    * @param {number} y
-   * @returns {import("../renderer/nodes.js").EditorNode}
+   * @returns {import("../renderer/graph.js").EditorNode}
    */
-  spawnNode(x, y) {
-    throw new Error("Cannot execute an abstract method: spawnNode");
+  instantiate(x, y) {
+    throw new Error("Cannot execute an abstract method: instantiate(x, y)");
   }
 }
 
