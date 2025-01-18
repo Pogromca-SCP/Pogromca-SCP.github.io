@@ -115,8 +115,8 @@ export class EditorNode {
     this.#x = root.offsetLeft - x;
     this.#y = root.offsetTop - y;
     const style = root.style;
-    style.left = `${x}px`;
-    style.top = `${y}px`;
+    style.left = `${this.#x}px`;
+    style.top = `${this.#y}px`;
   }
 }
 
