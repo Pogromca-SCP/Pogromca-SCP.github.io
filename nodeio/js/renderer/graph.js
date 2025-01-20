@@ -1,7 +1,7 @@
 // @ts-check
 import { CompiledNode } from "../compiler/nodes.js";
 import { doAction } from "../history.js";
-import { diselect, getSelection, isSelected, select, startDrag } from "./selection.js";
+import { hasFlag } from "../utils.js";
 
 const graph = /** @type {HTMLDivElement} */ (document.getElementById("graph"));
 
@@ -12,7 +12,40 @@ const graph = /** @type {HTMLDivElement} */ (document.getElementById("graph"));
 const NODE_CLASS = "node";
 const SELECTION_CLASS = "node selected";
 export const DRAG_DROP_DATA_FORMAT = "text/plain";
-export const REMOVABLE = 1;
+export const UNIQUE = 1;
+/** @type {[number, number, number, number]} */
+const coords = [0, 0, 0, 0];
+
+/** @param {MouseEvent} e */
+const continueDrag = e => {
+  e.preventDefault();
+  coords[0] = coords[2] - e.clientX;
+  coords[1] = coords[3] - e.clientY;
+  coords[2] = e.clientX;
+  coords[3] = e.clientY;
+  const x = coords[0];
+  const y = coords[1];
+
+  for (const node of EditorNode.selectedNodes) {
+    node.moveVisualOnly(x, y);
+  }
+};
+
+/** @param {MouseEvent} e */
+const endDrag = e => {
+  document.onmousemove = null;
+  document.onmouseup = null;
+  const node = EditorNode.selectedNodes[0];
+  node?.finishMove();
+};
+
+/** @param {MouseEvent} e */
+const startDrag = e => {
+  coords[2] = e.clientX;
+  coords[3] = e.clientY;
+  document.onmousemove = continueDrag;
+  document.onmouseup = endDrag;
+};
 
 class PlaceNodesAction {
   /**
@@ -109,12 +142,17 @@ class MoveNodesAction {
    */
   #moveNodes(x, y) {
     for (const node of this.nodes) {
-      node.applyMove(x, y);
+      node.transientMove(x, y);
     }
   }
 }
 
 export class EditorNode {
+  /**
+   * @type {Set<EditorNode>}
+   * @readonly
+   */
+  static #selection = new Set();
   /**
    * @type {number}
    * @readonly
@@ -161,15 +199,15 @@ export class EditorNode {
     this.#title = title;
 
     root.onmousedown = e => {
-      if (this.selected) {
+      if (this.isSelected) {
         startDrag(e);
       }
     };
 
     root.onclick = e => {
-      if (this.selected) {
-        this.diselect();
-      } else {
+      e.stopPropagation();
+
+      if (!this.isSelected) {
         this.select();
       }
     };
@@ -179,6 +217,10 @@ export class EditorNode {
     for (const socket of sockets) {
       socket.render(root);
     }
+  }
+
+  static get selectedNodes() {
+    return Array.from(EditorNode.#selection);
   }
 
   get flags() {
@@ -193,16 +235,22 @@ export class EditorNode {
     return this.#y;
   }
 
-  get selected() {
-    return isSelected(this);
+  get isSelected() {
+    return EditorNode.#selection.has(this);
   }
 
-  get visible() {
+  get isVisible() {
     return this.#root.parentElement !== null;
   }
 
+  static clearSelection() {
+    for (const node of EditorNode.selectedNodes) {
+      node.diselect();
+    }
+  }
+
   static deleteSelection() {
-    doAction(new PlaceNodesAction(getSelection(), false));
+    doAction(new PlaceNodesAction(EditorNode.selectedNodes, false));
   }
 
   /**
@@ -210,25 +258,30 @@ export class EditorNode {
    * @param {number} y
    */
   static moveSelection(x, y) {
-    doAction(new MoveNodesAction(getSelection(), x, y));
+    doAction(new MoveNodesAction(EditorNode.selectedNodes, x, y));
   }
 
   select() {
     this.#root.className = SELECTION_CLASS;
-    select(this);
+    EditorNode.#selection.add(this);
   }
 
   diselect() {
     this.#root.className = NODE_CLASS;
-    diselect(this);
+    EditorNode.#selection.delete(this);
   }
 
   add() {
-    if (this.visible) {
+    if (this.isVisible) {
       return false;
     }
 
-    doAction(new PlaceNodesAction([this], true));
+    if (hasFlag(this.#flags, UNIQUE)) {
+      this.transientAdd();
+    } else {
+      doAction(new PlaceNodesAction([this], true));
+    }
+
     return true;
   }
 
@@ -237,7 +290,7 @@ export class EditorNode {
   }
 
   delete() {
-    if (!this.visible) {
+    if (!this.isVisible || hasFlag(this.#flags, UNIQUE)) {
       return false;
     }
 
@@ -253,25 +306,8 @@ export class EditorNode {
   /**
    * @param {number} x
    * @param {number} y
-   * @returns {[number, number]}
    */
-  calculateOffsets(x, y) {
-    const root = this.#root;
-    return [this.#x - (root.offsetLeft - x), this.#y - (root.offsetTop - y)];
-  }
-
-  /**
-   * @param {number} x
-   * @param {number} y
-   * @param {boolean} [applyOffset]
-   */
-  move(x, y, applyOffset = true) {
-    if (applyOffset) {
-      const root = this.#root;
-      x = root.offsetLeft - x;
-      y = root.offsetTop - y;
-    }
-
+  move(x, y) {
     if (this.#x === x && this.#y === y) {
       return false;
     }
@@ -280,45 +316,34 @@ export class EditorNode {
     return true;
   }
 
-  /**
-   * @param {number} x
-   * @param {number} y
-   */
-  finishMove(x, y) {
+  finishMove() {
     const root = this.#root;
-    x = root.offsetLeft - x;
-    y = root.offsetTop - y;
-    EditorNode.moveSelection(this.#x - x, this.#y - y);
-  }
-
-  /**
-   * @param {number} x
-   * @param {number} y
-   * @param {boolean} [applyOffset]
-   */
-  transientMove(x, y, applyOffset = true) {
-    const root = this.#root;
-    
-    if (applyOffset) {
-      x = root.offsetLeft - x;
-      y = root.offsetTop - y;
-    }
-
-    const style = root.style;
-    style.left = `${x}px`;
-    style.top = `${y}px`;
+    EditorNode.moveSelection(this.#x - root.offsetLeft, this.#y - root.offsetTop);
   }
 
   /**
    * @param {number} x
    * @param {number} y
    */
-  applyMove(x, y) {
+  transientMove(x, y) {
     this.#x += x;
     this.#y += y;
     const style = this.#root.style;
     style.left = `${this.#x}px`;
     style.top = `${this.#y}px`;
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   */
+  moveVisualOnly(x, y) {
+    const root = this.#root;
+    x = root.offsetLeft - x;
+    y = root.offsetTop - y;
+    const style = root.style;
+    style.left = `${x}px`;
+    style.top = `${y}px`;
   }
 }
 
@@ -333,3 +358,5 @@ graph.addEventListener("drop", e => {
 
   node.instantiate(e.clientX, e.clientY).add();
 });
+
+graph.addEventListener("click", e => EditorNode.clearSelection());
