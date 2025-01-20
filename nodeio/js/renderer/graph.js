@@ -318,7 +318,7 @@ export class EditorNode {
 
   finishMove() {
     const root = this.#root;
-    EditorNode.moveSelection(this.#x - root.offsetLeft, this.#y - root.offsetTop);
+    EditorNode.moveSelection(root.offsetLeft - this.#x, root.offsetTop - this.#y);
   }
 
   /**
