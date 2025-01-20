@@ -40,7 +40,8 @@ export const saveFile = (filename, text) => {
   element.href = `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
   element.download = filename;
   element.hidden = true;
-  document.body.appendChild(element);
+  const body = document.body;
+  body.appendChild(element);
   element.click();
-  document.body.removeChild(element);
+  body.removeChild(element);
 };

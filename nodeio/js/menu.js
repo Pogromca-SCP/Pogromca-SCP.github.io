@@ -22,9 +22,10 @@ export const showContextMenu = (x, y, items) => {
   }
 
   menu.innerHTML = "";
+  const length = items.length;
   let i = 0;
 
-  while (i < items.length) {
+  while (i < length) {
     const section = items[i];
 
     for (const element of section.filter(s => s.condition === undefined || s.condition())) {
@@ -36,13 +37,14 @@ export const showContextMenu = (x, y, items) => {
 
     ++i;
 
-    if (i < items.length) {
+    if (i < length) {
       menu.appendChild(document.createElement("li"));
     }
   }
 
-  menu.style.left = `${x}px`;
-  menu.style.top = `${y}px`;
+  const style = menu.style;
+  style.left = `${x}px`;
+  style.top = `${y}px`;
   menu.hidden = false;
 };
 

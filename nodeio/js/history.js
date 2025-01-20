@@ -23,11 +23,12 @@ export const clearActionHistory = () => {
 /** @param {Readonly<Action>} ac */
 export const doAction = ac => {
   ac.do();
-  hist.done.push(ac);
+  const done = hist.done;
+  done.push(ac);
   hist.undone = [];
 
-  if (hist.done.length > ACTIONS_HISTORY_LIMIT) {
-    hist.done.shift();
+  if (done.length > ACTIONS_HISTORY_LIMIT) {
+    done.shift();
   }
 };
 

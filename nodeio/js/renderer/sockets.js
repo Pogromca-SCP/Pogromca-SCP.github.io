@@ -1,14 +1,15 @@
 // @ts-check
-import { socketDirection } from "../enums.js";
-
 const DEFAULT_NAME = "Label";
+const NONE = 0;
+const INPUT = 1;
+const OUTPUT = 2;
 
 /**
  * @template T
  * @abstract
  */
 export class SocketBase {
-  /** @type {socketDirection} */
+  /** @type {number} */
   #direction;
   /** @type {number} */
   #slot;
@@ -20,7 +21,7 @@ export class SocketBase {
   #root;
 
   /**
-   * @param {socketDirection} direction
+   * @param {number} direction
    * @param {number} slot
    * @param {string} name
    * @param {T} def
@@ -45,7 +46,7 @@ export class SocketBase {
   render(parent) {
     this.#root = document.createElement("div");
 
-    if (this.#direction === socketDirection.input) {
+    if (this.#direction === INPUT) {
       this.#root.appendChild(this.#createConnector());
     }
 
@@ -58,10 +59,12 @@ export class SocketBase {
     const input = this.createDirectInput(this.#default);
 
     if (input !== null) {
+      input.onclick = e => e.stopPropagation();
+      input.onmousedown = e => e.stopPropagation();
       this.#root.appendChild(input);
     }
 
-    if (this.#direction === socketDirection.output) {
+    if (this.#direction === OUTPUT) {
       this.#root.appendChild(this.#createConnector());
     }
 
@@ -106,7 +109,7 @@ export class NamedSocket extends SocketBase {
    * @param {string} def
    */
   constructor(slot, name, def) {
-    super(socketDirection.input, slot, name.trim().length > 0 ? name : DEFAULT_NAME, def);
+    super(INPUT, slot, name.trim().length > 0 ? name : DEFAULT_NAME, def);
   }
 }
 
@@ -129,7 +132,7 @@ export class NumberSocket extends SocketBase {
    * @param {number | null} step
    */
   constructor(slot, name, def, connective, min, max, step) {
-    super(connective ? socketDirection.input : socketDirection.none, slot, name, def);
+    super(connective ? INPUT : NONE, slot, name, def);
     this.#min = min;
     this.#max = max;
     this.#step = step;
@@ -169,7 +172,7 @@ export class SelectSocket extends SocketBase {
    * @param {string[]} options
    */
   constructor(slot, name, def, options) {
-    super(socketDirection.none, slot, name, def);
+    super(NONE, slot, name, def);
     this.#options = options;
   }
 
@@ -205,7 +208,7 @@ export class SwitchSocket extends SocketBase {
    * @param {string} inactive
    */
   constructor(slot, name, def, connective, active, inactive) {
-    super(connective ? socketDirection.input : socketDirection.none, slot, name, def);
+    super(connective ? INPUT : NONE, slot, name, def);
     this.#active = active;
     this.#inactive = inactive;
   }
@@ -245,7 +248,7 @@ export class TextSocket extends SocketBase {
    * @param {string} valid
    */
   constructor(slot, name, def, connective, min, max, valid) {
-    super(connective ? socketDirection.input : socketDirection.none, slot, name, def);
+    super(connective ? INPUT : NONE, slot, name, def);
     this.#min = min;
     this.#max = max;
     this.#valid = valid;
@@ -276,6 +279,6 @@ export class OutputSocket extends SocketBase {
    * @param {string} name
    */
   constructor(slot, name) {
-    super(socketDirection.output, slot, name.trim().length > 0 ? name : DEFAULT_NAME, null);
+    super(OUTPUT, slot, name.trim().length > 0 ? name : DEFAULT_NAME, null);
   }
 }

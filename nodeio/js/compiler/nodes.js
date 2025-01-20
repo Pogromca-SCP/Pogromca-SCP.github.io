@@ -1,5 +1,6 @@
 // @ts-check
 import { doAction } from "../history.js";
+import { hasFlag } from "../utils.js";
 
 class ChangeIdAction {
   /**
@@ -38,6 +39,9 @@ class ChangeIdAction {
   }
 }
 
+export const USABLE = 1;
+export const EDITABLE = 2;
+
 /** @abstract */
 export class CompiledNode {
   /** @type {(element: HTMLLIElement, show: boolean) => void} */
@@ -48,6 +52,11 @@ export class CompiledNode {
    */
   static #nodes = new Map();
   /**
+   * @type {number}
+   * @readonly
+   */
+  #flags;
+  /**
    * @type {HTMLLIElement}
    * @readonly
    */
@@ -55,13 +64,15 @@ export class CompiledNode {
   /** @type {string | null} */
   #id;
 
-  constructor() {
+  /** @param {number} flags */
+  constructor(flags) {
     if (this.constructor === CompiledNode) {
       throw new Error("Cannot instantiate an abstract class: CompiledNode");
     }
 
     const display = document.createElement("li");
-    display.draggable = this.dragEnabled;
+    display.draggable = hasFlag(flags, USABLE);
+    this.#flags = flags;
     this.#display = display;
     this.#id = null;
   }
@@ -70,12 +81,12 @@ export class CompiledNode {
     return CompiledNode.#nodes.values();
   }
 
-  get id() {
-    return this.#id;
+  get flags() {
+    return this.#flags;
   }
 
-  get dragEnabled() {
-    return true;
+  get id() {
+    return this.#id;
   }
 
   /** @param {string} id */
@@ -100,17 +111,19 @@ export class CompiledNode {
 
   /** @param {string | null} id */
   transientChangeId(id) {
+    const display = this.#display;
+
     if (this.#id !== null) {
       CompiledNode.#nodes.delete(this.#id);
-      CompiledNode.rendererCallback(this.#display, false);
+      CompiledNode.rendererCallback(display, false);
     }
 
     this.#id = id;
     
-    if (this.#id !== null) {
-      CompiledNode.#nodes.set(this.#id, this);
-      this.#display.innerText = this.#id;
-      CompiledNode.rendererCallback(this.#display, true);
+    if (id !== null) {
+      CompiledNode.#nodes.set(id, this);
+      display.innerText = id;
+      CompiledNode.rendererCallback(display, true);
     }
   }
 
@@ -125,7 +138,7 @@ export class CompiledNode {
 }
 
 export class RootNode extends CompiledNode {
-  get dragEnabled() {
-    return false;
+  constructor() {
+    super(EDITABLE);
   }
 }
