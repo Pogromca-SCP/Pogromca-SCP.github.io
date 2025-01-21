@@ -52,16 +52,20 @@ export class SocketBase {
    * @type {number}
    * @readonly
    */
+  #direction;
+  /**
+   * @type {number}
+   * @readonly
+   */
   #slot;
   /**
-   * @type {HTMLDivElement}
+   * @type {string}
    * @readonly
    */
+  #name;
+  /** @type {HTMLDivElement | null} */
   #root;
-  /**
-   * @type {HTMLInputElement | HTMLSelectElement | null}
-   * @readonly
-   */
+  /** @type {HTMLInputElement | HTMLSelectElement | null} */
   #input;
   /** @type {T} */
   #value;
@@ -77,20 +81,38 @@ export class SocketBase {
       throw new Error("Cannot instantiatea an abstract class: SocketBase");
     }
 
+    this.#direction = direction;
     this.#slot = slot;
+    this.#name = name;
+    this.#root = null;
+    this.#input = null;
+    this.#value = def;
+  }
+
+  get slot() {
+    return this.#slot;
+  }
+
+  get value() {
+    return this.#value;
+  }
+
+  /** @param {HTMLElement} parent */
+  render(parent) {
     const root = document.createElement("div");
+    const direction = this.#direction;
 
     if (direction === INPUT) {
       root.appendChild(this.#createConnector());
     }
 
-    if (name.trim().length > 0) {
+    if (this.#name.trim().length > 0) {
       const label = document.createElement("label");
-      label.textContent = name;
+      label.textContent = this.#name;
       root.appendChild(label);
     }
 
-    const input = this.createDirectInput(def);
+    const input = this.createDirectInput(this.#value);
 
     if (input !== null) {
       input.onclick = e => e.stopPropagation();
@@ -114,24 +136,7 @@ export class SocketBase {
 
     this.#root = root;
     this.#input = input;
-    this.#value = def;
-  }
-
-  get slot() {
-    return this.#slot;
-  }
-
-  get value() {
-    return this.#value;
-  }
-
-  /** @param {HTMLElement} parent */
-  render(parent) {
-    const root = this.#root;
-    
-    if (root.parentElement === null) {
-      parent.appendChild(root);
-    }
+    parent.appendChild(root);
   }
 
   /**
