@@ -2,7 +2,7 @@
 import { CompiledNode } from "../compiler/nodes.js";
 import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
-import { ERROR_CLASS, hasFlag } from "../utils.js";
+import { ERROR_CLASS, hasFlag, stopDefault } from "../utils.js";
 
 const graph = /** @type {HTMLDivElement} */ (document.getElementById("graph"));
 const org = /** @type {HTMLDivElement} */ (document.getElementById("origin"));
@@ -443,7 +443,7 @@ export class EditorNode {
   }
 }
 
-graph.addEventListener("dragover", e => e.preventDefault());
+graph.addEventListener("dragover", stopDefault);
 
 graph.addEventListener("drop", e => {
   const node = CompiledNode.get(e.dataTransfer?.getData(DRAG_DROP_DATA_FORMAT) ?? "");

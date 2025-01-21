@@ -167,8 +167,18 @@ main {
   position: relative;
 }
 
-#origin, .node {
+#origin, .node, svg {
   position: absolute;
+}
+
+svg {
+  overflow: visible;
+}
+
+path {
+  stroke: var(--dot-color);
+  stroke-width: var(--selection-size);
+  fill: none;
 }
 
 .node {

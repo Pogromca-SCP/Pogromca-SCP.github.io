@@ -1,10 +1,17 @@
 // @ts-check
 import { doAction } from "../history.js";
 import { closeContextMenu } from "../menu.js";
+import { dontPropagate } from "../utils.js";
 
 const NONE = 0;
 const INPUT = 1;
 const OUTPUT = 2;
+
+/** @param {MouseEvent} e */
+const removeContext = e => {
+  e.stopPropagation();
+  closeContextMenu();
+};
 
 /** @template T */
 class ChangeValueAction {
@@ -116,11 +123,6 @@ export class SocketBase {
     const input = this.createDirectInput(this.#value);
 
     if (input !== null) {
-      input.onclick = e => {
-        e.stopPropagation();
-        closeContextMenu();
-      };
-
       input.onchange = e => {
         if (!this.changeValue(this.readValue(input.value))) {
           const tmp = input.onchange;
@@ -130,8 +132,9 @@ export class SocketBase {
         }
       };
 
-      input.onmousedown = e => e.stopPropagation();
-      input.oncontextmenu = e => e.stopPropagation();
+      input.onclick = removeContext;
+      input.onmousedown = dontPropagate;
+      input.oncontextmenu = removeContext;
       root.appendChild(input);
     }
 
