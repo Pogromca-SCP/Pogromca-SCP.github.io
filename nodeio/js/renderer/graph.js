@@ -215,7 +215,7 @@ export class EditorNode {
     this.#createTitle(name);
     this.#bindEvents();
 
-    for (const socket of sockets.sort((s1, s2) => s2.slot - s1.slot)) {
+    for (const socket of sockets.sort((s1, s2) => s1.slot - s2.slot)) {
       socket.render(root);
     }
   }
