@@ -21,6 +21,7 @@
   --dot-size: 1.2rem;
   --dot-color: #888888;
   --selection-size: 5px;
+  --error-color: #aa0000;
 }
 
 html {
@@ -65,7 +66,7 @@ noscript > li {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   color: #ffffff;
-  background-color: #aa0000;
+  background-color: var(--error-color);
 }
 
 nav > ol > li, nav > ol > li > ul > li, #context-menu > li {
@@ -166,8 +167,11 @@ main {
   position: relative;
 }
 
-.node {
+#origin, .node {
   position: absolute;
+}
+
+.node {
   display: flex;
   flex-direction: column;
   border: transparent solid var(--selection-size);
@@ -232,7 +236,11 @@ main {
 }
 
 .selected {
-  border: #aa0000 solid var(--selection-size);
+  border:#aa6000 solid var(--selection-size);
+}
+
+.error, .node > p.error {
+  color: var(--error-color);
 }
 
 #context-menu {

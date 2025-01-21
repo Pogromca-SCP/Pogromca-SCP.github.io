@@ -1,9 +1,11 @@
 // @ts-check
 import { CompiledNode } from "../compiler/nodes.js";
 import { doAction } from "../history.js";
-import { hasFlag } from "../utils.js";
+import { closeContextMenu, showContextMenu } from "../menu.js";
+import { ERROR_CLASS, hasFlag } from "../utils.js";
 
 const graph = /** @type {HTMLDivElement} */ (document.getElementById("graph"));
+const org = /** @type {HTMLDivElement} */ (document.getElementById("origin"));
 
 /**
  * @typedef {import("./sockets.js").SocketBase} SocketBase
@@ -17,34 +19,55 @@ export const UNIQUE = 1;
 const coords = [0, 0, 0, 0];
 
 /** @param {MouseEvent} e */
-const continueDrag = e => {
+const continueNodeDrag = e => {
   e.preventDefault();
   coords[0] = coords[2] - e.clientX;
   coords[1] = coords[3] - e.clientY;
   coords[2] = e.clientX;
   coords[3] = e.clientY;
-  const x = coords[0];
-  const y = coords[1];
-
-  for (const node of EditorNode.selectedNodes) {
-    node.moveVisualOnly(x, y);
-  }
+  EditorNode.moveSelectionVisualOnly(coords[0], coords[1]);
 };
 
 /** @param {MouseEvent} e */
-const endDrag = e => {
+const continueBgDrag = e => {
+  e.preventDefault();
+  coords[0] = coords[2] - e.clientX;
+  coords[1] = coords[3] - e.clientY;
+  coords[2] = e.clientX;
+  coords[3] = e.clientY;
+  const style = org.style;
+  style.left = `${org.offsetLeft - coords[0]}px`;
+  style.top = `${org.offsetTop - coords[1]}px`;
+};
+
+/** @param {MouseEvent} e */
+const endNodeDrag = e => {
   document.onmousemove = null;
   document.onmouseup = null;
   const node = EditorNode.selectedNodes[0];
-  node?.finishMove();
+  node?.finalizeMove();
 };
 
 /** @param {MouseEvent} e */
-const startDrag = e => {
+const endBgDrag = e => {
+  document.onmousemove = null;
+  document.onmouseup = null;
+};
+
+/** @param {MouseEvent} e */
+const startNodeDrag = e => {
   coords[2] = e.clientX;
   coords[3] = e.clientY;
-  document.onmousemove = continueDrag;
-  document.onmouseup = endDrag;
+  document.onmousemove = continueNodeDrag;
+  document.onmouseup = endNodeDrag;
+};
+
+/** @param {MouseEvent} e */
+const startBgDrag = e => {
+  coords[2] = e.clientX;
+  coords[3] = e.clientY;
+  document.onmousemove = continueBgDrag;
+  document.onmouseup = endBgDrag;
 };
 
 class PlaceNodesAction {
@@ -183,44 +206,26 @@ export class EditorNode {
    */
   constructor(flags, x, y, name, color, ...sockets) {
     this.#flags = flags;
-    x -= graph.offsetLeft;
-    y -= graph.offsetTop;
-    this.#x = x;
-    this.#y = y;
+    this.#x = x - org.offsetLeft;
+    this.#y = y - org.offsetTop;
     const root = document.createElement("div");
-    root.className = NODE_CLASS;
-    const style = root.style;
-    style.left = `${x}px`;
-    style.top = `${y}px`;
-    style.backgroundColor = color;
-    const title = document.createElement("p");
-    title.innerText = name;
-    root.appendChild(title);
-    this.#title = title;
-
-    root.onmousedown = e => {
-      if (this.isSelected) {
-        startDrag(e);
-      }
-    };
-
-    root.onclick = e => {
-      e.stopPropagation();
-
-      if (!this.isSelected) {
-        this.select();
-      }
-    };
-
     this.#root = root;
+    this.#title = document.createElement("p");
+    this.#createRoot(color);
+    this.#createTitle(name);
+    this.#bindEvents();
 
-    for (const socket of sockets) {
+    for (const socket of sockets.sort((s1, s2) => s2.slot - s1.slot)) {
       socket.render(root);
     }
   }
 
   static get selectedNodes() {
     return Array.from(EditorNode.#selection);
+  }
+
+  static get selectedNonUniqueNodes() {
+    return EditorNode.selectedNodes.filter(n => !hasFlag(n.#flags, UNIQUE));
   }
 
   get flags() {
@@ -249,16 +254,24 @@ export class EditorNode {
     }
   }
 
-  static deleteSelection() {
-    doAction(new PlaceNodesAction(EditorNode.selectedNodes, false));
+  /**
+   * @param {number} offsetX
+   * @param {number} offsetY
+   */
+  static moveSelection(offsetX, offsetY) {
+    if (EditorNode.#selection.size > 0 && offsetX !== 0 && offsetY !== 0) {
+      doAction(new MoveNodesAction(EditorNode.selectedNodes, offsetX, offsetY));
+    }
   }
 
   /**
-   * @param {number} x
-   * @param {number} y
+   * @param {number} offsetX
+   * @param {number} offsetY
    */
-  static moveSelection(x, y) {
-    doAction(new MoveNodesAction(EditorNode.selectedNodes, x, y));
+  static moveSelectionVisualOnly(offsetX, offsetY) {
+    for (const node of EditorNode.#selection) {
+      node.moveVisualOnly(offsetX, offsetY);
+    }
   }
 
   select() {
@@ -269,6 +282,38 @@ export class EditorNode {
   diselect() {
     this.#root.className = NODE_CLASS;
     EditorNode.#selection.delete(this);
+  }
+
+  /** @param {string} name */
+  setName(name) {
+    const title = this.#title;
+    title.className = "";
+    title.innerHTML = "";
+    title.innerText = name;
+  }
+
+  /** @param {readonly string[]} issues */
+  setIssues(issues) {
+    const length = issues.length;
+
+    if (length < 1) {
+      return;
+    }
+
+    const title = this.#title;
+    title.className = ERROR_CLASS;
+    title.innerHTML = "";
+    title.appendChild(document.createTextNode(issues[0]));
+
+    for (let i = 1; i < length; ++i) {
+      title.appendChild(document.createElement("br"));
+      title.appendChild(document.createTextNode(issues[i]));
+    }
+  }
+
+  /** @param {string} color */
+  setColor(color) {
+    this.#root.style.backgroundColor = color;
   }
 
   add() {
@@ -286,7 +331,7 @@ export class EditorNode {
   }
 
   transientAdd() {
-    graph.appendChild(this.#root);
+    org.appendChild(this.#root);
   }
 
   delete() {
@@ -300,7 +345,7 @@ export class EditorNode {
 
   transientDelete() {
     this.diselect();
-    graph.removeChild(this.#root);
+    org.removeChild(this.#root);
   }
 
   /**
@@ -316,34 +361,80 @@ export class EditorNode {
     return true;
   }
 
-  finishMove() {
+  finalizeMove() {
     const root = this.#root;
     EditorNode.moveSelection(root.offsetLeft - this.#x, root.offsetTop - this.#y);
   }
 
   /**
-   * @param {number} x
-   * @param {number} y
+   * @param {number} offsetX
+   * @param {number} offsetY
    */
-  transientMove(x, y) {
-    this.#x += x;
-    this.#y += y;
+  transientMove(offsetX, offsetY) {
+    this.#x += offsetX;
+    this.#y += offsetY;
     const style = this.#root.style;
     style.left = `${this.#x}px`;
     style.top = `${this.#y}px`;
   }
 
   /**
-   * @param {number} x
-   * @param {number} y
+   * @param {number} offsetX
+   * @param {number} offsetY
    */
-  moveVisualOnly(x, y) {
+  moveVisualOnly(offsetX, offsetY) {
     const root = this.#root;
-    x = root.offsetLeft - x;
-    y = root.offsetTop - y;
+    offsetX = root.offsetLeft - offsetX;
+    offsetY = root.offsetTop - offsetY;
     const style = root.style;
-    style.left = `${x}px`;
-    style.top = `${y}px`;
+    style.left = `${offsetX}px`;
+    style.top = `${offsetY}px`;
+  }
+
+  /** @param {string} color */
+  #createRoot(color) {
+    const root = this.#root;
+    root.className = NODE_CLASS;
+    const style = root.style;
+    style.left = `${this.#x}px`;
+    style.top = `${this.#y}px`;
+    style.backgroundColor = color;
+  }
+
+  /** @param {string} name */
+  #createTitle(name) {
+    const title = this.#title;
+    title.innerText = name;
+    this.#root.appendChild(title);
+  }
+
+  #bindEvents() {
+    const root = this.#root;
+
+    root.onmousedown = e => {
+      e.stopPropagation();
+
+      if (this.isSelected) {
+        startNodeDrag(e);
+      }
+    };
+
+    root.onclick = e => {
+      e.stopPropagation();
+      closeContextMenu();
+
+      if (!this.isSelected) {
+        this.select();
+      }
+    };
+
+    if (!hasFlag(this.#flags, UNIQUE)) {
+      root.oncontextmenu = e => showContextMenu(e.clientX, e.clientY, [
+        [
+          { name: "Delete", handler: e => this.delete() },
+        ],
+      ]);
+    }
   }
 }
 
@@ -360,3 +451,4 @@ graph.addEventListener("drop", e => {
 });
 
 graph.addEventListener("click", e => EditorNode.clearSelection());
+graph.addEventListener("mousedown", startBgDrag);

@@ -22,7 +22,7 @@ export class SocketNode extends CompiledNode {
       new NumberSocket(3, "Slot", 1, false, 1, 100, 1),
       new TextSocket(4, "Name", "", true, null, 50, ""),
       new TextSocket(5, "Default", "", true, null, 50, ""),
-      new NamedSocket(6, "Data", ""),
+      new NamedSocket(6, "Data"),
     );
   }
 }
@@ -38,7 +38,7 @@ export class TypeNode extends CompiledNode {
    */
   instantiate(x, y) {
     return new EditorNode(NO_FLAGS, x, y, "Type", BUILT_IN_COLOR,
-      new NamedSocket(1, "Channel", ""),
+      new NamedSocket(1, "Channel"),
       new SwitchSocket(2, "", false, false, "Default", "Not default"),
       new SwitchSocket(3, "", true, false, "Connective", "Not connective"),
       new OutputSocket(4, "Data"),
@@ -57,7 +57,7 @@ export class OptionNode extends CompiledNode {
    */
   instantiate(x, y) {
     return new EditorNode(NO_FLAGS, x, y, "Option", BUILT_IN_COLOR,
-      new NamedSocket(1, "When", ""),
+      new NamedSocket(1, "When"),
       new TextSocket(2, "", "", false, null, 50, ""),
       new OutputSocket(3, "Then"),
     );

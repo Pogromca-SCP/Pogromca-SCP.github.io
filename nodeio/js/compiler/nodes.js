@@ -1,6 +1,6 @@
 // @ts-check
 import { doAction } from "../history.js";
-import { hasFlag } from "../utils.js";
+import { ERROR_CLASS, hasFlag } from "../utils.js";
 
 class ChangeIdAction {
   /**
@@ -97,6 +97,11 @@ export class CompiledNode {
   /** @param {string} id */
   static get(id) {
     return CompiledNode.#nodes.get(id);
+  }
+
+  /** @param {boolean} isError */
+  setErrorState(isError) {
+    this.#display.className = isError ? ERROR_CLASS : "";
   }
 
   /** @param {string | null} id */
