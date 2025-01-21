@@ -206,8 +206,8 @@ export class EditorNode {
    */
   constructor(flags, x, y, name, color, ...sockets) {
     this.#flags = flags;
-    this.#x = x - org.offsetLeft;
-    this.#y = y - org.offsetTop;
+    this.#x = x - org.offsetLeft - graph.offsetLeft;
+    this.#y = y - org.offsetTop - graph.offsetTop;
     const root = document.createElement("div");
     this.#root = root;
     this.#title = document.createElement("p");
@@ -429,11 +429,15 @@ export class EditorNode {
     };
 
     if (!hasFlag(this.#flags, UNIQUE)) {
-      root.oncontextmenu = e => showContextMenu(e.clientX, e.clientY, [
-        [
-          { name: "Delete", handler: e => this.delete() },
-        ],
-      ]);
+      root.oncontextmenu = e => {
+        e.preventDefault();
+
+        showContextMenu(e.clientX, e.clientY, [
+          [
+            { name: "Delete", handler: e => this.delete() },
+          ],
+        ]);
+      };
     }
   }
 }
