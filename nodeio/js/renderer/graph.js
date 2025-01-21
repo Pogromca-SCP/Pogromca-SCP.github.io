@@ -431,6 +431,7 @@ export class EditorNode {
     if (!hasFlag(this.#flags, UNIQUE)) {
       root.oncontextmenu = e => {
         e.preventDefault();
+        e.stopPropagation();
 
         showContextMenu(e.clientX, e.clientY, [
           [
