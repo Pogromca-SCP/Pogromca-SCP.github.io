@@ -1,11 +1,7 @@
 // @ts-check
 import { doAction } from "../history.js";
 import { closeContextMenu } from "../menu.js";
-import { dontPropagate } from "../utils.js";
-
-const NONE = 0;
-const INPUT = 1;
-const OUTPUT = 2;
+import { dontPropagate, hasFlag } from "../utils.js";
 
 /** @param {MouseEvent} e */
 const removeContext = e => {
@@ -51,6 +47,11 @@ class ChangeValueAction {
   }
 }
 
+export const INPUT = 1;
+export const OUTPUT = 2;
+export const IN_SELECT = 4;
+export const IN_WRITE = 8;
+
 /**
  * @template T
  * @abstract
@@ -60,41 +61,46 @@ export class SocketBase {
    * @type {number}
    * @readonly
    */
-  #direction;
+  #flags;
   /**
    * @type {number}
    * @readonly
    */
   #slot;
   /**
-   * @type {string}
+   * @type {HTMLDivElement}
    * @readonly
    */
-  #name;
-  /** @type {HTMLDivElement | null} */
   #root;
-  /** @type {HTMLInputElement | HTMLSelectElement | null} */
+  /**
+   * @type {HTMLInputElement | HTMLSelectElement | null}
+   * @readonly
+   */
   #input;
   /** @type {T} */
   #value;
 
   /**
-   * @param {number} direction
+   * @param {number} flags
    * @param {number} slot
    * @param {string} name
    * @param {T} def
    */
-  constructor(direction, slot, name, def) {
+  constructor(flags, slot, name, def) {
     if (this.constructor === SocketBase) {
       throw new Error("Cannot instantiatea an abstract class: SocketBase");
     }
 
-    this.#direction = direction;
+    this.#flags = flags;
     this.#slot = slot;
-    this.#name = name;
-    this.#root = null;
-    this.#input = null;
+    this.#root = document.createElement("div");
+    this.#input = hasFlag(flags, IN_WRITE) ? document.createElement("input") : (hasFlag(flags, IN_SELECT) ? document.createElement("select") : null);
     this.#value = def;
+    this.#createSocket(name);
+  }
+
+  get flags() {
+    return this.#flags;
   }
 
   get slot() {
@@ -107,53 +113,35 @@ export class SocketBase {
 
   /** @param {HTMLElement} parent */
   render(parent) {
-    const root = document.createElement("div");
-    const direction = this.#direction;
-
-    if (direction === INPUT) {
-      root.appendChild(this.#createConnector());
+    if (this.#root.parentElement !== null) {
+      return;
     }
 
-    if (this.#name.trim().length > 0) {
-      const label = document.createElement("label");
-      label.textContent = this.#name;
-      root.appendChild(label);
-    }
-
-    const input = this.createDirectInput(this.#value);
+    const input = this.#input;
 
     if (input !== null) {
+      if (input instanceof HTMLInputElement) {
+        this.setupDirectInput(input);
+      }
+      else {
+        this.setupOptions(input);
+      }
+
       input.onchange = e => {
         if (!this.changeValue(this.readValue(input.value))) {
-          const tmp = input.onchange;
-          input.onchange = null;
           this.transientChangeValue(this.#value);
-          input.onchange = tmp;
         }
       };
-
-      input.onclick = removeContext;
-      input.onmousedown = dontPropagate;
-      input.oncontextmenu = removeContext;
-      root.appendChild(input);
     }
 
-    if (direction === OUTPUT) {
-      root.appendChild(this.#createConnector());
-    }
-
-    this.#root = root;
-    this.#input = input;
-    parent.appendChild(root);
+    parent.appendChild(this.#root);
   }
 
-  /**
-   * @param {T} def
-   * @returns {HTMLInputElement | HTMLSelectElement | null}
-   */
-  createDirectInput(def) {
-    return null;
-  }
+  /** @param {HTMLInputElement} input */
+  setupDirectInput(input) {}
+
+  /** @param {HTMLSelectElement} input */
+  setupOptions(input) {}
 
   /** @param {T} value */
   changeValue(value) {
@@ -171,7 +159,10 @@ export class SocketBase {
     const input = this.#input;
 
     if (input !== null) {
+      const tmp = input.onchange;
+      input.onchange = null;
       input.value = this.writeValue(value);
+      input.onchange = tmp;
     }
   }
 
@@ -191,6 +182,35 @@ export class SocketBase {
   /** @param {T} value */
   writeValue(value) {
     return "";
+  }
+
+  /** @param {string} name */
+  #createSocket(name) {
+    const root = this.#root;
+    const flags = this.#flags;
+
+    if (hasFlag(flags, INPUT)) {
+      root.appendChild(this.#createConnector());
+    }
+
+    if (name.trim().length > 0) {
+      const label = document.createElement("label");
+      label.textContent = name;
+      root.appendChild(label);
+    }
+
+    const input = this.#input;
+
+    if (input !== null) {
+      input.onclick = removeContext;
+      input.onmousedown = dontPropagate;
+      input.oncontextmenu = removeContext;
+      root.appendChild(input);
+    }
+
+    if (hasFlag(flags, OUTPUT)) {
+      root.appendChild(this.#createConnector());
+    }
   }
 
   #createConnector() {
@@ -237,15 +257,14 @@ export class NumberSocket extends SocketBase {
    * @param {number | null} step
    */
   constructor(slot, name, def, connective, min, max, step) {
-    super(connective ? INPUT : NONE, slot, name, def);
+    super(connective ? INPUT | IN_WRITE : IN_WRITE, slot, name, def);
     this.#min = min;
     this.#max = max;
     this.#step = step;
   }
 
-  /** @param {number} def */
-  createDirectInput(def) {
-    const input = document.createElement("input");
+  /** @param {HTMLInputElement} input */
+  setupDirectInput(input) {
     input.type = "number";
 
     if (this.#min !== null) {
@@ -260,8 +279,7 @@ export class NumberSocket extends SocketBase {
       input.step = this.#step.toString();
     }
 
-    input.value = this.writeValue(def);
-    return input;
+    input.value = this.value.toString();
   }
 
   /** @param {number} value */
@@ -307,23 +325,21 @@ export class SelectSocket extends SocketBase {
    * @param {readonly string[]} options
    */
   constructor(slot, name, def, options) {
-    super(NONE, slot, name, def);
+    super(IN_SELECT, slot, name, def);
     this.#options = options;
   }
 
-  /** @param {string} def */
-  createDirectInput(def) {
-    const select = document.createElement("select");
+  /** @param {HTMLSelectElement} input */
+  setupOptions(input) {
+    const value = this.value;
 
     for (const opt of this.#options) {
       const option = document.createElement("option");
       option.value = opt;
       option.innerText = opt;
-      option.selected = opt === def;
-      select.appendChild(option);
+      option.selected = opt === value;
+      input.appendChild(option);
     }
-
-    return select;
   }
 
   /** @param {string} value */
@@ -364,24 +380,22 @@ export class SwitchSocket extends SocketBase {
    * @param {string} inactive
    */
   constructor(slot, name, def, connective, active, inactive) {
-    super(connective ? INPUT : NONE, slot, name, def);
+    super(connective ? INPUT | IN_SELECT : IN_SELECT, slot, name, def);
     this.#active = active;
     this.#inactive = inactive;
   }
 
-  /** @param {boolean} def */
-  createDirectInput(def) {
-    const select = document.createElement("select");
+  /** @param {HTMLSelectElement} input */
+  setupOptions(input) {
+    const value = this.value;
 
     for (const opt of [false, true]) {
       const option = document.createElement("option");
       option.value = this.writeValue(opt);
       option.innerText = opt ? this.#active : this.#inactive;
-      option.selected = opt === def;
-      select.appendChild(option);
+      option.selected = opt === value;
+      input.appendChild(option);
     }
-
-    return select;
   }
 
   /** @param {string} value */
@@ -423,15 +437,14 @@ export class TextSocket extends SocketBase {
    * @param {string} valid
    */
   constructor(slot, name, def, connective, min, max, valid) {
-    super(connective ? INPUT : NONE, slot, name, def);
+    super(connective ? INPUT | IN_WRITE : IN_WRITE, slot, name, def);
     this.#min = min;
     this.#max = max;
     this.#valid = valid;
   }
 
-  /** @param {string} def */
-  createDirectInput(def) {
-    const input = document.createElement("input");
+  /** @param {HTMLInputElement} input */
+  setupDirectInput(input) {
     input.type = "text";
 
     if (this.#min !== null) {
@@ -442,8 +455,7 @@ export class TextSocket extends SocketBase {
       input.maxLength = this.#max;
     }
 
-    input.value = def;
-    return input;
+    input.value = this.value;
   }
 
   /** @param {string} value */
