@@ -1,6 +1,6 @@
 // @ts-check
 import { doAction } from "../history.js";
-import { closeContextMenu } from "../menu.js";
+import { closeContextMenu, showContextMenu } from "../menu.js";
 import { dontPropagate, hasFlag } from "../utils.js";
 
 /** @param {MouseEvent} e */
@@ -8,6 +8,11 @@ const removeContext = e => {
   e.stopPropagation();
   closeContextMenu();
 };
+
+/** @type {SocketBase | null} */
+let tmpInput = null;
+/** @type {OutputSocket | null} */
+let tmpOutput = null;
 
 /** @template T */
 class ChangeValueAction {
@@ -47,6 +52,43 @@ class ChangeValueAction {
   }
 }
 
+class ChangeConnectionAction {
+  /**
+   * @type {SocketBase}
+   * @readonly
+   */
+  socket;
+  /**
+   * @type {OutputSocket | null}
+   * @readonly
+   */
+  oldValue;
+  /**
+   * @type {OutputSocket | null}
+   * @readonly
+   */
+  newValue;
+
+  /**
+   * @param {SocketBase} socket
+   * @param {OutputSocket | null} oldValue
+   * @param {OutputSocket | null} newValue
+   */
+  constructor(socket, oldValue, newValue) {
+    this.socket = socket;
+    this.oldValue = oldValue;
+    this.newValue = newValue;
+  }
+
+  do() {
+    this.socket.transientChangeConnection(this.newValue);
+  }
+
+  undo() {
+    this.socket.transientChangeConnection(this.oldValue);
+  }
+}
+
 export const INPUT = 1;
 export const OUTPUT = 2;
 export const IN_SELECT = 4;
@@ -79,6 +121,8 @@ export class SocketBase {
   #input;
   /** @type {T} */
   #value;
+  /** @type {OutputSocket | null} */
+  #connection;
 
   /**
    * @param {number} flags
@@ -96,6 +140,7 @@ export class SocketBase {
     this.#root = document.createElement("div");
     this.#input = hasFlag(flags, IN_WRITE) ? document.createElement("input") : (hasFlag(flags, IN_SELECT) ? document.createElement("select") : null);
     this.#value = def;
+    this.#connection = null;
     this.#createSocket(name);
   }
 
@@ -109,6 +154,10 @@ export class SocketBase {
 
   get value() {
     return this.#value;
+  }
+
+  get connection() {
+    return this.#connection;
   }
 
   /** @param {HTMLElement} parent */
@@ -184,13 +233,33 @@ export class SocketBase {
     return "";
   }
 
+  /** @param {OutputSocket | null} connection */
+  changeConnection(connection) {
+    if (!hasFlag(this.#flags, INPUT) || this.#connection === connection) {
+      return false;
+    }
+
+    doAction(new ChangeConnectionAction(this, this.#connection, connection));
+    return true;
+  }
+
+  /** @param {OutputSocket | null} connection */
+  transientChangeConnection(connection) {
+    this.#connection = connection;
+    const input = this.#input;
+
+    if (input !== null) {
+      input.hidden = connection !== null;
+    }
+  }
+
   /** @param {string} name */
   #createSocket(name) {
     const root = this.#root;
     const flags = this.#flags;
 
     if (hasFlag(flags, INPUT)) {
-      root.appendChild(this.#createConnector());
+      root.appendChild(this.#createConnector(true));
     }
 
     if (name.trim().length > 0) {
@@ -209,12 +278,68 @@ export class SocketBase {
     }
 
     if (hasFlag(flags, OUTPUT)) {
-      root.appendChild(this.#createConnector());
+      root.appendChild(this.#createConnector(false));
     }
   }
 
-  #createConnector() {
-    return document.createElement("div");
+  /** @param {boolean} isInput */
+  #createConnector(isInput) {
+    const element = document.createElement("div");
+
+    if (isInput) {
+      element.onmousedown = e => {
+        e.stopPropagation();
+        tmpInput = this;
+        console.debug("Started connection at input.");
+      };
+
+      element.onmouseup = e => {
+        if (tmpOutput === null) {
+          console.debug("Cannot connect two input sockets");
+        } else {
+          const result = tmpInput?.changeConnection(tmpOutput);
+          console.debug(`Changed connection: ${result}`);
+        }
+
+        tmpInput = null;
+        tmpOutput = null;
+      };
+
+      element.oncontextmenu = e => {
+        if (this.#connection === null) {
+          return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        showContextMenu(e.clientX, e.clientY, [
+          [
+            { name: "Disconnect", handler: e => this.changeConnection(null) },
+          ]
+        ]);
+      };
+    } else {
+      element.onmousedown = e => {
+        e.stopPropagation();
+        tmpOutput = /** @type {OutputSocket} */ (this);
+        console.debug("Started connection at output.");
+      };
+
+      element.onmouseup = e => {
+        if (tmpInput === null) {
+          console.debug("Cannot connect two output sockets");
+        } else {
+          const result = tmpInput.changeConnection(tmpOutput);
+          console.debug(`Changed connection: ${result}`);
+        }
+
+        tmpInput = null;
+        tmpOutput = null;
+      };
+    }
+
+    return element;
   }
 }
 
