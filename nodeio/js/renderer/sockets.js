@@ -297,7 +297,7 @@ export class SocketBase {
         if (tmpOutput === null) {
           console.debug("Cannot connect two input sockets");
         } else {
-          const result = tmpInput?.changeConnection(tmpOutput);
+          const result = this.changeConnection(tmpOutput);
           console.debug(`Changed connection: ${result}`);
         }
 
@@ -330,7 +330,7 @@ export class SocketBase {
         if (tmpInput === null) {
           console.debug("Cannot connect two output sockets");
         } else {
-          const result = tmpInput.changeConnection(tmpOutput);
+          const result = tmpInput.changeConnection(/** @type {OutputSocket} */ (this));
           console.debug(`Changed connection: ${result}`);
         }
 
