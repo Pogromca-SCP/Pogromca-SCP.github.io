@@ -88,6 +88,6 @@ export class Connection {
    */
   #draw(fromX, fromY, toX, toY) {
     this.#group ??= addConnection(this.#path);
-    this.#path.style.d = `M ${fromX} ${fromY} L ${toX} ${toY} Z`;
+    this.#path.setAttribute("d", `M ${fromX} ${fromY} L ${toX} ${toY} Z`);
   }
 }
