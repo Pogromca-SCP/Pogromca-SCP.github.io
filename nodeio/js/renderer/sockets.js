@@ -160,15 +160,15 @@ export class SocketBase {
   }
 
   get left() {
-    return parseInt(this.#root.style.left.replace("px", ""));
+    return this.#root.offsetLeft;
   }
 
   get right() {
-    return parseInt(this.#root.style.right.replace("px", ""));
+    return this.#root.offsetLeft + this.#root.offsetWidth;
   }
 
   get height() {
-    return parseInt(this.#root.style.top.replace("px", ""));
+    return this.#root.offsetTop;
   }
 
   /** @param {HTMLElement} parent */
