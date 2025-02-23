@@ -306,6 +306,7 @@ export class SocketBase {
 
       element.onmouseup = e => {
         tmpConnection?.finalize(this);
+        this.changeConnection(tmpConnection?.output ?? null);
         tmpConnection = null;
       };
 
@@ -332,6 +333,7 @@ export class SocketBase {
 
       element.onmouseup = e => {
         tmpConnection?.finalize(this);
+        tmpConnection?.output?.changeConnection(/** @type {OutputSocket} */ (this));
         tmpConnection = null;
       };
     }

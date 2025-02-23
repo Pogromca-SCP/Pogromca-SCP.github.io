@@ -1,6 +1,6 @@
 // @ts-check
 import { CompiledNode, USABLE } from "./nodes.js";
-import { EditorNode } from "../renderer/graph.js";
+import { EditorNode } from "../renderer/nodes.js";
 import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, TextSocket } from "../renderer/sockets.js";
 import { NO_FLAGS } from "../utils.js";
 
