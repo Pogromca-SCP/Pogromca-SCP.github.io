@@ -89,6 +89,6 @@ export class Connection {
   #draw(fromX, fromY, toX, toY) {
     console.debug("drawing connection");
     this.#group ??= addConnection(this.#path);
-    this.#path.style.d = `C ${fromX},${fromY} ${fromX + ((toX - fromX) / 2)},${fromY + ((toY - fromY) / 2)} ${toX},${toY}`;
+    this.#path.style.d = `M ${fromX} ${fromY} L ${toX} ${toY} Z`;
   }
 }
