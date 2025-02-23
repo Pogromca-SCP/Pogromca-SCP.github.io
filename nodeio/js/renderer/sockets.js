@@ -2,6 +2,7 @@
 import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
 import { dontPropagate, hasFlag } from "../utils.js";
+import { Connection } from "./connections.js";
 
 /** @param {MouseEvent} e */
 const removeContext = e => {
@@ -9,10 +10,8 @@ const removeContext = e => {
   closeContextMenu();
 };
 
-/** @type {SocketBase | null} */
-let tmpInput = null;
-/** @type {OutputSocket | null} */
-let tmpOutput = null;
+/** @type {Connection | null} */
+let tmpConnection = null;
 
 /** @template T */
 class ChangeValueAction {
@@ -160,6 +159,18 @@ export class SocketBase {
     return this.#connection;
   }
 
+  get left() {
+    return parseInt(this.#root.style.left.replace("px", ""));
+  }
+
+  get right() {
+    return parseInt(this.#root.style.right.replace("px", ""));
+  }
+
+  get height() {
+    return parseInt(this.#root.style.top.replace("px", ""));
+  }
+
   /** @param {HTMLElement} parent */
   render(parent) {
     if (this.#root.parentElement !== null) {
@@ -289,20 +300,13 @@ export class SocketBase {
     if (isInput) {
       element.onmousedown = e => {
         e.stopPropagation();
-        tmpInput = this;
-        console.debug("Started connection at input.");
+        tmpConnection = new Connection(this, true);
+        tmpConnection.startDraw(e);
       };
 
       element.onmouseup = e => {
-        if (tmpOutput === null) {
-          console.debug("Cannot connect two input sockets");
-        } else {
-          const result = this.changeConnection(tmpOutput);
-          console.debug(`Changed connection: ${result}`);
-        }
-
-        tmpInput = null;
-        tmpOutput = null;
+        tmpConnection?.finalize(this);
+        tmpConnection = null;
       };
 
       element.oncontextmenu = e => {
@@ -322,20 +326,13 @@ export class SocketBase {
     } else {
       element.onmousedown = e => {
         e.stopPropagation();
-        tmpOutput = /** @type {OutputSocket} */ (this);
-        console.debug("Started connection at output.");
+        tmpConnection = new Connection(this, false);
+        tmpConnection.startDraw(e);
       };
 
       element.onmouseup = e => {
-        if (tmpInput === null) {
-          console.debug("Cannot connect two output sockets");
-        } else {
-          const result = tmpInput.changeConnection(/** @type {OutputSocket} */ (this));
-          console.debug(`Changed connection: ${result}`);
-        }
-
-        tmpInput = null;
-        tmpOutput = null;
+        tmpConnection?.finalize(this);
+        tmpConnection = null;
       };
     }
 
