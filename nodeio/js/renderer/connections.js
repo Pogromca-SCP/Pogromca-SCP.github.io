@@ -87,8 +87,7 @@ export class Connection {
    * @param {number} toY
    */
   #draw(fromX, fromY, toX, toY) {
-    console.debug("drawing connection");
     this.#group ??= addConnection(this.#path);
-    this.#path.style.d = `M ${fromX} ${fromY} L ${toX} ${toY} Z`;
+    this.#path.setAttribute("d", `M ${fromX} ${fromY} L ${toX} ${toY} Z`);
   }
 }
