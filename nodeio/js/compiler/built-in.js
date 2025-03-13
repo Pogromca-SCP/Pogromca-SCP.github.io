@@ -4,7 +4,7 @@ import { EditorNode } from "../renderer/nodes.js";
 import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, TextSocket } from "../renderer/sockets.js";
 import { NO_FLAGS } from "../utils.js";
 
-const BUILT_IN_COLOR = "#333333";
+const BUILT_IN_COLOR = "333";
 
 export class SocketNode extends CompiledNode {
   constructor() {

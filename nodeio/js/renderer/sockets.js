@@ -3,6 +3,7 @@ import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
 import { dontPropagate, hasFlag } from "../utils.js";
 import { Connection } from "./connections.js";
+import { getOffsetLeft, getOffsetTop } from "./graph.js";
 
 /** @param {MouseEvent} e */
 const removeContext = e => {
@@ -58,20 +59,20 @@ class ChangeConnectionAction {
    */
   socket;
   /**
-   * @type {OutputSocket | null}
+   * @type {SocketBase | null}
    * @readonly
    */
   oldValue;
   /**
-   * @type {OutputSocket | null}
+   * @type {SocketBase | null}
    * @readonly
    */
   newValue;
 
   /**
    * @param {SocketBase} socket
-   * @param {OutputSocket | null} oldValue
-   * @param {OutputSocket | null} newValue
+   * @param {SocketBase | null} oldValue
+   * @param {SocketBase | null} newValue
    */
   constructor(socket, oldValue, newValue) {
     this.socket = socket;
@@ -118,9 +119,14 @@ export class SocketBase {
    * @readonly
    */
   #input;
+  /**
+   * @type {Set<Connection>}
+   * @readonly
+   */
+  #connections;
   /** @type {T} */
   #value;
-  /** @type {OutputSocket | null} */
+  /** @type {SocketBase | null} */
   #connection;
 
   /**
@@ -138,6 +144,7 @@ export class SocketBase {
     this.#slot = slot;
     this.#root = document.createElement("div");
     this.#input = hasFlag(flags, IN_WRITE) ? document.createElement("input") : (hasFlag(flags, IN_SELECT) ? document.createElement("select") : null);
+    this.#connections = new Set();
     this.#value = def;
     this.#connection = null;
     this.#createSocket(name);
@@ -160,15 +167,15 @@ export class SocketBase {
   }
 
   get left() {
-    return this.#root.offsetLeft;
+    return getOffsetLeft(this.#root.offsetLeft);
   }
 
   get right() {
-    return this.#root.offsetLeft + this.#root.offsetWidth;
+    return getOffsetLeft(this.#root.offsetLeft + this.#root.offsetWidth);
   }
 
   get height() {
-    return this.#root.offsetTop;
+    return getOffsetTop(this.#root.offsetTop);
   }
 
   /** @param {HTMLElement} parent */
@@ -244,7 +251,7 @@ export class SocketBase {
     return "";
   }
 
-  /** @param {OutputSocket | null} connection */
+  /** @param {SocketBase | null} connection */
   changeConnection(connection) {
     if (!hasFlag(this.#flags, INPUT) || this.#connection === connection) {
       return false;
@@ -254,13 +261,38 @@ export class SocketBase {
     return true;
   }
 
-  /** @param {OutputSocket | null} connection */
+  /** @param {SocketBase | null} connection */
   transientChangeConnection(connection) {
     this.#connection = connection;
+    const isRemove = connection === null;
     const input = this.#input;
 
     if (input !== null) {
-      input.hidden = connection !== null;
+      input.hidden = !isRemove;
+    }
+
+    if (isRemove) {
+      const connections = this.#connections;
+      const toRemove = Array.from(connections).filter(c => c.input === this);
+
+      for (const connect of toRemove) {
+        connections.delete(connect);
+        const output = connect.output;
+
+        if (output !== null) {
+          output.#removeConnections(toRemove);
+        }
+      }
+    } else {
+      const connect = new Connection(this, connection);
+      this.#connections.add(connect);
+      connection.#addConnection(connect);
+    }
+  }
+
+  refreshConnections() {
+    for (const connect of this.#connections) {
+      connect.queueRedraw();
     }
   }
 
@@ -300,12 +332,12 @@ export class SocketBase {
     if (isInput) {
       element.onmousedown = e => {
         e.stopPropagation();
-        tmpConnection = new Connection(this, true);
+        tmpConnection = new Connection(this, null);
         tmpConnection.startDraw(e);
       };
 
       element.onmouseup = e => {
-        tmpConnection?.finalize(this);
+        tmpConnection?.remove();
         this.changeConnection(tmpConnection?.output ?? null);
         tmpConnection = null;
       };
@@ -327,18 +359,34 @@ export class SocketBase {
     } else {
       element.onmousedown = e => {
         e.stopPropagation();
-        tmpConnection = new Connection(this, false);
+        tmpConnection = new Connection(null, this);
         tmpConnection.startDraw(e);
       };
 
       element.onmouseup = e => {
-        tmpConnection?.finalize(this);
-        tmpConnection?.output?.changeConnection(/** @type {OutputSocket} */ (this));
+        tmpConnection?.remove();
+        tmpConnection?.output?.changeConnection(this);
         tmpConnection = null;
       };
     }
 
     return element;
+  }
+
+  /** @param {Connection} connection */
+  #addConnection(connection) {
+    this.#connections.add(connection);
+    connection.redraw();
+  }
+
+  /** @param {readonly Connection[]} connections */
+  #removeConnections(connections) {
+    const tmp = this.#connections;
+
+    for (const connect of connections) {
+      tmp.delete(connect);
+      connect.remove();
+    }
   }
 }
 

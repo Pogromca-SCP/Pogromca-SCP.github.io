@@ -2,6 +2,7 @@
 import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
 import { ERROR_CLASS, hasFlag } from "../utils.js";
+import { Connection } from "./connections.js";
 import { addElement, bindGraphClick, getOffsetLeft, getOffsetTop, removeElement, startDrag } from "./graph.js";
 
 /**
@@ -11,12 +12,6 @@ import { addElement, bindGraphClick, getOffsetLeft, getOffsetTop, removeElement,
 const NODE_CLASS = "node";
 const SELECTION_CLASS = "node selected";
 export const UNIQUE = 1;
-
-/**
- * @param {number} x
- * @param {number} y
- */
-const nodeDrag = (x, y) => EditorNode.moveSelectionVisualOnly(x, y);
 
 const nodeDragEnd = () => {
   const node = EditorNode.selectedNodes[0];
@@ -144,6 +139,11 @@ export class EditorNode {
    * @readonly
    */
   #title;
+  /**
+   * @type {readonly SocketBase[]}
+   * @readonly
+   */
+  #sockets;
   /** @type {number} */
   #x;
   /** @type {number} */
@@ -164,11 +164,12 @@ export class EditorNode {
     const root = document.createElement("div");
     this.#root = root;
     this.#title = document.createElement("p");
+    this.#sockets = sockets.sort((s1, s2) => s1.slot - s2.slot);
     this.#createRoot(color);
     this.#createTitle(name);
     this.#bindEvents();
 
-    for (const socket of sockets.sort((s1, s2) => s1.slot - s2.slot)) {
+    for (const socket of sockets) {
       socket.render(root);
     }
   }
@@ -183,6 +184,10 @@ export class EditorNode {
 
   get flags() {
     return this.#flags;
+  }
+
+  get sockets() {
+    return this.#sockets;
   }
 
   get x() {
@@ -266,7 +271,7 @@ export class EditorNode {
 
   /** @param {string} color */
   setColor(color) {
-    this.#root.style.backgroundColor = color;
+    this.#root.style.backgroundColor = `#${color}`;
   }
 
   add() {
@@ -329,6 +334,7 @@ export class EditorNode {
     const style = this.#root.style;
     style.left = `${this.#x}px`;
     style.top = `${this.#y}px`;
+    this.refreshConnections();
   }
 
   /**
@@ -342,6 +348,15 @@ export class EditorNode {
     const style = root.style;
     style.left = `${offsetX}px`;
     style.top = `${offsetY}px`;
+    this.refreshConnections();
+  }
+
+  refreshConnections() {
+    for (const socket of this.#sockets) {
+      socket.refreshConnections();
+    }
+
+    Connection.finishMassRedraw();
   }
 
   /** @param {string} color */
@@ -351,7 +366,7 @@ export class EditorNode {
     const style = root.style;
     style.left = `${this.#x}px`;
     style.top = `${this.#y}px`;
-    style.backgroundColor = color;
+    style.backgroundColor = `#${color}`;
   }
 
   /** @param {string} name */
@@ -368,7 +383,7 @@ export class EditorNode {
       e.stopPropagation();
 
       if (this.isSelected) {
-        startDrag(e, nodeDrag, nodeDragEnd);
+        startDrag(e, EditorNode.moveSelectionVisualOnly, nodeDragEnd);
       }
     };
 

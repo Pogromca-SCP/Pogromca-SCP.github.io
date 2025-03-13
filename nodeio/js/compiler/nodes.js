@@ -135,7 +135,7 @@ export class CompiledNode {
   /**
    * @param {number} x
    * @param {number} y
-   * @returns {import("../renderer/graph.js").EditorNode}
+   * @returns {import("../renderer/nodes.js").EditorNode}
    */
   instantiate(x, y) {
     throw new Error("Cannot execute an abstract method: instantiate(x, y)");

@@ -7,14 +7,16 @@ const org = /** @type {HTMLDivElement} */ (document.getElementById("origin"));
 
 export const DRAG_DROP_DATA_FORMAT = "text/plain";
 export const SVG_URL = "http://www.w3.org/2000/svg";
+
+const connections = document.createElementNS(SVG_URL, "svg");
+org.appendChild(connections);
+
 /** @type {[number, number, number, number]} */
 const coords = [0, 0, 0, 0];
 /** @type {((x: number, y: number) => void) | null} */
 let onDrag = null;
 /** @type {(() => void) | null} */
 let onEnd = null;
-/** @type {SVGElement | null} */
-let connectionsGroup = null;
 
 /** @param {MouseEvent} e */
 const continueDrag = e => {
@@ -41,7 +43,7 @@ const continueBgDrag = e => {
   style.top = `${org.offsetTop - coords[1]}px`;
 };
 
-/** @param {MouseEvent} e */
+/** @param {Readonly<MouseEvent>} e */
 const endDrag = e => {
   document.onmousemove = null;
   document.onmouseup = null;
@@ -54,14 +56,14 @@ const endDrag = e => {
   onEnd = null;
 };
 
-/** @param {MouseEvent} e */
+/** @param {Readonly<MouseEvent>} e */
 const endBgDrag = e => {
   document.onmousemove = null;
   document.onmouseup = null;
 };
 
 /**
- * @param {MouseEvent} e
+ * @param {Readonly<MouseEvent>} e
  * @param {((x: number, y: number) => void) | null} dragHandler
  * @param {(() => void) | null} endHandler
  */
@@ -74,7 +76,7 @@ export const startDrag = (e, dragHandler, endHandler) => {
   document.onmouseup = endDrag;
 };
 
-/** @param {MouseEvent} e */
+/** @param {Readonly<MouseEvent>} e */
 const startBgDrag = e => {
   coords[2] = e.clientX;
   coords[3] = e.clientY;
@@ -83,15 +85,7 @@ const startBgDrag = e => {
 };
 
 /** @param {HTMLElement} element */
-export const addElement = element => {
-  org.appendChild(element)
-
-  if (connectionsGroup !== null && connectionsGroup.children.length < 1) {
-    org.removeChild(connectionsGroup);
-  }
-
-  connectionsGroup = null;
-};
+export const addElement = element => org.appendChild(element);
 
 /** @param {HTMLElement} element */
 export const removeElement = element => org.removeChild(element);
@@ -103,27 +97,10 @@ export const getOffsetTop = x => x - org.offsetTop - graph.offsetTop;
 export const getOffsetLeft = x => x - org.offsetLeft - graph.offsetLeft;
 
 /** @param {SVGPathElement} connection */
-export const addConnection = connection => {
-  if (connectionsGroup === null) {
-    connectionsGroup = document.createElementNS(SVG_URL, "svg");
-    org.appendChild(connectionsGroup);
-  }
+export const addConnection = connection => connections.appendChild(connection);
 
-  connectionsGroup.appendChild(connection);
-  return connectionsGroup;
-};
-
-/**
- * @param {SVGElement} group
- * @param {SVGPathElement} connection
- */
-export const removeConnection = (group, connection) => {
-  group.removeChild(connection);
-
-  if (group !== connectionsGroup && group.children.length < 1) {
-    org.removeChild(group);
-  }
-};
+/** @param {SVGPathElement} connection */
+export const removeConnection = connection => connections.removeChild(connection);
 
 /** @param {() => void} handler */
 export const bindGraphClick = handler => graph.addEventListener("click", handler);
