@@ -6,6 +6,11 @@ import { addConnection, removeConnection, startDrag, SVG_URL } from "./graph.js"
  * @typedef {import("./sockets.js").OutputSocket} OutputSocket
  */
 
+/** @type {number | null} */
+let tmpX = null;
+/** @type {number | null} */
+let tmpY = null;
+
 export class Connection {
   /**
    * @type {Set<Connection>}
@@ -68,9 +73,13 @@ export class Connection {
     const end = this.#input;
 
     if (end !== null) {
-      this.#draw(end.left - offsetX, end.height - offsetY, end.left, end.height);
+      tmpX ??= end.left;
+      tmpY ??= end.height;
+      this.#draw(tmpX - offsetX, tmpY - offsetY, end.left, end.height);
     } else if (start !== null) {
-      this.#draw(start.right, start.height, start.right - offsetX, start.height - offsetY);
+      tmpX ??= start.right;
+      tmpY ??= start.height;
+      this.#draw(start.right, start.height, tmpX - offsetX, tmpY - offsetY);
     }
   }
 
@@ -82,6 +91,8 @@ export class Connection {
       return;
     }
 
+    tmpX = null;
+    tmpY = null;
     this.#draw(start.right, start.height, end.left, end.height);
   }
 
@@ -90,6 +101,7 @@ export class Connection {
   }
 
   remove() {
+    Connection.#toRedraw.delete(this);
     const path = this.#path;
 
     if (path.parentElement !== null) {
