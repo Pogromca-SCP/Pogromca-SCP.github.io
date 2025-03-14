@@ -61,7 +61,10 @@ export class Connection {
 
   /** @param {MouseEvent} e */
   startDraw(e) {
-    startDrag(e, (x, y) => this.drawInProgress(x, y), null);
+    startDrag(e, (x, y) => this.drawInProgress(x, y), () => {
+      tmpX = null;
+      tmpY = null;
+    });
   }
 
   /**
@@ -91,8 +94,6 @@ export class Connection {
       return;
     }
 
-    tmpX = null;
-    tmpY = null;
     this.#draw(start.right, start.height, end.left, end.height);
   }
 
