@@ -5,7 +5,7 @@ import { dontPropagate, hasFlag, textToInt } from "../utils.js";
 import { Connection, DraggableConnection } from "./connections.js";
 
 const borderSize = textToInt(getComputedStyle(document.body).getPropertyValue("--selection-size"));
-const socketMargin = textToInt(getComputedStyle(document.body).getPropertyValue("--socket-margin")) / 2;
+const socketMargin = textToInt(getComputedStyle(document.body).getPropertyValue("--socket-margin")) / 4;
 
 /** @param {MouseEvent} e */
 const removeContext = e => {
@@ -169,13 +169,7 @@ export class SocketBase {
   }
 
   get left() {
-    const parent = this.#root.parentElement;
-
-    if (parent === null) {
-      return 0;
-    }
-
-    return parent.offsetLeft + borderSize;
+    return (this.#root.parentElement?.offsetLeft ?? 0) + borderSize;
   }
 
   get right() {
@@ -184,13 +178,7 @@ export class SocketBase {
 
   get height() {
     const root = this.#root;
-    const parent = root.parentElement;
-
-    if (parent === null) {
-      return 0;
-    }
-
-    return parent.offsetTop + root.offsetTop + socketMargin + (root.offsetHeight / 2);
+    return (root.parentElement?.offsetTop ?? 0) + root.offsetTop + borderSize + (root.offsetHeight / 2);
   }
 
   /** @param {HTMLElement} parent */
