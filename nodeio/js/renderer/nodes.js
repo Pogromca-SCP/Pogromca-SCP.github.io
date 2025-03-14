@@ -170,7 +170,7 @@ export class EditorNode {
     this.#bindEvents();
 
     for (const socket of sockets) {
-      socket.render(root);
+      socket.render(this, root);
     }
   }
 

@@ -5,6 +5,10 @@ import { dontPropagate, hasFlag } from "../utils.js";
 import { Connection } from "./connections.js";
 import { getOffsetLeft, getOffsetTop } from "./graph.js";
 
+/**
+ * @typedef {import("./nodes.js").EditorNode} EditorNode
+ */
+
 /** @param {MouseEvent} e */
 const removeContext = e => {
   e.stopPropagation();
@@ -124,6 +128,8 @@ export class SocketBase {
    * @readonly
    */
   #connections;
+  /** @type {EditorNode | null} */
+  #node;
   /** @type {T} */
   #value;
   /** @type {SocketBase | null} */
@@ -145,6 +151,7 @@ export class SocketBase {
     this.#root = document.createElement("div");
     this.#input = hasFlag(flags, IN_WRITE) ? document.createElement("input") : (hasFlag(flags, IN_SELECT) ? document.createElement("select") : null);
     this.#connections = new Set();
+    this.#node = null;
     this.#value = def;
     this.#connection = null;
     this.#createSocket(name);
@@ -158,6 +165,10 @@ export class SocketBase {
     return this.#slot;
   }
 
+  get node() {
+    return this.#node;
+  }
+
   get value() {
     return this.#value;
   }
@@ -167,23 +178,27 @@ export class SocketBase {
   }
 
   get left() {
-    return getOffsetLeft(this.#root.offsetLeft);
+    return this.#node?.x ?? 0;
   }
 
   get right() {
-    return getOffsetLeft(this.#root.offsetLeft + this.#root.offsetWidth);
+    return this.left + this.#root.offsetWidth;
   }
 
   get height() {
-    return getOffsetTop(this.#root.offsetTop);
+    return this.#node?.y ?? 0;
   }
 
-  /** @param {HTMLElement} parent */
-  render(parent) {
+  /**
+   * @param {EditorNode} node
+   * @param {HTMLElement} parent
+   */
+  render(node, parent) {
     if (this.#root.parentElement !== null) {
       return;
     }
 
+    this.#node = node;
     const input = this.#input;
 
     if (input !== null) {
