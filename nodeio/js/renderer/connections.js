@@ -138,7 +138,7 @@ export class DraggableConnection extends ConnectionBase {
 
   /** @param {MouseEvent} e */
   startDraw(e) {
-    startDrag(e, this.drawInProgress, this.remove);
+    startDrag(e, (x, y) => this.drawInProgress(x, y), () => this.remove());
   }
 
   /**
