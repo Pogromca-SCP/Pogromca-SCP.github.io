@@ -68,9 +68,9 @@ export class Connection {
     const end = this.#input;
 
     if (end !== null) {
-      this.#draw(offsetX, offsetY, end.left, end.height);
+      this.#draw(end.left - offsetX, end.height - offsetY, end.left, end.height);
     } else if (start !== null) {
-      this.#draw(start.right, start.height, offsetX, offsetY);
+      this.#draw(start.right, start.height, start.right - offsetX, start.height - offsetY);
     }
   }
 
