@@ -124,6 +124,8 @@ export class DraggableConnection extends ConnectionBase {
     super();
     this.#socket = socket;
     this.#isInput = isInput;
+    this.#x = isInput ? socket.left : socket.right;
+    this.#y = socket.height;
   }
 
   get socket() {
