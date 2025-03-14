@@ -5,7 +5,6 @@ import { dontPropagate, hasFlag, textToInt } from "../utils.js";
 import { Connection, DraggableConnection } from "./connections.js";
 
 const borderSize = textToInt(getComputedStyle(document.body).getPropertyValue("--selection-size"));
-const socketMargin = textToInt(getComputedStyle(document.body).getPropertyValue("--socket-margin")) / 4;
 
 /** @param {MouseEvent} e */
 const removeContext = e => {

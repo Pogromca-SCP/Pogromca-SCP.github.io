@@ -36,13 +36,14 @@ class ConnectionBase {
    * @param {number} toY
    */
   draw(fromX, fromY, toX, toY) {
+    const half = fromX + ((toX - fromX) / 2);
     const path = this.#path;
 
     if (path.parentElement === null) {
       addConnection(path);
     }
 
-    path.setAttribute("d", `M ${fromX} ${fromY} L ${toX} ${toY} Z`);
+    path.setAttribute("d", `M ${fromX} ${fromY} C ${half} ${fromY}, ${half} ${toY}, ${toX} ${toY}`);
   }
 }
 
