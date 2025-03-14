@@ -1,12 +1,11 @@
 // @ts-check
 import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
-import { dontPropagate, hasFlag } from "../utils.js";
+import { dontPropagate, hasFlag, textToInt } from "../utils.js";
 import { Connection, DraggableConnection } from "./connections.js";
 
-/**
- * @typedef {import("./nodes.js").EditorNode} EditorNode
- */
+const borderSize = textToInt(getComputedStyle(document.body).getPropertyValue("--selection-size"));
+const socketMargin = textToInt(getComputedStyle(document.body).getPropertyValue("--socket-margin")) / 2;
 
 /** @param {MouseEvent} e */
 const removeContext = e => {
@@ -127,8 +126,6 @@ export class SocketBase {
    * @readonly
    */
   #connections;
-  /** @type {EditorNode | null} */
-  #node;
   /** @type {T} */
   #value;
   /** @type {SocketBase | null} */
@@ -150,7 +147,6 @@ export class SocketBase {
     this.#root = document.createElement("div");
     this.#input = hasFlag(flags, IN_WRITE) ? document.createElement("input") : (hasFlag(flags, IN_SELECT) ? document.createElement("select") : null);
     this.#connections = new Set();
-    this.#node = null;
     this.#value = def;
     this.#connection = null;
     this.#createSocket(name);
@@ -164,10 +160,6 @@ export class SocketBase {
     return this.#slot;
   }
 
-  get node() {
-    return this.#node;
-  }
-
   get value() {
     return this.#value;
   }
@@ -177,7 +169,13 @@ export class SocketBase {
   }
 
   get left() {
-    return (this.#node?.visualX ?? 0) + 5;
+    const parent = this.#root.parentElement;
+
+    if (parent === null) {
+      return 0;
+    }
+
+    return parent.offsetLeft + borderSize;
   }
 
   get right() {
@@ -185,19 +183,22 @@ export class SocketBase {
   }
 
   get height() {
-    return (this.#node?.visualY ?? 0) + this.#root.offsetTop + 16 + (this.#root.offsetHeight / 2);
+    const root = this.#root;
+    const parent = root.parentElement;
+
+    if (parent === null) {
+      return 0;
+    }
+
+    return parent.offsetTop + root.offsetTop + socketMargin + (root.offsetHeight / 2);
   }
 
-  /**
-   * @param {EditorNode} node
-   * @param {HTMLElement} parent
-   */
-  render(node, parent) {
+  /** @param {HTMLElement} parent */
+  render(parent) {
     if (this.#root.parentElement !== null) {
       return;
     }
 
-    this.#node = node;
     const input = this.#input;
 
     if (input !== null) {

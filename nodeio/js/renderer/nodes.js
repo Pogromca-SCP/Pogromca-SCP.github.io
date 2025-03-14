@@ -170,7 +170,7 @@ export class EditorNode {
     this.#bindEvents();
 
     for (const socket of sockets) {
-      socket.render(this, root);
+      socket.render(root);
     }
   }
 
@@ -196,14 +196,6 @@ export class EditorNode {
 
   get y() {
     return this.#y;
-  }
-
-  get visualX() {
-    return this.#root.offsetLeft;
-  }
-
-  get visualY() {
-    return this.#root.offsetTop;
   }
 
   get isSelected() {
