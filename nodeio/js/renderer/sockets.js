@@ -177,7 +177,7 @@ export class SocketBase {
   }
 
   get left() {
-    return this.#node?.x ?? 0;
+    return this.#node?.visualX ?? 0;
   }
 
   get right() {
@@ -185,7 +185,7 @@ export class SocketBase {
   }
 
   get height() {
-    return this.#node?.y ?? 0;
+    return (this.#node?.visualY ?? 0) + this.#root.offsetTop;
   }
 
   /**

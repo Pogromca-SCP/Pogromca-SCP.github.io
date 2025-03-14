@@ -198,6 +198,14 @@ export class EditorNode {
     return this.#y;
   }
 
+  get visualX() {
+    return this.#root.offsetLeft;
+  }
+
+  get visualY() {
+    return this.#root.offsetTop;
+  }
+
   get isSelected() {
     return EditorNode.#selection.has(this);
   }
