@@ -6,39 +6,69 @@ import { addConnection, removeConnection, startDrag, SVG_URL } from "./graph.js"
  * @typedef {import("./sockets.js").OutputSocket} OutputSocket
  */
 
-/** @type {number | null} */
-let tmpX = null;
-/** @type {number | null} */
-let tmpY = null;
+class ConnectionBase {
+  /**
+   * @type {SVGPathElement}
+   * @readonly
+   */
+  #path;
 
-export class Connection {
+  constructor() {
+    if (this.constructor === ConnectionBase) {
+      throw new Error("Cannot instantiatea an abstract class: ConnectionBase");
+    }
+
+    this.#path = document.createElementNS(SVG_URL, "path");
+  }
+
+  remove() {
+    const path = this.#path;
+
+    if (path.parentElement !== null) {
+      removeConnection(path);
+    }
+  }
+
+  /**
+   * @param {number} fromX
+   * @param {number} fromY
+   * @param {number} toX
+   * @param {number} toY
+   */
+  draw(fromX, fromY, toX, toY) {
+    const path = this.#path;
+
+    if (path.parentElement === null) {
+      addConnection(path);
+    }
+
+    path.setAttribute("d", `M ${fromX} ${fromY} L ${toX} ${toY} Z`);
+  }
+}
+
+export class Connection extends ConnectionBase {
   /**
    * @type {Set<Connection>}
    * @readonly
    */
   static #toRedraw = new Set();
   /**
-   * @type {SVGPathElement}
-   * @readonly
-   */
-  #path;
-  /**
-   * @type {SocketBase | null}
+   * @type {SocketBase}
    * @readonly
    */
   #input;
   /**
-   * @type {SocketBase | null}
+   * @type {SocketBase}
    * @readonly
    */
   #output;
 
   /**
-   * @param {SocketBase | null} input
-   * @param {SocketBase | null} output
+   * @param {SocketBase} input
+   * @param {SocketBase} output
    */
   constructor(input, output) {
-    this.#path = document.createElementNS(SVG_URL, "path");
+    super();
     this.#input = input;
     this.#output = output;
   }
@@ -59,12 +89,54 @@ export class Connection {
     return this.#output;
   }
 
+  redraw() {
+    const start = this.#output;
+    const end = this.#input;
+    this.draw(start.right, start.height, end.left, end.height);
+  }
+
+  queueRedraw() {
+    Connection.#toRedraw.add(this);
+  }
+}
+
+export class DraggableConnection extends ConnectionBase {
+  /**
+   * @type {SocketBase}
+   * @readonly
+   */
+  #socket;
+  /**
+   * @type {boolean}
+   * @readonly
+   */
+  #isInput;
+  /** @type {number} */
+  #x;
+  /** @type {number} */
+  #y;
+
+  /**
+   * @param {SocketBase} socket
+   * @param {boolean} isInput
+   */
+  constructor(socket, isInput) {
+    super();
+    this.#socket = socket;
+    this.#isInput = isInput;
+  }
+
+  get socket() {
+    return this.#socket;
+  }
+
+  get isInput() {
+    return this.#isInput;
+  }
+
   /** @param {MouseEvent} e */
   startDraw(e) {
-    startDrag(e, (x, y) => this.drawInProgress(x, y), () => {
-      tmpX = null;
-      tmpY = null;
-    });
+    startDrag(e, this.drawInProgress, this.remove);
   }
 
   /**
@@ -72,57 +144,14 @@ export class Connection {
    * @param {number} offsetY
    */
   drawInProgress(offsetX, offsetY) {
-    const start = this.#output;
-    const end = this.#input;
+    const socket = this.#socket;
+    this.#x += offsetX;
+    this.#y += offsetY;
 
-    if (end !== null) {
-      tmpX ??= end.left;
-      tmpY ??= end.height;
-      this.#draw(tmpX - offsetX, tmpY - offsetY, end.left, end.height);
-    } else if (start !== null) {
-      tmpX ??= start.right;
-      tmpY ??= start.height;
-      this.#draw(start.right, start.height, tmpX - offsetX, tmpY - offsetY);
+    if (this.#isInput) {
+      this.draw(this.#x, this.#y, socket.left, socket.height);
+    } else {
+      this.draw(socket.right, socket.height, this.#x, this.#y);
     }
-  }
-
-  redraw() {
-    const start = this.#output;
-    const end = this.#input;
-
-    if (start === null || end === null) {
-      return;
-    }
-
-    this.#draw(start.right, start.height, end.left, end.height);
-  }
-
-  queueRedraw() {
-    Connection.#toRedraw.add(this);
-  }
-
-  remove() {
-    Connection.#toRedraw.delete(this);
-    const path = this.#path;
-
-    if (path.parentElement !== null) {
-      removeConnection(path);
-    }
-  }
-
-  /**
-   * @param {number} fromX
-   * @param {number} fromY
-   * @param {number} toX
-   * @param {number} toY
-   */
-  #draw(fromX, fromY, toX, toY) {
-    const path = this.#path;
-
-    if (path.parentElement === null) {
-      addConnection(path);
-    }
-
-    path.setAttribute("d", `M ${fromX} ${fromY} L ${toX} ${toY} Z`);
   }
 }

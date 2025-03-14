@@ -2,8 +2,7 @@
 import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
 import { dontPropagate, hasFlag } from "../utils.js";
-import { Connection } from "./connections.js";
-import { getOffsetLeft, getOffsetTop } from "./graph.js";
+import { Connection, DraggableConnection } from "./connections.js";
 
 /**
  * @typedef {import("./nodes.js").EditorNode} EditorNode
@@ -15,7 +14,7 @@ const removeContext = e => {
   closeContextMenu();
 };
 
-/** @type {Connection | null} */
+/** @type {DraggableConnection | null} */
 let tmpConnection = null;
 
 /** @template T */
@@ -353,13 +352,12 @@ export class SocketBase {
     if (isInput) {
       element.onmousedown = e => {
         e.stopPropagation();
-        tmpConnection = new Connection(this, null);
+        tmpConnection = new DraggableConnection(this, true);
         tmpConnection.startDraw(e);
       };
 
       element.onmouseup = e => {
-        tmpConnection?.remove();
-        this.changeConnection(tmpConnection?.output ?? null);
+        this.changeConnection(tmpConnection?.socket ?? null);
         tmpConnection = null;
       };
 
@@ -380,13 +378,12 @@ export class SocketBase {
     } else {
       element.onmousedown = e => {
         e.stopPropagation();
-        tmpConnection = new Connection(null, this);
+        tmpConnection = new DraggableConnection(this, false);
         tmpConnection.startDraw(e);
       };
 
       element.onmouseup = e => {
-        tmpConnection?.remove();
-        tmpConnection?.output?.changeConnection(this);
+        tmpConnection?.socket.changeConnection(this);
         tmpConnection = null;
       };
     }
