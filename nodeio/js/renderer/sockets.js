@@ -178,7 +178,7 @@ export class SocketBase {
   }
 
   get left() {
-    return this.#node?.x ?? 0;
+    return this.#node?.visualX ?? 0;
   }
 
   get right() {
@@ -186,7 +186,7 @@ export class SocketBase {
   }
 
   get height() {
-    return this.#node?.y ?? 0;
+    return this.#node?.visualX ?? 0;
   }
 
   /**
@@ -308,6 +308,12 @@ export class SocketBase {
   refreshConnections() {
     for (const connect of this.#connections) {
       connect.queueRedraw();
+    }
+  }
+
+  hideConnections() {
+    for (const connect of this.#connections) {
+      connect.remove();
     }
   }
 

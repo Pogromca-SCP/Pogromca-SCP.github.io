@@ -198,6 +198,14 @@ export class EditorNode {
     return this.#y;
   }
 
+  get visualX() {
+    return this.#root.offsetLeft;
+  }
+
+  get visualY() {
+    return this.#root.offsetTop;
+  }
+
   get isSelected() {
     return EditorNode.#selection.has(this);
   }
@@ -290,6 +298,7 @@ export class EditorNode {
 
   transientAdd() {
     addElement(this.#root);
+    this.refreshConnections();
   }
 
   delete() {
@@ -304,6 +313,10 @@ export class EditorNode {
   transientDelete() {
     this.diselect();
     removeElement(this.#root);
+
+    for (const socket of this.#sockets) {
+      socket.hideConnections();
+    }
   }
 
   /**
