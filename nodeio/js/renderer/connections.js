@@ -147,8 +147,8 @@ export class DraggableConnection extends ConnectionBase {
    */
   drawInProgress(offsetX, offsetY) {
     const socket = this.#socket;
-    this.#x += offsetX;
-    this.#y += offsetY;
+    this.#x -= offsetX;
+    this.#y -= offsetY;
 
     if (this.#isInput) {
       this.draw(this.#x, this.#y, socket.left, socket.height);
