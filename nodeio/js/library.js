@@ -1,6 +1,7 @@
 // @ts-check
 import { ConditionNode, OptionNode, SettingsNode, SocketNode, TypeNode } from "./compiler/built-in.js";
-import { CompiledNode, RootNode } from "./compiler/nodes.js";
+import { CompiledNode, CustomNode, RootNode } from "./compiler/nodes.js";
+import { showContextMenu } from "./menu.js";
 import { DRAG_DROP_DATA_FORMAT } from "./renderer/graph.js";
 
 const search = /** @type {HTMLInputElement} */ (document.getElementById("search"));
@@ -19,6 +20,26 @@ search.addEventListener("change", e => {
       child.hidden = !child.innerText.includes(filter);
     }
   }
+});
+
+const createNode = () => {
+  const node = new CustomNode();
+  node.changeId(prompt("Input new node name:"));
+  
+  if (node.id !== null) {
+    node.spawnInitialNodes();
+    node.openInEditor();
+  }
+};
+
+library.addEventListener("contextmenu", e => {
+  e.preventDefault();
+
+  showContextMenu(e.clientX, e.clientY, [
+    [
+      { name: "New node", handler: createNode },
+    ],
+  ]);
 });
 
 /**
@@ -46,6 +67,7 @@ export const initialize = () => {
   /** @type {CompiledNode} */
   let node = new RootNode();
   node.transientChangeId("Root");
+  node.openInEditor();
   node = new SocketNode();
   node.transientChangeId("Socket");
   node = new TypeNode();

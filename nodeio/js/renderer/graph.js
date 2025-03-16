@@ -1,16 +1,21 @@
 // @ts-check
-import { CompiledNode } from "../compiler/nodes.js";
 import { stopDefault } from "../utils.js";
 
 const graph = /** @type {HTMLDivElement} */ (document.getElementById("graph"));
-const org = /** @type {HTMLDivElement} */ (document.getElementById("origin"));
+
+/**
+ * @typedef {import("../compiler/nodes.js").CompiledNode} CompiledNode
+ * @typedef {import("../compiler/nodes.js").NodeGraph} NodeGraph
+ * @typedef {import("./nodes.js").EditorNode} EditorNode
+ */
 
 export const DRAG_DROP_DATA_FORMAT = "text/plain";
 export const SVG_URL = "http://www.w3.org/2000/svg";
 
-const connections = document.createElementNS(SVG_URL, "svg");
-org.appendChild(connections);
-
+/** @type {Map<string, CompiledNode>} */
+const library = new Map();
+/** @type {NodeGraph} */
+let nodeGraph = /** @type {NodeGraph} */ ({ remove() {} });
 /** @type {[number, number, number, number]} */
 const coords = [0, 0, 0, 0];
 /** @type {((x: number, y: number) => void) | null} */
@@ -38,9 +43,7 @@ const continueBgDrag = e => {
   coords[1] = coords[3] - e.clientY;
   coords[2] = e.clientX;
   coords[3] = e.clientY;
-  const style = org.style;
-  style.left = `${org.offsetLeft - coords[0]}px`;
-  style.top = `${org.offsetTop - coords[1]}px`;
+  nodeGraph.moveOrigin(coords[0], coords[1]);
 };
 
 /** @param {Readonly<MouseEvent>} e */
@@ -84,23 +87,55 @@ const startBgDrag = e => {
   document.onmouseup = endBgDrag;
 };
 
-/** @param {HTMLElement} element */
-export const addElement = element => org.appendChild(element);
+export const getAllNodes = () => library.values();
 
-/** @param {HTMLElement} element */
-export const removeElement = element => org.removeChild(element);
+/**
+ * @param {string} id
+ * @param {CompiledNode} node
+ */
+export const registerNode = (id, node) => library.set(id, node);
+
+/** @param {string} id */
+export const unregiserNode = id => library.delete(id);
+
+/** @param {string} id */
+export const nodeExists = id => library.has(id);
+
+/** @param {string} id */
+export const getNode = id => library.get(id);
+
+/** @param {NodeGraph} gr */
+export const openGraph = gr => {
+  nodeGraph.remove();
+  nodeGraph = gr;
+  nodeGraph.attach(graph);
+};
+
+export const centerViewport = () => nodeGraph.centerOrigin();
+
+/**
+ * @param {EditorNode} node
+ * @param {HTMLElement} element
+ */
+export const addElement = (node, element) => nodeGraph.addNode(node, element);
+
+/**
+ * @param {EditorNode} node
+ * @param {HTMLElement} element
+ */
+export const removeElement = (node, element) => nodeGraph.removeNode(node, element);
 
 /** @param {number} x */
-export const getOffsetTop = x => x - org.offsetTop - graph.offsetTop;
+export const getOffsetTop = x => x - nodeGraph.offsetTop - graph.offsetTop;
 
 /** @param {number} x */
-export const getOffsetLeft = x => x - org.offsetLeft - graph.offsetLeft;
+export const getOffsetLeft = x => x - nodeGraph.offsetLeft - graph.offsetLeft;
 
 /** @param {SVGPathElement} connection */
-export const addConnection = connection => connections.appendChild(connection);
+export const addConnection = connection => nodeGraph.addConnection(connection);
 
 /** @param {SVGPathElement} connection */
-export const removeConnection = connection => connections.removeChild(connection);
+export const removeConnection = connection => nodeGraph.removeConnection(connection);
 
 /** @param {() => void} handler */
 export const bindGraphClick = handler => graph.addEventListener("click", handler);
@@ -108,7 +143,7 @@ export const bindGraphClick = handler => graph.addEventListener("click", handler
 graph.addEventListener("dragover", stopDefault);
 
 graph.addEventListener("drop", e => {
-  const node = CompiledNode.get(e.dataTransfer?.getData(DRAG_DROP_DATA_FORMAT) ?? "");
+  const node = library.get(e.dataTransfer?.getData(DRAG_DROP_DATA_FORMAT) ?? "");
 
   if (node === undefined) {
     return;

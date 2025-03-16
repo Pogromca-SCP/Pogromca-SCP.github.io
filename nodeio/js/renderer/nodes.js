@@ -6,6 +6,7 @@ import { Connection } from "./connections.js";
 import { addElement, bindGraphClick, getOffsetLeft, getOffsetTop, removeElement, startDrag } from "./graph.js";
 
 /**
+ * @typedef {import("../compiler/nodes.js").CompiledNode} CompiledNode
  * @typedef {import("./sockets.js").SocketBase} SocketBase
  */
 
@@ -60,6 +61,8 @@ class PlaceNodesAction {
     for (const node of this.nodes) {
       node.transientAdd();
     }
+
+    Connection.finishMassRedraw();
   }
 
   #hideNodes() {
@@ -115,6 +118,8 @@ class MoveNodesAction {
     for (const node of this.nodes) {
       node.transientMove(x, y);
     }
+
+    Connection.finishMassRedraw();
   }
 }
 
@@ -129,6 +134,11 @@ export class EditorNode {
    * @readonly
    */
   #flags;
+  /**
+   * @type {CompiledNode | null}
+   * @readonly
+   */
+  #type;
   /**
    * @type {HTMLDivElement}
    * @readonly
@@ -151,14 +161,16 @@ export class EditorNode {
 
   /**
    * @param {number} flags
+   * @param {CompiledNode | null} type
    * @param {number} x
    * @param {number} y
    * @param {string} name
    * @param {string} color
    * @param {...SocketBase} sockets
    */
-  constructor(flags, x, y, name, color, ...sockets) {
+  constructor(flags, type, x, y, name, color, ...sockets) {
     this.#flags = flags;
+    this.#type = type;
     this.#x = getOffsetLeft(x);
     this.#y = getOffsetTop(y);
     const root = document.createElement("div");
@@ -184,6 +196,10 @@ export class EditorNode {
 
   get flags() {
     return this.#flags;
+  }
+
+  get type() {
+    return this.#type;
   }
 
   get sockets() {
@@ -230,6 +246,8 @@ export class EditorNode {
     for (const node of EditorNode.#selection) {
       node.moveVisualOnly(offsetX, offsetY);
     }
+
+    Connection.finishMassRedraw();
   }
 
   select() {
@@ -248,6 +266,8 @@ export class EditorNode {
     title.className = "";
     title.innerHTML = "";
     title.innerText = name;
+    this.refreshConnections();
+    Connection.finishMassRedraw();
   }
 
   /** @param {readonly string[]} issues */
@@ -267,6 +287,9 @@ export class EditorNode {
       title.appendChild(document.createElement("br"));
       title.appendChild(document.createTextNode(issues[i]));
     }
+
+    this.refreshConnections();
+    Connection.finishMassRedraw();
   }
 
   /** @param {string} color */
@@ -281,6 +304,7 @@ export class EditorNode {
 
     if (hasFlag(this.#flags, UNIQUE)) {
       this.transientAdd();
+      Connection.finishMassRedraw();
     } else {
       doAction(new PlaceNodesAction([this], true));
     }
@@ -289,7 +313,7 @@ export class EditorNode {
   }
 
   transientAdd() {
-    addElement(this.#root);
+    addElement(this, this.#root);
     this.refreshConnections();
   }
 
@@ -304,7 +328,7 @@ export class EditorNode {
 
   transientDelete() {
     this.diselect();
-    removeElement(this.#root);
+    removeElement(this, this.#root);
 
     for (const socket of this.#sockets) {
       socket.hideConnections();
@@ -360,8 +384,6 @@ export class EditorNode {
     for (const socket of this.#sockets) {
       socket.refreshConnections();
     }
-
-    Connection.finishMassRedraw();
   }
 
   /** @param {string} color */

@@ -167,7 +167,7 @@ main {
   position: relative;
 }
 
-#origin, .node, svg {
+.origin, .node, svg {
   position: absolute;
 }
 
