@@ -1,5 +1,5 @@
 // @ts-check
-import { addConnection, removeConnection, startDrag, SVG_URL } from "./graph.js";
+import { NodeGraph, startDrag, SVG_URL } from "./graph.js";
 
 /**
  * @typedef {import("./sockets.js").SocketBase} SocketBase
@@ -12,6 +12,11 @@ class ConnectionBase {
    * @readonly
    */
   #path;
+  /**
+   * @type {NodeGraph}
+   * @readonly
+   */
+  #graph;
 
   constructor() {
     if (this.constructor === ConnectionBase) {
@@ -19,13 +24,14 @@ class ConnectionBase {
     }
 
     this.#path = document.createElementNS(SVG_URL, "path");
+    this.#graph = NodeGraph.currentGraph;
   }
 
   remove() {
     const path = this.#path;
 
     if (path.parentElement !== null) {
-      removeConnection(path);
+      this.#graph.removeConnection(path);
     }
   }
 
@@ -42,7 +48,7 @@ class ConnectionBase {
     const path = this.#path;
 
     if (path.parentElement === null) {
-      addConnection(path);
+      this.#graph.addConnection(path);
     }
 
     path.setAttribute("d",

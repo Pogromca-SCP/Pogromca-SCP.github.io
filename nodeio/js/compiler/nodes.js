@@ -1,7 +1,7 @@
 // @ts-check
 import { doAction } from "../history.js";
 import { showContextMenu } from "../menu.js";
-import { nodeExists, openGraph, registerNode, SVG_URL, unregiserNode } from "../renderer/graph.js";
+import { nodeExists, NodeGraph, registerNode, unregiserNode } from "../renderer/graph.js";
 import { EditorNode, UNIQUE } from "../renderer/nodes.js";
 import { NamedSocket, OutputSocket } from "../renderer/sockets.js";
 import { ERROR_CLASS, hasFlag } from "../utils.js";
@@ -44,7 +44,7 @@ class ChangeIdAction {
 }
 
 const INITIAL_X = 200;
-const INITIAL_Y = 500;
+const INITIAL_Y = 400;
 export const BUILT_IN_COLOR = "333";
 export const USABLE = 1;
 export const EDITABLE = 2;
@@ -137,6 +137,8 @@ export class CompiledNode {
       registerNode(id, this);
       display.innerText = id;
       CompiledNode.rendererCallback(display, true);
+    } else {
+      this.closeInEditor();
     }
   }
 
@@ -150,104 +152,8 @@ export class CompiledNode {
   }
 
   openInEditor() {}
-}
 
-export class NodeGraph {
-  /**
-   * @type {HTMLDivElement}
-   * @readonly
-   */
-  #origin;
-
-  /**
-   * @type {SVGSVGElement}
-   * @readonly
-   */
-  #connections;
-
-  /**
-   * @type {Set<EditorNode>}
-   * @readonly
-   */
-  #nodes;
-
-  constructor() {
-    this.#origin = document.createElement("div");
-    this.#origin.className = "origin";
-    this.#connections = document.createElementNS(SVG_URL, "svg");
-    this.#origin.appendChild(this.#connections);
-    this.#nodes = new Set();
-  }
-
-  get offsetLeft() {
-    return this.#origin.offsetLeft;
-  }
-
-  get offsetTop() {
-    return this.#origin.offsetTop;
-  }
-
-  centerOrigin() {
-    const org = this.#origin;
-    const style = org.style;
-    style.left = "0";
-    style.top = "0";
-  }
-
-  /**
-   * @param {number} x
-   * @param {number} y
-   */
-  moveOrigin(x, y) {
-    const org = this.#origin;
-    const style = org.style;
-    style.left = `${org.offsetLeft - x}px`;
-    style.top = `${org.offsetTop - y}px`;
-  }
-
-  /** @param {HTMLElement} parent */
-  attach(parent) {
-    parent.appendChild(this.#origin);
-  }
-
-  remove() {
-    const org = this.#origin;
-    org.parentElement?.removeChild(org);
-  }
-
-  /**
-   * @param {EditorNode} node
-   * @param {HTMLElement} child
-   */
-  addNode(node, child) {
-    if (node.type !== null) {
-      this.#nodes.add(node);
-    }
-
-    this.#origin.appendChild(child);
-  }
-
-  /**
-   * @param {EditorNode} node
-   * @param {HTMLElement} child
-   */
-  removeNode(node, child) {
-    if (node.type !== null) {
-      this.#nodes.delete(node);
-    }
-
-    this.#origin.removeChild(child);
-  }
-
-  /** @param {SVGPathElement} connection */
-  addConnection(connection) {
-    this.#connections.appendChild(connection);
-  }
-
-  /** @param {SVGPathElement} connection */
-  removeConnection(connection) {
-    this.#connections.removeChild(connection);
-  }
+  closeInEditor() {}
 }
 
 class EditableNode extends CompiledNode {
@@ -273,7 +179,11 @@ class EditableNode extends CompiledNode {
   }
 
   openInEditor() {
-    openGraph(this.#graph);
+    NodeGraph.switchGraph(this.#graph);
+  }
+
+  closeInEditor() {
+    NodeGraph.switchToRootIfDeleted(this.#graph);
   }
 }
 

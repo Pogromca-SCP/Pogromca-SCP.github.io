@@ -2,7 +2,7 @@
 import { ConditionNode, OptionNode, SettingsNode, SocketNode, TypeNode } from "./compiler/built-in.js";
 import { CompiledNode, CustomNode, RootNode } from "./compiler/nodes.js";
 import { showContextMenu } from "./menu.js";
-import { DRAG_DROP_DATA_FORMAT } from "./renderer/graph.js";
+import { DRAG_DROP_DATA_FORMAT, ROOT } from "./renderer/graph.js";
 
 const search = /** @type {HTMLInputElement} */ (document.getElementById("search"));
 const library = /** @type {HTMLOListElement} */ (document.getElementById("library"));
@@ -27,8 +27,8 @@ const createNode = () => {
   node.changeId(prompt("Input new node name:"));
   
   if (node.id !== null) {
-    node.spawnInitialNodes();
     node.openInEditor();
+    node.spawnInitialNodes();
   }
 };
 
@@ -67,7 +67,7 @@ export const initialize = () => {
   CompiledNode.rendererCallback = updateLibraryElement;
   /** @type {CompiledNode} */
   let node = new RootNode();
-  node.transientChangeId("Root");
+  node.transientChangeId(ROOT);
   node.openInEditor();
   node = new SocketNode();
   node.transientChangeId("Socket");

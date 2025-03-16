@@ -3,7 +3,7 @@ import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
 import { ERROR_CLASS, hasFlag } from "../utils.js";
 import { Connection } from "./connections.js";
-import { addElement, bindGraphClick, getOffsetLeft, getOffsetTop, removeElement, startDrag } from "./graph.js";
+import { bindGraphClick, getOffsetLeft, getOffsetTop, NodeGraph, startDrag } from "./graph.js";
 
 /**
  * @typedef {import("../compiler/nodes.js").CompiledNode} CompiledNode
@@ -135,6 +135,11 @@ export class EditorNode {
    */
   #flags;
   /**
+   * @type {NodeGraph}
+   * @readonly
+   */
+  #graph;
+  /**
    * @type {CompiledNode | null}
    * @readonly
    */
@@ -170,6 +175,7 @@ export class EditorNode {
    */
   constructor(flags, type, x, y, name, color, ...sockets) {
     this.#flags = flags;
+    this.#graph = NodeGraph.currentGraph;
     this.#type = type;
     this.#x = getOffsetLeft(x);
     this.#y = getOffsetTop(y);
@@ -313,7 +319,7 @@ export class EditorNode {
   }
 
   transientAdd() {
-    addElement(this, this.#root);
+    this.#graph.addNode(this, this.#root);
     this.refreshConnections();
   }
 
@@ -328,7 +334,7 @@ export class EditorNode {
 
   transientDelete() {
     this.diselect();
-    removeElement(this, this.#root);
+    this.#graph.removeNode(this, this.#root);
 
     for (const socket of this.#sockets) {
       socket.hideConnections();
