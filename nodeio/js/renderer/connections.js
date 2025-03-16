@@ -37,8 +37,8 @@ class ConnectionBase {
    */
   draw(fromX, fromY, toX, toY) {
     const half = fromX + ((toX - fromX) / 2);
-    const minFromX = fromX + 30;
-    const minToX = toX - 30;
+    const minFromX = fromX + 100;
+    const minToX = toX - 100;
     const path = this.#path;
 
     if (path.parentElement === null) {
