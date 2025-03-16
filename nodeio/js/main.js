@@ -1,10 +1,8 @@
 // @ts-check
 import { redoAction, undoAction } from "./history.js";
-import { initialize } from "./library.js";
+import { createNode, initialize } from "./library.js";
 import { closeContextMenu } from "./menu.js";
-
-
-
+import { NodeGraph } from "./renderer/graph.js";
 
 const emptyOp = () => {};
 
@@ -14,6 +12,8 @@ window["openGraph"] = emptyOp;
 window["saveGraph"] = emptyOp;
 window["undoAction"] = undoAction;
 window["redoAction"] = redoAction;
+window["centerView"] = NodeGraph.centerCurrent;
+window["addNode"] = createNode;
 
 window.addEventListener("beforeunload", e => {
   e.preventDefault();

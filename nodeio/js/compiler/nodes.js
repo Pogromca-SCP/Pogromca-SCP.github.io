@@ -43,8 +43,7 @@ class ChangeIdAction {
   }
 }
 
-const INITIAL_X = 200;
-const INITIAL_Y = 400;
+const INITIAL_POS = 400;
 export const BUILT_IN_COLOR = "333";
 export const USABLE = 1;
 export const EDITABLE = 2;
@@ -87,7 +86,7 @@ export class CompiledNode {
         
         showContextMenu(e.clientX, e.clientY, [
           [
-            { name: "Rename", handler: e => this.changeId(prompt("Input new node name:")) },
+            { name: "Rename", handler: e => this.changeId(prompt("Input new node name:") ?? "") },
             { name: "Delete", handler: e => this.changeId(null) },
           ],
         ]);
@@ -199,7 +198,7 @@ export class CustomNode extends EditableNode {
   }
 
   spawnInitialNodes() {
-    new EditorNode(UNIQUE, null, INITIAL_X, INITIAL_Y, "Inputs", BUILT_IN_COLOR, new OutputSocket(0, "")).add();
-    new EditorNode(UNIQUE, null, INITIAL_X * 3, INITIAL_Y, "Outputs", BUILT_IN_COLOR, new NamedSocket(0, "")).add();
+    new EditorNode(UNIQUE, null, INITIAL_POS, INITIAL_POS, "Inputs", BUILT_IN_COLOR, new OutputSocket(0, "In")).add();
+    new EditorNode(UNIQUE, null, INITIAL_POS * 3, INITIAL_POS, "Outputs", BUILT_IN_COLOR, new NamedSocket(0, "Out")).add();
   }
 }

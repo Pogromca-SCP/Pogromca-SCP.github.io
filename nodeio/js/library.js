@@ -22,7 +22,7 @@ search.addEventListener("change", e => {
   }
 });
 
-const createNode = () => {
+export const createNode = () => {
   const node = new CustomNode();
   node.changeId(prompt("Input new node name:"));
   

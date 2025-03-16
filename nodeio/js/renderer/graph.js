@@ -76,6 +76,10 @@ export class NodeGraph {
     }
   }
 
+  static centerCurrent() {
+    NodeGraph.#currentGraph.centerOrigin();
+  }
+
   centerOrigin() {
     const org = this.#origin;
     const style = org.style;
