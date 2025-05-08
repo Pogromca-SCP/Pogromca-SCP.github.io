@@ -174,7 +174,7 @@ export class SocketBase {
   }
 
   get left() {
-    return this.#node.x + borderSize;
+    return this.#node.left + borderSize;
   }
 
   get right() {
@@ -183,7 +183,7 @@ export class SocketBase {
 
   get height() {
     const root = this.#root;
-    return this.#node.y + root.offsetTop + borderSize + (root.offsetHeight / 2);
+    return this.#node.top + root.offsetTop + borderSize + (root.offsetHeight / 2);
   }
 
   /** @param {HTMLInputElement} input */

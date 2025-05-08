@@ -251,6 +251,14 @@ export class EditorNode {
     return this.#root.parentElement !== null;
   }
 
+  get left() {
+    return this.#root.offsetLeft;
+  }
+
+  get top() {
+    return this.#root.offsetTop;
+  }
+
   static clearSelection() {
     for (const node of EditorNode.selectedNodes) {
       node.diselect();

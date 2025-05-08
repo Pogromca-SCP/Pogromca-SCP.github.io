@@ -89,7 +89,6 @@ export class Connection extends ConnectionBase {
 
   static finishMassRedraw() {
     for (const connect of Connection.#toRedraw) {
-      console.debug(`Redrawing: ${connect.output.left}`);
       connect.redraw();
     }
 
