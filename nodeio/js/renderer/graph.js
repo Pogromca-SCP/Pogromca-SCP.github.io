@@ -34,6 +34,12 @@ export class NodeGraph {
    */
   #nodes;
 
+  /** @type {EditorNode | null} */
+  #outputsNode;
+
+  /** @type {EditorNode | null} */
+  #inputsNode;
+
   constructor() {
     const origin = document.createElement("div");
     origin.className = "origin";
@@ -42,6 +48,8 @@ export class NodeGraph {
     this.#origin = origin;
     this.#connections = connections;
     this.#nodes = new Set();
+    this.#outputsNode = null;
+    this.#inputsNode = null;
   }
 
   static get currentGraph() {
@@ -56,6 +64,14 @@ export class NodeGraph {
     return this.#origin.offsetTop;
   }
 
+  get outputsNode() {
+    return this.#outputsNode;
+  }
+
+  get inputsNode() {
+    return this.#inputsNode;
+  }
+
   /** @param {NodeGraph} gr */
   static switchGraph(gr) {
     const current = NodeGraph.#currentGraph;
@@ -67,6 +83,16 @@ export class NodeGraph {
     current.remove();
     NodeGraph.#currentGraph = gr;
     gr.attach();
+    const out = gr.#outputsNode;
+    const ins = gr.#inputsNode;
+
+    if (out !== null && !out.isVisible) {
+      out.add();
+    }
+
+    if (ins !== null && !ins.isVisible) {
+      ins.add();
+    }
   }
 
   /** @param {NodeGraph} gr */
@@ -81,21 +107,21 @@ export class NodeGraph {
   }
 
   centerOrigin() {
-    const org = this.#origin;
-    const style = org.style;
-    style.left = "0";
-    style.top = "0";
+    const style = this.#origin.style;
+    const value = "0";
+    style.left = value;
+    style.top = value;
   }
 
   /**
-   * @param {number} x
-   * @param {number} y
+   * @param {number} offsetX
+   * @param {number} offsetY
    */
-  moveOrigin(x, y) {
+  moveOrigin(offsetX, offsetY) {
     const org = this.#origin;
     const style = org.style;
-    style.left = `${org.offsetLeft - x}px`;
-    style.top = `${org.offsetTop - y}px`;
+    style.left = `${org.offsetLeft - offsetX}px`;
+    style.top = `${org.offsetTop - offsetY}px`;
   }
 
   attach() {
@@ -112,6 +138,16 @@ export class NodeGraph {
     if (org.parentElement !== null) {
       graph.removeChild(org);
     }
+  }
+
+  /** @param {EditorNode} inputs */
+  addInputs(inputs) {
+    this.#inputsNode ??= inputs;
+  }
+
+  /** @param {EditorNode} outputs */
+  addOutputs(outputs) {
+    this.#outputsNode ??= outputs;
   }
 
   /**
@@ -257,7 +293,7 @@ graph.addEventListener("drop", e => {
     return;
   }
 
-  node.instantiate(e.clientX, e.clientY).add();
+  node.instantiate(e.clientX, e.clientY, NodeGraph.currentGraph).add();
 });
 
 graph.addEventListener("mousedown", startBgDrag);

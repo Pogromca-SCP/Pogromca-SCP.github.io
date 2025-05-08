@@ -2,7 +2,7 @@
 import { doAction } from "../history.js";
 import { showContextMenu } from "../menu.js";
 import { nodeExists, NodeGraph, registerNode, unregiserNode } from "../renderer/graph.js";
-import { EditorNode, UNIQUE } from "../renderer/nodes.js";
+import { EditorNode } from "../renderer/nodes.js";
 import { NamedSocket, OutputSocket } from "../renderer/sockets.js";
 import { ERROR_CLASS, hasFlag } from "../utils.js";
 
@@ -144,9 +144,10 @@ export class CompiledNode {
   /**
    * @param {number} x
    * @param {number} y
+   * @param {NodeGraph} graph
    * @returns {EditorNode}
    */
-  instantiate(x, y) {
+  instantiate(x, y, graph) {
     throw new Error("Cannot execute an abstract method: instantiate(x, y)");
   }
 
@@ -155,6 +156,7 @@ export class CompiledNode {
   closeInEditor() {}
 }
 
+/** @abstract */
 class EditableNode extends CompiledNode {
   /**
    * @type {NodeGraph}
@@ -189,16 +191,16 @@ class EditableNode extends CompiledNode {
 export class RootNode extends EditableNode {
   constructor() {
     super(EDITABLE);
+    const graph = this.graph;
+    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "console.log", BUILT_IN_COLOR, { type: "named", name: "Out" }));
   }
 }
 
 export class CustomNode extends EditableNode {
   constructor() {
     super(EDITABLE | USABLE | ADDED);
-  }
-
-  spawnInitialNodes() {
-    new EditorNode(UNIQUE, null, INITIAL_POS, INITIAL_POS, "Inputs", BUILT_IN_COLOR, new OutputSocket(0, "In")).add();
-    new EditorNode(UNIQUE, null, INITIAL_POS * 3, INITIAL_POS, "Outputs", BUILT_IN_COLOR, new NamedSocket(0, "Out")).add();
+    const graph = this.graph;
+    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "Outputs", BUILT_IN_COLOR, { type: "named", name: "Out" }));
+    graph.addInputs(new EditorNode(null, graph, INITIAL_POS, INITIAL_POS, "Inputs", BUILT_IN_COLOR, { type: "output", name: "In" }));
   }
 }

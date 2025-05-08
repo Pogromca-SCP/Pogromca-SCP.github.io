@@ -1,18 +1,51 @@
 // @ts-check
 import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
-import { ERROR_CLASS, hasFlag } from "../utils.js";
+import { ERROR_CLASS } from "../utils.js";
 import { Connection } from "./connections.js";
 import { bindGraphClick, getOffsetLeft, getOffsetTop, NodeGraph, startDrag } from "./graph.js";
+import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, TextSocket } from "./sockets.js";
 
 /**
  * @typedef {import("../compiler/nodes.js").CompiledNode} CompiledNode
  * @typedef {import("./sockets.js").SocketBase} SocketBase
+ * 
+ * @typedef {object} SocketDef
+ * @property {string} name
+ * @property {"named" | "number" | "select" | "switch" | "text" | "output"} type
+ * 
+ * @typedef {object} NumberDef
+ * @property {number} def
+ * @property {boolean} connective
+ * @property {number | null} min
+ * @property {number | null} max
+ * @property {number | null} step
+ * 
+ * @typedef {object} SelectDef
+ * @property {string} def
+ * @property {string[]} options
+ * 
+ * @typedef {object} SwitchDef
+ * @property {boolean} def
+ * @property {boolean} connective
+ * @property {string} active
+ * @property {string} inactive
+ * 
+ * @typedef {object} TextDef
+ * @property {string} def
+ * @property {boolean} connective
+ * @property {number | null} min
+ * @property {number | null} max
+ * @property {string} valid
+ * 
+ * @typedef {SocketDef & NumberDef} NumberSocketDef
+ * @typedef {SocketDef & SelectDef} SelectSocketDef
+ * @typedef {SocketDef & SwitchDef} SwitchSocketDef
+ * @typedef {SocketDef & TextDef} TextSocketDef
  */
 
 const NODE_CLASS = "node";
 const SELECTION_CLASS = "node selected";
-export const UNIQUE = 1;
 
 const nodeDragEnd = () => {
   const node = EditorNode.selectedNodes[0];
@@ -130,20 +163,15 @@ export class EditorNode {
    */
   static #selection = new Set();
   /**
-   * @type {number}
+   * @type {CompiledNode | null}
    * @readonly
    */
-  #flags;
+  #type;
   /**
    * @type {NodeGraph}
    * @readonly
    */
   #graph;
-  /**
-   * @type {CompiledNode | null}
-   * @readonly
-   */
-  #type;
   /**
    * @type {HTMLDivElement}
    * @readonly
@@ -165,31 +193,26 @@ export class EditorNode {
   #y;
 
   /**
-   * @param {number} flags
    * @param {CompiledNode | null} type
+   * @param {NodeGraph} graph
    * @param {number} x
    * @param {number} y
    * @param {string} name
    * @param {string} color
-   * @param {...SocketBase} sockets
+   * @param {...(SocketDef | NumberSocketDef | SelectSocketDef | SwitchSocketDef | TextSocketDef)} sockets
    */
-  constructor(flags, type, x, y, name, color, ...sockets) {
-    this.#flags = flags;
-    this.#graph = NodeGraph.currentGraph;
+  constructor(type, graph, x, y, name, color, ...sockets) {
     this.#type = type;
+    this.#graph = graph;
     this.#x = getOffsetLeft(x);
     this.#y = getOffsetTop(y);
     const root = document.createElement("div");
     this.#root = root;
     this.#title = document.createElement("p");
-    this.#sockets = sockets.sort((s1, s2) => s1.slot - s2.slot);
+    this.#sockets = sockets.map(s => this.#loadSocket(s));
     this.#createRoot(color);
     this.#createTitle(name);
     this.#bindEvents();
-
-    for (const socket of sockets) {
-      socket.render(root);
-    }
   }
 
   static get selectedNodes() {
@@ -197,15 +220,15 @@ export class EditorNode {
   }
 
   static get selectedNonUniqueNodes() {
-    return EditorNode.selectedNodes.filter(n => !hasFlag(n.#flags, UNIQUE));
-  }
-
-  get flags() {
-    return this.#flags;
+    return EditorNode.selectedNodes.filter(n => n.#type !== null);
   }
 
   get type() {
     return this.#type;
+  }
+
+  get graph() {
+    return this.#graph;
   }
 
   get sockets() {
@@ -308,7 +331,7 @@ export class EditorNode {
       return false;
     }
 
-    if (hasFlag(this.#flags, UNIQUE)) {
+    if (this.#type === null) {
       this.transientAdd();
       Connection.finishMassRedraw();
     } else {
@@ -320,11 +343,11 @@ export class EditorNode {
 
   transientAdd() {
     this.#graph.addNode(this, this.#root);
-    this.refreshConnections();
+    this.restoreConnections();
   }
 
   delete() {
-    if (!this.isVisible || hasFlag(this.#flags, UNIQUE)) {
+    if (!this.isVisible || this.#type === null) {
       return false;
     }
 
@@ -335,10 +358,7 @@ export class EditorNode {
   transientDelete() {
     this.diselect();
     this.#graph.removeNode(this, this.#root);
-
-    for (const socket of this.#sockets) {
-      socket.hideConnections();
-    }
+    this.hideConnections();
   }
 
   /**
@@ -386,9 +406,43 @@ export class EditorNode {
     this.refreshConnections();
   }
 
+  restoreConnections() {
+    for (const socket of this.#sockets) {
+      socket.restoreConnections();
+    }
+  }
+
   refreshConnections() {
     for (const socket of this.#sockets) {
       socket.refreshConnections();
+    }
+  }
+
+  hideConnections() {
+    for (const socket of this.#sockets) {
+      socket.hideConnections();
+    }
+  }
+
+  /** @param {SocketDef} def */
+  #loadSocket(def) {
+    switch (def.type) {
+      case "named":
+        return new NamedSocket(this, this.#root, def.name);
+      case "number":
+        const num = /** @type {NumberSocketDef} */ (def);
+        return new NumberSocket(this, this.#root, num.name, num.def, num.connective, num.min, num.max, num.step);
+      case "select":
+        const sel = /** @type {SelectSocketDef} */ (def);
+        return new SelectSocket(this, this.#root, sel.name, sel.def, sel.options);
+      case "switch":
+        const swt = /** @type {SwitchSocketDef} */ (def);
+        return new SwitchSocket(this, this.#root, swt.name, swt.def, swt.connective, swt.active, swt.inactive);
+      case "text":
+        const txt = /** @type {TextSocketDef} */ (def);
+        return new TextSocket(this, this.#root, txt.name, txt.def, txt.connective, txt.min, txt.max, txt.valid);
+      default:
+        return new OutputSocket(this, this.#root, def.name);
     }
   }
 
@@ -429,7 +483,7 @@ export class EditorNode {
       }
     };
 
-    if (!hasFlag(this.#flags, UNIQUE)) {
+    if (this.#type !== null) {
       root.oncontextmenu = e => {
         e.preventDefault();
         e.stopPropagation();

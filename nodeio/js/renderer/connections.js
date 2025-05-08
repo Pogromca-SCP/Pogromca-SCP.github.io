@@ -1,11 +1,13 @@
 // @ts-check
-import { NodeGraph, startDrag, SVG_URL } from "./graph.js";
+import { startDrag, SVG_URL } from "./graph.js";
 
 /**
+ * @typedef {import("./graph.js").NodeGraph} NodeGraph
  * @typedef {import("./sockets.js").SocketBase} SocketBase
  * @typedef {import("./sockets.js").OutputSocket} OutputSocket
  */
 
+/** @abstract */
 class ConnectionBase {
   /**
    * @type {SVGPathElement}
@@ -18,13 +20,14 @@ class ConnectionBase {
    */
   #graph;
 
-  constructor() {
+  /** @param {NodeGraph} graph */
+  constructor(graph) {
     if (this.constructor === ConnectionBase) {
       throw new Error("Cannot instantiatea an abstract class: ConnectionBase");
     }
 
     this.#path = document.createElementNS(SVG_URL, "path");
-    this.#graph = NodeGraph.currentGraph;
+    this.#graph = graph;
   }
 
   remove() {
@@ -74,11 +77,12 @@ export class Connection extends ConnectionBase {
   #output;
 
   /**
+   * @param {NodeGraph} graph
    * @param {SocketBase} input
    * @param {SocketBase} output
    */
-  constructor(input, output) {
-    super();
+  constructor(graph, input, output) {
+    super(graph);
     this.#input = input;
     this.#output = output;
   }
@@ -127,11 +131,12 @@ export class DraggableConnection extends ConnectionBase {
   #y;
 
   /**
+   * @param {NodeGraph} graph
    * @param {SocketBase} socket
    * @param {boolean} isInput
    */
-  constructor(socket, isInput) {
-    super();
+  constructor(graph, socket, isInput) {
+    super(graph);
     this.#socket = socket;
     this.#isInput = isInput;
     this.#x = isInput ? socket.left : socket.right;

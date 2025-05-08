@@ -28,7 +28,6 @@ export const createNode = () => {
   
   if (node.id !== null) {
     node.openInEditor();
-    node.spawnInitialNodes();
   }
 };
 

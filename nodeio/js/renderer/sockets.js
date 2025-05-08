@@ -4,6 +4,10 @@ import { closeContextMenu, showContextMenu } from "../menu.js";
 import { dontPropagate, hasFlag, textToInt } from "../utils.js";
 import { Connection, DraggableConnection } from "./connections.js";
 
+/**
+ * @typedef {import("./nodes.js").EditorNode} EditorNode
+ */
+
 const borderSize = textToInt(getComputedStyle(document.body).getPropertyValue("--selection-size"));
 
 /** @param {MouseEvent} e */
@@ -82,11 +86,13 @@ class ChangeConnectionAction {
   }
 
   do() {
-    this.socket.transientChangeConnection(this.newValue);
+    this.socket.transientChangeConnection(this.newValue, true);
+    Connection.finishMassRedraw();
   }
 
   undo() {
-    this.socket.transientChangeConnection(this.oldValue);
+    this.socket.transientChangeConnection(this.oldValue, true);
+    Connection.finishMassRedraw();
   }
 }
 
@@ -106,10 +112,10 @@ export class SocketBase {
    */
   #flags;
   /**
-   * @type {number}
+   * @type {EditorNode}
    * @readonly
    */
-  #slot;
+  #node;
   /**
    * @type {HTMLDivElement}
    * @readonly
@@ -121,7 +127,7 @@ export class SocketBase {
    */
   #input;
   /**
-   * @type {Set<Connection>}
+   * @type {Set<Connection> | null}
    * @readonly
    */
   #connections;
@@ -132,31 +138,33 @@ export class SocketBase {
 
   /**
    * @param {number} flags
-   * @param {number} slot
+   * @param {EditorNode} node
+   * @param {HTMLElement} parent
    * @param {string} name
    * @param {T} def
    */
-  constructor(flags, slot, name, def) {
+  constructor(flags, node, parent, name, def) {
     if (this.constructor === SocketBase) {
       throw new Error("Cannot instantiatea an abstract class: SocketBase");
     }
 
     this.#flags = flags;
-    this.#slot = slot;
+    this.#node = node;
     this.#root = document.createElement("div");
     this.#input = hasFlag(flags, IN_WRITE) ? document.createElement("input") : (hasFlag(flags, IN_SELECT) ? document.createElement("select") : null);
-    this.#connections = new Set();
+    this.#connections = hasFlag(flags, OUTPUT) ? new Set() : null;
     this.#value = def;
     this.#connection = null;
     this.#createSocket(name);
+    this.#render(parent);
   }
 
   get flags() {
     return this.#flags;
   }
 
-  get slot() {
-    return this.#slot;
+  get node() {
+    return this.#node;
   }
 
   get value() {
@@ -168,7 +176,7 @@ export class SocketBase {
   }
 
   get left() {
-    return (this.#root.parentElement?.offsetLeft ?? 0) + borderSize;
+    return this.#node.x + borderSize;
   }
 
   get right() {
@@ -177,33 +185,7 @@ export class SocketBase {
 
   get height() {
     const root = this.#root;
-    return (root.parentElement?.offsetTop ?? 0) + root.offsetTop + borderSize + (root.offsetHeight / 2);
-  }
-
-  /** @param {HTMLElement} parent */
-  render(parent) {
-    if (this.#root.parentElement !== null) {
-      return;
-    }
-
-    const input = this.#input;
-
-    if (input !== null) {
-      if (input instanceof HTMLInputElement) {
-        this.setupDirectInput(input);
-      }
-      else {
-        this.setupOptions(input);
-      }
-
-      input.onchange = e => {
-        if (!this.changeValue(this.readValue(input.value))) {
-          this.transientChangeValue(this.#value);
-        }
-      };
-    }
-
-    parent.appendChild(this.#root);
+    return this.#node.y + root.offsetTop + borderSize + (root.offsetHeight / 2);
   }
 
   /** @param {HTMLInputElement} input */
@@ -255,7 +237,7 @@ export class SocketBase {
 
   /** @param {SocketBase | null} connection */
   changeConnection(connection) {
-    if (!hasFlag(this.#flags, INPUT) || this.#connection === connection) {
+    if (this.#connection === connection || !this.validateConnection(connection)) {
       return false;
     }
 
@@ -263,44 +245,82 @@ export class SocketBase {
     return true;
   }
 
-  /** @param {SocketBase | null} connection */
-  transientChangeConnection(connection) {
+  /**
+   * @param {SocketBase | null} connection
+   * @param {boolean} updateOther
+   */
+  transientChangeConnection(connection, updateOther) {
+    const oldConnection = this.#connection;
     this.#connection = connection;
-    const isRemove = connection === null;
     const input = this.#input;
 
     if (input !== null) {
-      input.hidden = !isRemove;
+      input.hidden = connection !== null;
     }
 
-    if (isRemove) {
-      const connections = this.#connections;
-      const toRemove = Array.from(connections).filter(c => c.input === this);
+    if (oldConnection !== null && oldConnection.#connections !== null) {
+      this.#removeConnection(oldConnection.#connections, updateOther);
+    }
+    
+    if (connection !== null) {
+      this.#addConnection(connection, updateOther);
+    }
+  }
 
-      for (const connect of toRemove) {
-        connections.delete(connect);
-        const output = connect.output;
+  /** @param {SocketBase | null} connection */
+  validateConnection(connection) {
+    return hasFlag(this.#flags, INPUT) && (connection === null || hasFlag(connection.#flags, OUTPUT));
+  }
 
-        if (output !== null) {
-          output.#removeConnections(toRemove);
-        }
+  restoreConnections() {
+    const connections = this.#connections;
+
+    if (connections !== null) {
+      for (const connect of connections) {
+        connect.input.transientChangeConnection(this, false);
       }
-    } else {
-      const connect = new Connection(this, connection);
-      this.#connections.add(connect);
-      connection.#addConnection(connect);
+    }
+
+    const connection = this.#connection;
+
+    if (connection !== null) {
+      this.#addConnection(connection, true);
     }
   }
 
   refreshConnections() {
-    for (const connect of this.#connections) {
-      connect.queueRedraw();
+    let connections = this.#connections;
+
+    if (connections !== null) {
+      for (const connect of connections) {
+        connect.queueRedraw();
+      }
+    }
+
+    connections = this.#connection === null ? null : this.#connection.#connections;
+
+    if (connections !== null) {
+      for (const connect of connections) {
+        if (connect.input === this) {
+          connect.queueRedraw();
+        }
+      }
     }
   }
 
   hideConnections() {
-    for (const connect of this.#connections) {
-      connect.remove();
+    let connections = this.#connections;
+
+    if (connections !== null) {
+      for (const connect of connections) {
+        connect.input.transientChangeConnection(null, false);
+      }
+    }
+
+    connections = this.#connection === null ? null : this.#connection.#connections;
+
+    if (connections !== null) {
+      this.#removeConnection(connections, true);
     }
   }
 
@@ -340,12 +360,15 @@ export class SocketBase {
     if (isInput) {
       element.onmousedown = e => {
         e.stopPropagation();
-        tmpConnection = new DraggableConnection(this, true);
+        tmpConnection = new DraggableConnection(this.#node.graph, this, true);
         tmpConnection.startDraw(e);
       };
 
       element.onmouseup = e => {
-        this.changeConnection(tmpConnection?.socket ?? null);
+        if (tmpConnection !== null) {
+          this.changeConnection(tmpConnection.socket);
+        }
+
         tmpConnection = null;
       };
 
@@ -366,7 +389,7 @@ export class SocketBase {
     } else {
       element.onmousedown = e => {
         e.stopPropagation();
-        tmpConnection = new DraggableConnection(this, false);
+        tmpConnection = new DraggableConnection(this.#node.graph, this, false);
         tmpConnection.startDraw(e);
       };
 
@@ -379,19 +402,54 @@ export class SocketBase {
     return element;
   }
 
-  /** @param {Connection} connection */
-  #addConnection(connection) {
-    this.#connections.add(connection);
-    connection.redraw();
+  /** @param {HTMLElement} parent */
+  #render(parent) {
+    const input = this.#input;
+
+    if (input !== null) {
+      if (input instanceof HTMLInputElement) {
+        this.setupDirectInput(input);
+      }
+      else {
+        this.setupOptions(input);
+      }
+
+      input.onchange = e => {
+        if (!this.changeValue(this.readValue(input.value))) {
+          this.transientChangeValue(this.#value);
+        }
+      };
+    }
+
+    parent.appendChild(this.#root);
   }
 
-  /** @param {readonly Connection[]} connections */
-  #removeConnections(connections) {
-    const tmp = this.#connections;
+  /**
+   * @param {SocketBase} connection
+   * @param {boolean} updateOther
+   */
+  #addConnection(connection, updateOther) {
+    const connect = new Connection(this.#node.graph, this, connection);
+    connect.queueRedraw();
 
-    for (const connect of connections) {
-      tmp.delete(connect);
+    if (updateOther) {
+      connection.#connections?.add(connect);
+    }
+  }
+
+  /**
+   * @param {Set<Connection>} connections
+   * @param {boolean} updateOther
+   */
+  #removeConnection(connections, updateOther) {
+    const toRemove = Array.from(connections).filter(c => c.input === this);
+
+    for (const connect of toRemove) {
       connect.remove();
+        
+      if (updateOther) {
+        connections.delete(connect);
+      }
     }
   }
 }
@@ -399,11 +457,12 @@ export class SocketBase {
 /** @extends {SocketBase<null>} */
 export class NamedSocket extends SocketBase {
   /**
-   * @param {number} slot
+   * @param {EditorNode} node
+   * @param {HTMLElement} parent
    * @param {string} name
    */
-  constructor(slot, name) {
-    super(INPUT, slot, name, null);
+  constructor(node, parent, name) {
+    super(INPUT, node, parent, name, null);
   }
 }
 
@@ -426,7 +485,8 @@ export class NumberSocket extends SocketBase {
   #step;
 
   /**
-   * @param {number} slot
+   * @param {EditorNode} node
+   * @param {HTMLElement} parent
    * @param {string} name
    * @param {number} def
    * @param {boolean} connective
@@ -434,8 +494,8 @@ export class NumberSocket extends SocketBase {
    * @param {number | null} max
    * @param {number | null} step
    */
-  constructor(slot, name, def, connective, min, max, step) {
-    super(connective ? INPUT | IN_WRITE : IN_WRITE, slot, name, def);
+  constructor(node, parent, name, def, connective, min, max, step) {
+    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, parent, name, def);
     this.#min = min;
     this.#max = max;
     this.#step = step;
@@ -497,13 +557,14 @@ export class SelectSocket extends SocketBase {
   #options;
 
   /**
-   * @param {number} slot
+   * @param {EditorNode} node
+   * @param {HTMLElement} parent
    * @param {string} name
    * @param {string} def
    * @param {readonly string[]} options
    */
-  constructor(slot, name, def, options) {
-    super(IN_SELECT, slot, name, def);
+  constructor(node, parent, name, def, options) {
+    super(IN_SELECT, node, parent, name, def);
     this.#options = options;
   }
 
@@ -550,15 +611,16 @@ export class SwitchSocket extends SocketBase {
   #inactive;
 
   /**
-   * @param {number} slot
+   * @param {EditorNode} node
+   * @param {HTMLElement} parent
    * @param {string} name
    * @param {boolean} def
    * @param {boolean} connective
    * @param {string} active
    * @param {string} inactive
    */
-  constructor(slot, name, def, connective, active, inactive) {
-    super(connective ? INPUT | IN_SELECT : IN_SELECT, slot, name, def);
+  constructor(node, parent, name, def, connective, active, inactive) {
+    super(connective ? INPUT | IN_SELECT : IN_SELECT, node, parent, name, def);
     this.#active = active;
     this.#inactive = inactive;
   }
@@ -606,7 +668,8 @@ export class TextSocket extends SocketBase {
   #valid;
 
   /**
-   * @param {number} slot
+   * @param {EditorNode} node
+   * @param {HTMLElement} parent
    * @param {string} name
    * @param {string} def
    * @param {boolean} connective
@@ -614,8 +677,8 @@ export class TextSocket extends SocketBase {
    * @param {number | null} max
    * @param {string} valid
    */
-  constructor(slot, name, def, connective, min, max, valid) {
-    super(connective ? INPUT | IN_WRITE : IN_WRITE, slot, name, def);
+  constructor(node, parent, name, def, connective, min, max, valid) {
+    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, parent, name, def);
     this.#min = min;
     this.#max = max;
     this.#valid = valid;
@@ -673,10 +736,11 @@ export class TextSocket extends SocketBase {
 /** @extends {SocketBase<null>} */
 export class OutputSocket extends SocketBase {
   /**
-   * @param {number} slot
+   * @param {EditorNode} node
+   * @param {HTMLElement} parent
    * @param {string} name
    */
-  constructor(slot, name) {
-    super(OUTPUT, slot, name, null);
+  constructor(node, parent, name) {
+    super(OUTPUT, node, parent, name, null);
   }
 }

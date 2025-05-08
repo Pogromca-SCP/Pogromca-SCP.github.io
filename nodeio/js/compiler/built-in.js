@@ -1,8 +1,10 @@
 // @ts-check
 import { BUILT_IN_COLOR, CompiledNode, USABLE } from "./nodes.js";
 import { EditorNode } from "../renderer/nodes.js";
-import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, TextSocket } from "../renderer/sockets.js";
-import { NO_FLAGS } from "../utils.js";
+
+/**
+ * @typedef {import("../renderer/graph.js").NodeGraph} NodeGraph
+ */
 
 export class SocketNode extends CompiledNode {
   constructor() {
@@ -12,15 +14,16 @@ export class SocketNode extends CompiledNode {
   /**
    * @param {number} x
    * @param {number} y
+   * @param {NodeGraph} graph
    */
-  instantiate(x, y) {
-    return new EditorNode(NO_FLAGS, this, x, y, "Socket", BUILT_IN_COLOR,
-      new SelectSocket(1, "", "Output", ["Input", "Output"]),
-      new OutputSocket(2, "Channel"),
-      new NumberSocket(3, "Slot", 1, false, 1, 100, 1),
-      new TextSocket(4, "Name", "", true, null, 50, ""),
-      new TextSocket(5, "Default", "", true, null, 50, ""),
-      new NamedSocket(6, "Data"),
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, "Socket", BUILT_IN_COLOR,
+      { type: "select", name: "", def: "Output", options: ["Input", "Output"] },
+      { type: "output", name: "Channel" },
+      { type: "number", name: "Slot", def: 1, connective: false, min: 1, max: 100, step: 1 },
+      { type: "text", name: "Name", def: "", connective: true, min: null, max: 50, valid: "" },
+      { type: "text", name: "Default", def: "", connective: true, min: null, max: 50, valid: "" },
+      { type: "named", name: "Data" },
     );
   }
 }
@@ -33,13 +36,14 @@ export class TypeNode extends CompiledNode {
   /**
    * @param {number} x
    * @param {number} y
+   * @param {NodeGraph} graph
    */
-  instantiate(x, y) {
-    return new EditorNode(NO_FLAGS, this, x, y, "Type", BUILT_IN_COLOR,
-      new NamedSocket(1, "Channel"),
-      new SwitchSocket(2, "", false, false, "Default", "Not default"),
-      new SwitchSocket(3, "", true, false, "Connective", "Not connective"),
-      new OutputSocket(4, "Data"),
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, "Type", BUILT_IN_COLOR,
+      { type: "named", name: "Channel" },
+      { type: "switch", name: "", def: false, connective: false, active: "Default" , inactive: "Not default" },
+      { type: "switch", name: "", def: true, connective: false, active: "Connective" , inactive: "Not connective" },
+      { type: "output", name: "Data" },
     );
   }
 }
@@ -52,12 +56,13 @@ export class OptionNode extends CompiledNode {
   /**
    * @param {number} x
    * @param {number} y
+   * @param {NodeGraph} graph
    */
-  instantiate(x, y) {
-    return new EditorNode(NO_FLAGS, this, x, y, "Option", BUILT_IN_COLOR,
-      new NamedSocket(1, "When"),
-      new TextSocket(2, "", "", false, null, 50, ""),
-      new OutputSocket(3, "Then"),
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, "Option", BUILT_IN_COLOR,
+      { type: "named", name: "When" },
+      { type: "text", name: "", def: "", connective: false, min: null, max: 50, valid: "" },
+      { type: "output", name: "Then" },
     );
   }
 }
@@ -70,15 +75,16 @@ export class ConditionNode extends CompiledNode {
   /**
    * @param {number} x
    * @param {number} y
+   * @param {NodeGraph} graph
    */
-  instantiate(x, y) {
-    return new EditorNode(NO_FLAGS, this, x, y, "Condition", BUILT_IN_COLOR,
-      new SelectSocket(1, "Input", "Number", ["Number", "Text", "Bool", "Type"]),
-      new SelectSocket(2, "Operation", "Equals", ["Equals", "Not equals", "Less than", "Greater than"]),
-      new NumberSocket(3, "", 0, true, -100, 100, 1),
-      new NumberSocket(4, "", 0, true, -100, 100, 1),
-      new OutputSocket(5, "True"),
-      new OutputSocket(6, "False"),
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, "Condition", BUILT_IN_COLOR,
+      { type: "select", name: "Input", def: "Number", options: ["Number", "Text", "Bool", "Type"] },
+      { type: "select", name: "Opertaion", def: "Equals", options: ["Equals", "Not equals", "Less than", "Greater than"] },
+      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 1 },
+      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 1 },
+      { type: "output", name: "True" },
+      { type: "output", name: "False" },
     );
   }
 }
@@ -91,12 +97,13 @@ export class SettingsNode extends CompiledNode {
   /**
    * @param {number} x
    * @param {number} y
+   * @param {NodeGraph} graph
    */
-  instantiate(x, y) {
-    return new EditorNode(NO_FLAGS, this, x, y, "Settings", BUILT_IN_COLOR,
-      new OutputSocket(1, "Output"),
-      new TextSocket(2, "Name", "", true, null, 50, ""),
-      new TextSocket(3, "Color", "", true, 6, 6, "0123456789abcdef"),
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, "Settings", BUILT_IN_COLOR,
+      { type: "output", name: "Output" },
+      { type: "text", name: "Name", def: "", connective: true, min: null, max: 50, valid: "" },
+      { type: "text", name: "Color", def: "333333", connective: true, min: 6, max: 6, valid: "0123456789abcdef" },
     );
   }
 }
