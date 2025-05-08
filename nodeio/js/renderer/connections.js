@@ -56,6 +56,7 @@ class ConnectionBase {
 
     path.setAttribute("d",
       `M ${fromX} ${fromY} C ${minFromX < half ? half : minFromX} ${fromY}, ${minToX > half ? half : minToX} ${toY}, ${toX} ${toY}`);
+    console.debug(`M ${fromX} ${fromY} C ${minFromX < half ? half : minFromX} ${fromY}, ${minToX > half ? half : minToX} ${toY}, ${toX} ${toY}`);
   }
 }
 
