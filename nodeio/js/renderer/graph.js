@@ -275,11 +275,17 @@ export const nodeExists = id => library.has(id);
 /** @param {string} id */
 export const getNode = id => library.get(id);
 
-/** @param {number} x */
-export const getOffsetTop = x => x - NodeGraph.currentGraph.offsetTop - graph.offsetTop;
+/**
+ * @param {number} x
+ * @param {NodeGraph} graph
+ */
+export const getOffsetTop = (x, graph) => x - graph.offsetTop - graph.offsetTop;
 
-/** @param {number} x */
-export const getOffsetLeft = x => x - NodeGraph.currentGraph.offsetLeft - graph.offsetLeft;
+/**
+ * @param {number} x
+ * @param {NodeGraph} graph
+ */
+export const getOffsetLeft = (x, graph) => x - graph.offsetLeft - graph.offsetLeft;
 
 /** @param {() => void} handler */
 export const bindGraphClick = handler => graph.addEventListener("click", handler);

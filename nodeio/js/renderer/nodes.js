@@ -204,8 +204,8 @@ export class EditorNode {
   constructor(type, graph, x, y, name, color, ...sockets) {
     this.#type = type;
     this.#graph = graph;
-    this.#x = getOffsetLeft(x);
-    this.#y = getOffsetTop(y);
+    this.#x = getOffsetLeft(x, graph);
+    this.#y = getOffsetTop(y, graph);
     const root = document.createElement("div");
     this.#root = root;
     this.#title = document.createElement("p");
