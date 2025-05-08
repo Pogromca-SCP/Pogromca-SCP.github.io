@@ -209,9 +209,9 @@ export class EditorNode {
     const root = document.createElement("div");
     this.#root = root;
     this.#title = document.createElement("p");
-    this.#sockets = sockets.map(s => this.#loadSocket(s));
     this.#createRoot(color);
     this.#createTitle(name);
+    this.#sockets = sockets.map(s => this.#loadSocket(s));
     this.#bindEvents();
   }
 

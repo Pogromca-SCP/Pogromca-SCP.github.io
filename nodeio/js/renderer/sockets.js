@@ -139,11 +139,10 @@ export class SocketBase {
   /**
    * @param {number} flags
    * @param {EditorNode} node
-   * @param {HTMLElement} parent
    * @param {string} name
    * @param {T} def
    */
-  constructor(flags, node, parent, name, def) {
+  constructor(flags, node, name, def) {
     if (this.constructor === SocketBase) {
       throw new Error("Cannot instantiatea an abstract class: SocketBase");
     }
@@ -156,7 +155,6 @@ export class SocketBase {
     this.#value = def;
     this.#connection = null;
     this.#createSocket(name);
-    this.#render(parent);
   }
 
   get flags() {
@@ -324,6 +322,28 @@ export class SocketBase {
     }
   }
 
+  /** @param {HTMLElement} parent */
+  render(parent) {
+    const input = this.#input;
+
+    if (input !== null) {
+      if (input instanceof HTMLInputElement) {
+        this.setupDirectInput(input);
+      }
+      else {
+        this.setupOptions(input);
+      }
+
+      input.onchange = e => {
+        if (!this.changeValue(this.readValue(input.value))) {
+          this.transientChangeValue(this.#value);
+        }
+      };
+    }
+
+    parent.appendChild(this.#root);
+  }
+
   /** @param {string} name */
   #createSocket(name) {
     const root = this.#root;
@@ -402,28 +422,6 @@ export class SocketBase {
     return element;
   }
 
-  /** @param {HTMLElement} parent */
-  #render(parent) {
-    const input = this.#input;
-
-    if (input !== null) {
-      if (input instanceof HTMLInputElement) {
-        this.setupDirectInput(input);
-      }
-      else {
-        this.setupOptions(input);
-      }
-
-      input.onchange = e => {
-        if (!this.changeValue(this.readValue(input.value))) {
-          this.transientChangeValue(this.#value);
-        }
-      };
-    }
-
-    parent.appendChild(this.#root);
-  }
-
   /**
    * @param {SocketBase} connection
    * @param {boolean} updateOther
@@ -462,7 +460,8 @@ export class NamedSocket extends SocketBase {
    * @param {string} name
    */
   constructor(node, parent, name) {
-    super(INPUT, node, parent, name, null);
+    super(INPUT, node, name, null);
+    this.render(parent);
   }
 }
 
@@ -495,10 +494,11 @@ export class NumberSocket extends SocketBase {
    * @param {number | null} step
    */
   constructor(node, parent, name, def, connective, min, max, step) {
-    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, parent, name, def);
+    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, name, def);
     this.#min = min;
     this.#max = max;
     this.#step = step;
+    this.render(parent);
   }
 
   /** @param {HTMLInputElement} input */
@@ -564,8 +564,9 @@ export class SelectSocket extends SocketBase {
    * @param {readonly string[]} options
    */
   constructor(node, parent, name, def, options) {
-    super(IN_SELECT, node, parent, name, def);
+    super(IN_SELECT, node, name, def);
     this.#options = options;
+    this.render(parent);
   }
 
   /** @param {HTMLSelectElement} input */
@@ -620,9 +621,10 @@ export class SwitchSocket extends SocketBase {
    * @param {string} inactive
    */
   constructor(node, parent, name, def, connective, active, inactive) {
-    super(connective ? INPUT | IN_SELECT : IN_SELECT, node, parent, name, def);
+    super(connective ? INPUT | IN_SELECT : IN_SELECT, node, name, def);
     this.#active = active;
     this.#inactive = inactive;
+    this.render(parent);
   }
 
   /** @param {HTMLSelectElement} input */
@@ -678,10 +680,11 @@ export class TextSocket extends SocketBase {
    * @param {string} valid
    */
   constructor(node, parent, name, def, connective, min, max, valid) {
-    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, parent, name, def);
+    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, name, def);
     this.#min = min;
     this.#max = max;
     this.#valid = valid;
+    this.render(parent);
   }
 
   /** @param {HTMLInputElement} input */
@@ -741,6 +744,7 @@ export class OutputSocket extends SocketBase {
    * @param {string} name
    */
   constructor(node, parent, name) {
-    super(OUTPUT, node, parent, name, null);
+    super(OUTPUT, node, name, null);
+    this.render(parent);
   }
 }
