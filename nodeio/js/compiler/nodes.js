@@ -3,7 +3,6 @@ import { doAction } from "../history.js";
 import { showContextMenu } from "../menu.js";
 import { nodeExists, NodeGraph, registerNode, unregiserNode } from "../renderer/graph.js";
 import { EditorNode } from "../renderer/nodes.js";
-import { NamedSocket, OutputSocket } from "../renderer/sockets.js";
 import { ERROR_CLASS, hasFlag } from "../utils.js";
 
 class ChangeIdAction {
