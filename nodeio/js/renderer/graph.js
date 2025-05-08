@@ -277,15 +277,15 @@ export const getNode = id => library.get(id);
 
 /**
  * @param {number} x
- * @param {NodeGraph} graph
+ * @param {NodeGraph} gr
  */
-export const getOffsetTop = (x, graph) => x - graph.offsetTop - graph.offsetTop;
+export const getOffsetTop = (x, gr) => x - gr.offsetTop - graph.offsetTop;
 
 /**
  * @param {number} x
- * @param {NodeGraph} graph
+ * @param {NodeGraph} gr
  */
-export const getOffsetLeft = (x, graph) => x - graph.offsetLeft - graph.offsetLeft;
+export const getOffsetLeft = (x, gr) => x - gr.offsetLeft - graph.offsetLeft;
 
 /** @param {() => void} handler */
 export const bindGraphClick = handler => graph.addEventListener("click", handler);

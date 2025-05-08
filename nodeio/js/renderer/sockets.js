@@ -276,6 +276,7 @@ export class SocketBase {
     if (connections !== null) {
       for (const connect of connections) {
         connect.input.transientChangeConnection(this, false);
+        connect.queueRedraw();
       }
     }
 
@@ -427,12 +428,13 @@ export class SocketBase {
    * @param {boolean} updateOther
    */
   #addConnection(connection, updateOther) {
+    if (!updateOther) {
+      return;
+    }
+
     const connect = new Connection(this.#node.graph, this, connection);
     connect.queueRedraw();
-
-    if (updateOther) {
-      connection.#connections?.add(connect);
-    }
+    connection.#connections?.add(connect);
   }
 
   /**
