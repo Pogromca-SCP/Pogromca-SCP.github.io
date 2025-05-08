@@ -246,6 +246,11 @@ export const startDrag = (e, dragHandler, endHandler) => {
   coords[3] = e.clientY;
   onDrag = dragHandler;
   onEnd = endHandler;
+
+  if (document.onmouseup !== null) {
+    document.onmouseup(e);
+  }
+
   document.onmousemove = continueDrag;
   document.onmouseup = endDrag;
 };
@@ -254,6 +259,11 @@ export const startDrag = (e, dragHandler, endHandler) => {
 const startBgDrag = e => {
   coords[2] = e.clientX;
   coords[3] = e.clientY;
+  
+  if (document.onmouseup !== null) {
+    document.onmouseup(e);
+  }
+
   document.onmousemove = continueBgDrag;
   document.onmouseup = endBgDrag;
 };
