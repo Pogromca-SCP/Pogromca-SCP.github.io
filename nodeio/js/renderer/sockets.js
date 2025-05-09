@@ -122,11 +122,6 @@ export class SocketBase {
    */
   #root;
   /**
-   * @type {HTMLLabelElement}
-   * @readonly
-   */
-  #label;
-  /**
    * @type {HTMLInputElement | HTMLSelectElement | null}
    * @readonly
    */
@@ -141,6 +136,8 @@ export class SocketBase {
    * @readonly
    */
   #listeners;
+  /** @type {HTMLLabelElement | null} */
+  #label;
   /** @type {T} */
   #value;
   /** @type {SocketBase | null} */
@@ -160,7 +157,7 @@ export class SocketBase {
     this.#flags = flags;
     this.#node = node;
     this.#root = document.createElement("div");
-    this.#label = document.createElement("label");
+    this.#label = null;
     this.#input = hasFlag(flags, IN_WRITE) ? document.createElement("input") : (hasFlag(flags, IN_SELECT) ? document.createElement("select") : null);
     this.#connections = hasFlag(flags, OUTPUT) ? new Set() : null;
     this.#listeners = hasFlag(flags, INPUT | IN_SELECT) ? [] : null;
@@ -401,13 +398,20 @@ export class SocketBase {
 
   /** @param {string} name */
   setName(name) {
-    const label = this.#label;
+    let label = this.#label;
 
     if (name.trim().length > 0) {
-      label.textContent = name;
-      label.hidden = false;
-    } else {
-      label.hidden = true;
+      if (label === null) {
+        label = document.createElement("label");
+        this.#label = label;
+        const root = this.#root;
+        root.insertBefore(label, hasFlag(this.#flags, OUTPUT) ? root.lastChild : this.#input);
+      }
+
+      label.innerText = name;
+    } else if (label !== null) {
+      this.#root.removeChild(label);
+      this.#label = null;
     }
   }
 
@@ -415,19 +419,18 @@ export class SocketBase {
   #createSocket(name) {
     const root = this.#root;
     const flags = this.#flags;
-    const label = this.#label;
 
     if (hasFlag(flags, INPUT)) {
       root.appendChild(this.#createConnector(true));
     }
 
     if (name.trim().length > 0) {
+      const label = document.createElement("label");
       label.textContent = name;
-    } else {
-      label.hidden = true;
+      this.#label = label;
+      root.appendChild(label);
     }
 
-    root.appendChild(label);
     const input = this.#input;
 
     if (input !== null) {
