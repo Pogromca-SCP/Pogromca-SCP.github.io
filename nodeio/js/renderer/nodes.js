@@ -9,6 +9,7 @@ import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, Te
 /**
  * @typedef {import("../compiler/nodes.js").CompiledNode} CompiledNode
  * @typedef {import("./sockets.js").SocketBase} SocketBase
+ * @typedef {import("./sockets.js").SocketValue} SocketValue
  * 
  * @typedef {object} SocketDef
  * @property {DataSource<string>} name
@@ -47,7 +48,7 @@ import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, Te
 
 /**
  * @template T
- * @typedef {{ socketId: number, func: (x: string) => T, def: T }} DynamicData
+ * @typedef {{ socketId: number, func: (x: SocketValue) => T, def: T }} DynamicData
  */
 
 /**
@@ -531,12 +532,12 @@ export class EditorNode {
 
     if (typeof(name) !== "string") {
       const func = name.func;
-      scs[name.socketId].listeners?.push(value => this.setName(func(value)));
+      scs[name.socketId].listeners?.push({ allowOnRender: false, handler: value => this.setName(func(value)) });
     }
 
     if (typeof(color) !== "string") {
       const func = color.func;
-      scs[color.socketId].listeners?.push(value => this.setColor(func(value)));
+      scs[color.socketId].listeners?.push({ allowOnRender: false, handler: value => this.setColor(func(value)) });
     }
 
     const len = sockets.length;
@@ -548,17 +549,14 @@ export class EditorNode {
 
       if (typeof(tempName) !== "string") {
         const func = tempName.func;
-        scs[tempName.socketId].listeners?.push(value => target.setName(func(value)));
+        scs[tempName.socketId].listeners?.push({ allowOnRender: false, handler: value => target.setName(func(value)) });
       }
 
       const tempVis = def.visible;
 
       if (tempVis !== undefined) {
         const func = tempVis.func;
-        const listener = value => target.setVisibility(value !== null && func(value));
-        const src = scs[tempVis.socketId];
-        src.listeners?.push(listener);
-        src.renderWatchers?.push(listener);
+        scs[tempVis.socketId].listeners?.push({ allowOnRender: true, handler: value => target.setVisibility(value !== null && func(value)) });
 
         if (!tempVis.def) {
           target.setVisibility(false);

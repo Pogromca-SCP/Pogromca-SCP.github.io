@@ -69,11 +69,16 @@ export class TypeNode extends CompiledNode {
    * @param {NodeGraph} graph
    */
   instantiate(x, y, graph) {
-    return new EditorNode(this, graph, x, y, "Type", BUILT_IN_COLOR,
-      { type: "named", name: "Channel" },
-      { type: "switch", name: "", def: false, connective: false, active: "Default" , inactive: "Not default" },
-      { type: "switch", name: "", def: true, connective: false, active: "Connective" , inactive: "Not connective" },
-      { type: "output", name: "Data" },
+    const builtInVisible = { socketId: 2, func: x => x, def: false };
+
+    return new EditorNode(this, graph, x, y, "type", BUILT_IN_COLOR,
+      { type: "named", name: "channel" },
+      { type: "switch", name: "", def: false, connective: false, active: "default", inactive: "not default" },
+      { type: "switch", name: "", def: false, connective: false, active: "built in", inactive: "custom" },
+      { type: "select", name: "", def: "native/text", options: ["native/text", "native/number", "native/bool"], visible: builtInVisible },
+      { type: "switch", name: "", def: true, connective: false, active: "connective", inactive: "not connective", visible: builtInVisible },
+      { type: "text", name: "name", def: "", connective: true, min: 0, max: 20, valid: "", visible: { socketId: 2, func: x => !x, def: true } },
+      { type: "output", name: "data" },
     );
   }
 }
@@ -89,10 +94,10 @@ export class OptionNode extends CompiledNode {
    * @param {NodeGraph} graph
    */
   instantiate(x, y, graph) {
-    return new EditorNode(this, graph, x, y, "Option", BUILT_IN_COLOR,
-      { type: "named", name: "When" },
+    return new EditorNode(this, graph, x, y, "option", BUILT_IN_COLOR,
+      { type: "named", name: "when" },
       { type: "text", name: "", def: "", connective: false, min: 0, max: 50, valid: "" },
-      { type: "output", name: "Then" },
+      { type: "output", name: "then" },
     );
   }
 }
@@ -108,13 +113,23 @@ export class ConditionNode extends CompiledNode {
    * @param {NodeGraph} graph
    */
   instantiate(x, y, graph) {
-    return new EditorNode(this, graph, x, y, "Condition", BUILT_IN_COLOR,
-      { type: "select", name: "Input", def: "Number", options: ["Number", "Text", "Bool", "Type"] },
-      { type: "select", name: "Opertaion", def: "Equals", options: ["Equals", "Not equals", "Less than", "Greater than"] },
-      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 1 },
-      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 1 },
-      { type: "output", name: "True" },
-      { type: "output", name: "False" },
+    const numberVisible = { socketId: 0, func: x => x === "number", def: true };
+    const textOrTypeVisible = { socketId: 0, func: x => x === "text" || x === "type", def: false };
+    const boolVisible = { socketId: 0, func: x => x === "bool", def: false };
+
+    return new EditorNode(this, graph, x, y, "condition", BUILT_IN_COLOR,
+      { type: "select", name: "input", def: "number", options: ["number", "text", "bool", "type"] },
+      { type: "select", name: "operation", def: "equals", options: ["equals", "not equals", "less than", "greater than", "less or equal", "greater or equal"], visible: numberVisible },
+      { type: "select", name: "operation", def: "equals", options: ["equals", "not equals"], visible: textOrTypeVisible },
+      { type: "select", name: "operation", def: "equals", options: ["equals", "not equals", "and", "or", "not"], visible: boolVisible },
+      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 1, visible: numberVisible },
+      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 1, visible: numberVisible },
+      { type: "text", name: "", def: "", connective: true, min: 0, max: 50, valid: "", visible: textOrTypeVisible },
+      { type: "text", name: "", def: "", connective: true, min: 0, max: 50, valid: "", visible: textOrTypeVisible },
+      { type: "switch", name: "", def: false, connective: true, active: "true", inactive: "false", visible: boolVisible },
+      { type: "switch", name: "", def: false, connective: true, active: "true", inactive: "false", visible: { socketId: 3, func: x => x !== "not", def: true } },
+      { type: "output", name: "true" },
+      { type: "output", name: "false" },
     );
   }
 }
@@ -130,10 +145,10 @@ export class SettingsNode extends CompiledNode {
    * @param {NodeGraph} graph
    */
   instantiate(x, y, graph) {
-    return new EditorNode(this, graph, x, y, "Settings", BUILT_IN_COLOR,
-      { type: "output", name: "Output" },
-      { type: "text", name: "Name", def: "", connective: true, min: 0, max: 50, valid: "" },
-      { type: "text", name: "Color", def: "333333", connective: true, min: 6, max: 6, valid: "0123456789abcdef" },
+    return new EditorNode(this, graph, x, y, "settings", BUILT_IN_COLOR,
+      { type: "output", name: "output" },
+      { type: "text", name: "name", def: "", connective: true, min: 0, max: 50, valid: "" },
+      { type: "text", name: "color", def: "333333", connective: true, min: 6, max: 6, valid: "0123456789abcdef" },
     );
   }
 }

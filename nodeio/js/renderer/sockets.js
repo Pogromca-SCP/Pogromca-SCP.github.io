@@ -6,6 +6,12 @@ import { Connection, DraggableConnection } from "./connections.js";
 
 /**
  * @typedef {import("./nodes.js").EditorNode} EditorNode
+ * 
+ * @typedef {string | number | boolean | null} SocketValue
+ * 
+ * @typedef {object} Listener
+ * @property {boolean} allowOnRender
+ * @property {(x: SocketValue) => void} handler
  */
 
 const borderSize = textToInt(getComputedStyle(document.body).getPropertyValue("--selection-size"));
@@ -132,15 +138,10 @@ export class SocketBase {
    */
   #connections;
   /**
-   * @type {((x: string) => void)[] | null}
+   * @type {Listener[] | null}
    * @readonly
    */
   #listeners;
-  /**
-   * @type {((x: string | null) => void)[] | null}
-   * @readonly
-   */
-  #renderWatchers;
   /** @type {HTMLLabelElement | null} */
   #label;
   /** @type {T} */
@@ -165,8 +166,7 @@ export class SocketBase {
     this.#label = null;
     this.#input = hasFlag(flags, IN_WRITE) ? document.createElement("input") : (hasFlag(flags, IN_SELECT) ? document.createElement("select") : null);
     this.#connections = hasFlag(flags, OUTPUT) ? new Set() : null;
-    this.#listeners = hasFlag(flags, INPUT | IN_SELECT) ? [] : null;
-    this.#renderWatchers = hasFlag(flags, INPUT | IN_SELECT) ? [] : null;
+    this.#listeners = hasFlag(flags, INPUT | IN_SELECT | IN_WRITE) ? [] : null;
     this.#value = def;
     this.#connection = null;
     this.#createSocket(name);
@@ -182,10 +182,6 @@ export class SocketBase {
 
   get listeners() {
     return this.#listeners;
-  }
-
-  get renderWatchers() {
-    return this.#renderWatchers;
   }
 
   get value() {
@@ -243,9 +239,9 @@ export class SocketBase {
 
     const listeners = this.#listeners;
 
-    if (hasFlag(this.#flags, IN_SELECT) && typeof(value) === "string" && listeners !== null && listeners.length > 0) {
+    if (listeners !== null && listeners.length > 0) {
       for (const listener of listeners) {
-        listener(value);
+        listener.handler(/** @type {SocketValue} */ (value));
       }
 
       this.#node.refreshConnections();
@@ -405,14 +401,16 @@ export class SocketBase {
       this.hideConnections();
     }
 
-    const value = this.#value;
-    const listeners = this.#renderWatchers;
+    const value = /** @type {SocketValue} */ (this.#value);
+    const listeners = this.#listeners;
 
-    if (hasFlag(this.#flags, IN_SELECT) && typeof(value) === "string" && listeners !== null && listeners.length > 0) {
+    if (listeners !== null && listeners.length > 0) {
       const toApply = visible ? value : null;
 
       for (const listener of listeners) {
-        listener(toApply);
+        if (listener.allowOnRender) {
+          listener.handler(toApply);
+        }
       }
     }
   }
