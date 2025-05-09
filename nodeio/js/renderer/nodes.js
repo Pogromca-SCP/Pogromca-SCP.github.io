@@ -57,8 +57,6 @@ import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, Te
 
 const NODE_CLASS = "node";
 const SELECTION_CLASS = "node selected";
-/** @param {SocketBase} socket */
-const visibilityCheck = socket => socket.isVisible;
 
 const nodeDragEnd = () => {
   const node = EditorNode.selectedNodes[0];
@@ -557,8 +555,15 @@ export class EditorNode {
 
       if (tempVis !== undefined) {
         const func = tempVis.func;
-        const src = scs[tempVis.socketId];
-        src.listeners?.push(value => target.setVisibility(visibilityCheck(src) && func(value)));
+        const otherCond = sockets[tempVis.socketId].visible;
+
+        if (otherCond === undefined) {
+          scs[tempVis.socketId].listeners?.push(value => target.setVisibility(func(value)));
+        } else {
+          const otherSocket = scs[otherCond.socketId];
+          const otherFunc = otherCond.func;
+          scs[tempVis.socketId].listeners?.push(value => target.setVisibility(otherFunc(otherSocket.value) && func(value)));
+        }
 
         if (!tempVis.def) {
           target.setVisibility(false);
