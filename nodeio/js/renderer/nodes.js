@@ -555,15 +555,10 @@ export class EditorNode {
 
       if (tempVis !== undefined) {
         const func = tempVis.func;
-        const otherCond = sockets[tempVis.socketId].visible;
-
-        if (otherCond === undefined) {
-          scs[tempVis.socketId].listeners?.push(value => target.setVisibility(func(value)));
-        } else {
-          const otherSocket = scs[otherCond.socketId];
-          const otherFunc = otherCond.func;
-          scs[tempVis.socketId].listeners?.push(value => target.setVisibility(otherFunc(otherSocket.value) && func(value)));
-        }
+        const listener = value => target.setVisibility(value !== null && func(value));
+        const src = scs[tempVis.socketId];
+        src.listeners?.push(listener);
+        src.renderWatchers?.push(listener);
 
         if (!tempVis.def) {
           target.setVisibility(false);
