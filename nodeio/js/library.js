@@ -69,13 +69,13 @@ export const initialize = () => {
   node.transientChangeId(ROOT);
   node.openInEditor();
   node = new SocketNode();
-  node.transientChangeId("Socket");
+  node.transientChangeId("socket");
   node = new TypeNode();
-  node.transientChangeId("Type");
+  node.transientChangeId("type");
   node = new OptionNode();
-  node.transientChangeId("Option");
+  node.transientChangeId("option");
   node = new ConditionNode();
-  node.transientChangeId("Condition");
+  node.transientChangeId("condition");
   node = new SettingsNode();
-  node.transientChangeId("Settings");
+  node.transientChangeId("settings");
 };

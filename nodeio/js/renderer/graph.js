@@ -10,7 +10,7 @@ const graph = /** @type {HTMLDivElement} */ (document.getElementById("graph"));
 
 export const DRAG_DROP_DATA_FORMAT = "text/plain";
 export const SVG_URL = "http://www.w3.org/2000/svg";
-export const ROOT = "Root";
+export const ROOT = "root";
 
 export class NodeGraph {
   /** @type {NodeGraph} */
@@ -244,13 +244,14 @@ const endBgDrag = e => {
 export const startDrag = (e, dragHandler, endHandler) => {
   coords[2] = e.clientX;
   coords[3] = e.clientY;
+
+  if (onEnd !== null) {
+    onEnd();
+    onEnd = null;
+  }
+  
   onDrag = dragHandler;
   onEnd = endHandler;
-
-  if (document.onmouseup !== null) {
-    document.onmouseup(e);
-  }
-
   document.onmousemove = continueDrag;
   document.onmouseup = endDrag;
 };
@@ -260,8 +261,9 @@ const startBgDrag = e => {
   coords[2] = e.clientX;
   coords[3] = e.clientY;
   
-  if (document.onmouseup !== null) {
-    document.onmouseup(e);
+  if (onEnd !== null) {
+    onEnd();
+    onEnd = null;
   }
 
   document.onmousemove = continueBgDrag;

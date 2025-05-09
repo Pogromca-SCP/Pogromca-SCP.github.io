@@ -11,15 +11,16 @@ import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, Te
  * @typedef {import("./sockets.js").SocketBase} SocketBase
  * 
  * @typedef {object} SocketDef
- * @property {string} name
+ * @property {DataSource<string>} name
  * @property {"named" | "number" | "select" | "switch" | "text" | "output"} type
+ * @property {DynamicData<boolean>} [visible]
  * 
  * @typedef {object} NumberDef
  * @property {number} def
  * @property {boolean} connective
- * @property {number | null} min
- * @property {number | null} max
- * @property {number | null} step
+ * @property {number} min
+ * @property {number} max
+ * @property {number} step
  * 
  * @typedef {object} SelectDef
  * @property {string} def
@@ -34,14 +35,24 @@ import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, Te
  * @typedef {object} TextDef
  * @property {string} def
  * @property {boolean} connective
- * @property {number | null} min
- * @property {number | null} max
+ * @property {number} min
+ * @property {number} max
  * @property {string} valid
  * 
  * @typedef {SocketDef & NumberDef} NumberSocketDef
  * @typedef {SocketDef & SelectDef} SelectSocketDef
  * @typedef {SocketDef & SwitchDef} SwitchSocketDef
  * @typedef {SocketDef & TextDef} TextSocketDef
+ */
+
+/**
+ * @template T
+ * @typedef {{ socketId: number, func: (x: string) => T, def: T }} DynamicData
+ */
+
+/**
+ * @template T
+ * @typedef {T | DynamicData<T>} DataSource
  */
 
 const NODE_CLASS = "node";
@@ -197,9 +208,9 @@ export class EditorNode {
    * @param {NodeGraph} graph
    * @param {number} x
    * @param {number} y
-   * @param {string} name
-   * @param {string} color
-   * @param {...(SocketDef | NumberSocketDef | SelectSocketDef | SwitchSocketDef | TextSocketDef)} sockets
+   * @param {Readonly<DataSource<string>>} name
+   * @param {Readonly<DataSource<string>>} color
+   * @param {...Readonly<SocketDef | NumberSocketDef | SelectSocketDef | SwitchSocketDef | TextSocketDef>} sockets
    */
   constructor(type, graph, x, y, name, color, ...sockets) {
     this.#type = type;
@@ -213,6 +224,7 @@ export class EditorNode {
     this.#createTitle(name);
     this.#sockets = sockets.map(s => this.#loadSocket(s));
     this.#bindEvents();
+    this.#setupListeners(name, color, sockets);
   }
 
   static get selectedNodes() {
@@ -432,42 +444,46 @@ export class EditorNode {
     }
   }
 
-  /** @param {SocketDef} def */
+  /** @param {Readonly<SocketDef>} def */
   #loadSocket(def) {
+    const tempName = def.name;
+    const name = typeof(tempName) === "string" ? tempName : tempName.def;
+
     switch (def.type) {
       case "named":
-        return new NamedSocket(this, this.#root, def.name);
+        return new NamedSocket(this, this.#root, name);
       case "number":
         const num = /** @type {NumberSocketDef} */ (def);
-        return new NumberSocket(this, this.#root, num.name, num.def, num.connective, num.min, num.max, num.step);
+        return new NumberSocket(this, this.#root, name, num.def, num.connective, num.min, num.max, num.step);
       case "select":
         const sel = /** @type {SelectSocketDef} */ (def);
-        return new SelectSocket(this, this.#root, sel.name, sel.def, sel.options);
+        return new SelectSocket(this, this.#root, name, sel.def, sel.options);
       case "switch":
         const swt = /** @type {SwitchSocketDef} */ (def);
-        return new SwitchSocket(this, this.#root, swt.name, swt.def, swt.connective, swt.active, swt.inactive);
+        return new SwitchSocket(this, this.#root, name, swt.def, swt.connective, swt.active, swt.inactive);
       case "text":
         const txt = /** @type {TextSocketDef} */ (def);
-        return new TextSocket(this, this.#root, txt.name, txt.def, txt.connective, txt.min, txt.max, txt.valid);
+        return new TextSocket(this, this.#root, name, txt.def, txt.connective, txt.min, txt.max, txt.valid);
       default:
-        return new OutputSocket(this, this.#root, def.name);
+        return new OutputSocket(this, this.#root, name);
     }
   }
 
-  /** @param {string} color */
+  /** @param {Readonly<DataSource<string>>} color */
   #createRoot(color) {
     const root = this.#root;
     root.className = NODE_CLASS;
     const style = root.style;
     style.left = `${this.#x}px`;
     style.top = `${this.#y}px`;
-    style.backgroundColor = `#${color}`;
+    const value = typeof(color) === "string" ? color : color.def;
+    style.backgroundColor = `#${value}`;
   }
 
-  /** @param {string} name */
+  /** @param {Readonly<DataSource<string>>} name */
   #createTitle(name) {
     const title = this.#title;
-    title.innerText = name;
+    title.innerText = typeof(name) === "string" ? name : name.def;
     this.#root.appendChild(title);
   }
 
@@ -502,6 +518,50 @@ export class EditorNode {
           ],
         ]);
       };
+    }
+  }
+
+  /**
+   * @param {Readonly<DataSource<string>>} name 
+   * @param {Readonly<DataSource<string>>} color 
+   * @param {readonly Readonly<SocketDef>[]} sockets 
+   */
+  #setupListeners(name, color, sockets) {
+    const scs = this.#sockets;
+
+    if (typeof(name) !== "string") {
+      const func = name.func;
+      scs[name.socketId].listeners?.push(value => this.setName(func(value)));
+    }
+
+    if (typeof(color) !== "string") {
+      const func = color.func;
+      scs[color.socketId].listeners?.push(value => this.setColor(func(value)));
+    }
+
+    const len = sockets.length;
+
+    for (let i = 0; i < len; ++i) {
+      const def = sockets[i];
+      const target = scs[i];
+      const tempName = def.name;
+
+      if (typeof(tempName) !== "string") {
+        const func = tempName.func;
+        scs[tempName.socketId].listeners?.push(value => target.setName(func(value)));
+      }
+
+      const tempVis = def.visible;
+
+      if (tempVis !== undefined) {
+        const func = tempVis.func;
+        const src = scs[tempVis.socketId];
+        src.listeners?.push(value => target.setVisibility(src.isVisible && func(value)));
+
+        if (!tempVis.def) {
+          target.setVisibility(false);
+        }
+      }
     }
   }
 }

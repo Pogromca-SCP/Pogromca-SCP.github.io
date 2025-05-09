@@ -122,6 +122,11 @@ export class SocketBase {
    */
   #root;
   /**
+   * @type {HTMLLabelElement}
+   * @readonly
+   */
+  #label;
+  /**
    * @type {HTMLInputElement | HTMLSelectElement | null}
    * @readonly
    */
@@ -131,6 +136,11 @@ export class SocketBase {
    * @readonly
    */
   #connections;
+  /**
+   * @type {((x: string) => void)[] | null}
+   * @readonly
+   */
+  #listeners;
   /** @type {T} */
   #value;
   /** @type {SocketBase | null} */
@@ -150,8 +160,10 @@ export class SocketBase {
     this.#flags = flags;
     this.#node = node;
     this.#root = document.createElement("div");
+    this.#label = document.createElement("label");
     this.#input = hasFlag(flags, IN_WRITE) ? document.createElement("input") : (hasFlag(flags, IN_SELECT) ? document.createElement("select") : null);
     this.#connections = hasFlag(flags, OUTPUT) ? new Set() : null;
+    this.#listeners = hasFlag(flags, INPUT | IN_SELECT) ? [] : null;
     this.#value = def;
     this.#connection = null;
     this.#createSocket(name);
@@ -163,6 +175,10 @@ export class SocketBase {
 
   get node() {
     return this.#node;
+  }
+
+  get listeners() {
+    return this.#listeners;
   }
 
   get value() {
@@ -184,6 +200,10 @@ export class SocketBase {
   get height() {
     const root = this.#root;
     return this.#node.top + root.offsetTop + borderSize + (root.offsetHeight / 2);
+  }
+
+  get isVisible() {
+    return !this.#root.hidden;
   }
 
   /** @param {HTMLInputElement} input */
@@ -212,6 +232,17 @@ export class SocketBase {
       input.onchange = null;
       input.value = this.writeValue(value);
       input.onchange = tmp;
+    }
+
+    const listeners = this.#listeners;
+
+    if (hasFlag(this.#flags, IN_SELECT) && typeof(value) === "string" && listeners !== null && listeners.length > 0) {
+      for (const listener of listeners) {
+        listener(value);
+      }
+
+      this.#node.refreshConnections();
+      Connection.finishMassRedraw();
     }
   }
 
@@ -271,6 +302,10 @@ export class SocketBase {
   }
 
   restoreConnections() {
+    if (!this.isVisible) {
+      return;
+    }
+    
     const connections = this.#connections;
 
     if (connections !== null) {
@@ -288,6 +323,10 @@ export class SocketBase {
   }
 
   refreshConnections() {
+    if (!this.isVisible) {
+      return;
+    }
+
     let connections = this.#connections;
 
     if (connections !== null) {
@@ -345,21 +384,50 @@ export class SocketBase {
     parent.appendChild(this.#root);
   }
 
+  /** @param {boolean} visible */
+  setVisibility(visible) {
+    if (this.isVisible === visible) {
+      return;
+    }
+
+    this.#root.hidden = !visible;
+
+    if (visible) {
+      this.restoreConnections();
+    } else {
+      this.hideConnections();
+    }
+  }
+
+  /** @param {string} name */
+  setName(name) {
+    const label = this.#label;
+
+    if (name.trim().length > 0) {
+      label.textContent = name;
+      label.hidden = false;
+    } else {
+      label.hidden = true;
+    }
+  }
+
   /** @param {string} name */
   #createSocket(name) {
     const root = this.#root;
     const flags = this.#flags;
+    const label = this.#label;
 
     if (hasFlag(flags, INPUT)) {
       root.appendChild(this.#createConnector(true));
     }
 
     if (name.trim().length > 0) {
-      const label = document.createElement("label");
       label.textContent = name;
-      root.appendChild(label);
+    } else {
+      label.hidden = true;
     }
 
+    root.appendChild(label);
     const input = this.#input;
 
     if (input !== null) {
@@ -470,17 +538,17 @@ export class NamedSocket extends SocketBase {
 /** @extends {SocketBase<number>} */
 export class NumberSocket extends SocketBase {
   /**
-   * @type {number | null}
+   * @type {number}
    * @readonly
    */
   #min;
   /**
-   * @type {number | null}
+   * @type {number}
    * @readonly
    */
   #max;
   /**
-   * @type {number | null}
+   * @type {number}
    * @readonly
    */
   #step;
@@ -491,9 +559,9 @@ export class NumberSocket extends SocketBase {
    * @param {string} name
    * @param {number} def
    * @param {boolean} connective
-   * @param {number | null} min
-   * @param {number | null} max
-   * @param {number | null} step
+   * @param {number} min
+   * @param {number} max
+   * @param {number} step
    */
   constructor(node, parent, name, def, connective, min, max, step) {
     super(connective ? INPUT | IN_WRITE : IN_WRITE, node, name, def);
@@ -506,37 +574,15 @@ export class NumberSocket extends SocketBase {
   /** @param {HTMLInputElement} input */
   setupDirectInput(input) {
     input.type = "number";
-
-    if (this.#min !== null) {
-      input.min = this.#min.toString();
-    }
-
-    if (this.#max !== null) {
-      input.max = this.#max.toString();
-    }
-
-    if (this.#step !== null) {
-      input.step = this.#step.toString();
-    }
-
+    input.min = this.#min.toString();
+    input.max = this.#max.toString();
+    input.step = this.#step.toString();
     input.value = this.value.toString();
   }
 
   /** @param {number} value */
   validateValue(value) {
-    if (this.#min !== null && value < this.#min) {
-      return false;
-    }
-
-    if (this.#max !== null && value > this.#max) {
-      return false;
-    }
-
-    if (this.#step !== null && value % this.#step !== 0) {
-      return false;
-    }
-
-    return true;
+    return value >= this.#min && value <= this.#max && value % this.#step === 0;
   }
 
   /** @param {string} value */
@@ -656,12 +702,12 @@ export class SwitchSocket extends SocketBase {
 /** @extends {SocketBase<string>} */
 export class TextSocket extends SocketBase {
   /**
-   * @type {number | null}
+   * @type {number}
    * @readonly
    */
   #min;
   /**
-   * @type {number | null}
+   * @type {number}
    * @readonly
    */
   #max;
@@ -677,8 +723,8 @@ export class TextSocket extends SocketBase {
    * @param {string} name
    * @param {string} def
    * @param {boolean} connective
-   * @param {number | null} min
-   * @param {number | null} max
+   * @param {number} min
+   * @param {number} max
    * @param {string} valid
    */
   constructor(node, parent, name, def, connective, min, max, valid) {
@@ -692,25 +738,14 @@ export class TextSocket extends SocketBase {
   /** @param {HTMLInputElement} input */
   setupDirectInput(input) {
     input.type = "text";
-
-    if (this.#min !== null) {
-      input.minLength = this.#min;
-    }
-
-    if (this.#max !== null) {
-      input.maxLength = this.#max;
-    }
-
+    input.minLength = this.#min;
+    input.maxLength = this.#max;
     input.value = this.value;
   }
 
   /** @param {string} value */
   validateValue(value) {
-    if (this.#min !== null && value.length < this.#min) {
-      return false;
-    }
-
-    if (this.#max !== null && value.length > this.#max) {
+    if (value.length < this.#min || value.length > this.#max) {
       return false;
     }
 

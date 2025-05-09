@@ -30,6 +30,10 @@ class ConnectionBase {
     this.#graph = graph;
   }
 
+  get isVisible() {
+    return this.#path.parentElement !== null;
+  }
+
   remove() {
     const path = this.#path;
 
