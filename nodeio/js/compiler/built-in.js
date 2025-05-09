@@ -127,7 +127,7 @@ export class ConditionNode extends CompiledNode {
       { type: "text", name: "", def: "", connective: true, min: 0, max: 50, valid: "", visible: textOrTypeVisible },
       { type: "text", name: "", def: "", connective: true, min: 0, max: 50, valid: "", visible: textOrTypeVisible },
       { type: "switch", name: "", def: false, connective: true, active: "true", inactive: "false", visible: boolVisible },
-      { type: "switch", name: "", def: false, connective: true, active: "true", inactive: "false", visible: { socketId: 3, func: x => x !== "not", def: true } },
+      { type: "switch", name: "", def: false, connective: true, active: "true", inactive: "false", visible: { socketId: 3, func: x => x !== "not", def: false } },
       { type: "output", name: "true" },
       { type: "output", name: "false" },
     );
