@@ -836,6 +836,8 @@ export class RepetetiveSocket extends SocketBase {
    */
   #parent;
   /** @type {RepetetiveSocket | null} */
+  #previous;
+  /** @type {RepetetiveSocket | null} */
   #next;
   
   /**
@@ -843,10 +845,15 @@ export class RepetetiveSocket extends SocketBase {
    * @param {HTMLElement} parent
    */
   constructor(node, parent) {
-    super(INPUT, node, "", null);
+    super(INPUT, node, "_", null);
     this.#parent = parent;
+    this.#previous = null;
     this.#next = null;
     this.render(parent);
+  }
+
+  get previous() {
+    return this.#previous;
   }
 
   get next() {
@@ -860,13 +867,26 @@ export class RepetetiveSocket extends SocketBase {
   transientChangeConnection(connection, updateOther) {
     const oldConnection = this.connection;
     super.transientChangeConnection(connection, updateOther);
-    const parent = this.#parent;
 
     if (oldConnection === null && connection !== null) {
+      const parent = this.#parent;
       this.addBefore(parent, this.#next);
       this.#next ??= new RepetetiveSocket(this.node, parent);
-    } else if (oldConnection !== null && connection === null && parent.children.length > 2) {
+      this.#next.#previous = this;
+      const prev = this.#previous;
+
+      if (prev !== null) {
+        prev.#next = this;
+      }
+    } else if (oldConnection !== null && connection === null && this.#previous !== null) {
       this.delete();
+      const next = this.#next;
+      const prev = this.#previous;
+      prev.#next = next;
+      
+      if (next !== null) {
+        next.#previous = prev;
+      }
     }
   }
 }
