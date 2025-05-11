@@ -888,5 +888,12 @@ export class RepetetiveSocket extends SocketBase {
         next.#previous = prev;
       }
     }
+
+    this.node.refreshConnections();
+  }
+
+  refreshConnections() {
+    super.refreshConnections();
+    this.#next?.refreshConnections();
   }
 }
