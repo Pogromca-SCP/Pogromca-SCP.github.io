@@ -4,7 +4,6 @@ import { startDrag, SVG_URL } from "./graph.js";
 /**
  * @typedef {import("./graph.js").NodeGraph} NodeGraph
  * @typedef {import("./sockets.js").SocketBase} SocketBase
- * @typedef {import("./sockets.js").OutputSocket} OutputSocket
  */
 
 /** @abstract */

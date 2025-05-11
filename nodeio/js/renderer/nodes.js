@@ -4,7 +4,7 @@ import { closeContextMenu, showContextMenu } from "../menu.js";
 import { ERROR_CLASS } from "../utils.js";
 import { Connection } from "./connections.js";
 import { bindGraphClick, getOffsetLeft, getOffsetTop, NodeGraph, startDrag } from "./graph.js";
-import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, TextSocket } from "./sockets.js";
+import { NamedSocket, NumberSocket, OutputSocket, RepetetiveSocket, SelectSocket, SwitchSocket, TextSocket } from "./sockets.js";
 
 /**
  * @typedef {import("../compiler/nodes.js").CompiledNode} CompiledNode
@@ -13,7 +13,7 @@ import { NamedSocket, NumberSocket, OutputSocket, SelectSocket, SwitchSocket, Te
  * 
  * @typedef {object} SocketDef
  * @property {DataSource<string>} name
- * @property {"named" | "number" | "select" | "switch" | "text" | "output"} type
+ * @property {"named" | "number" | "select" | "switch" | "text" | "output" | "repetetive"} type
  * @property {DynamicData<boolean>} [visible]
  * 
  * @typedef {object} NumberDef
@@ -312,34 +312,14 @@ export class EditorNode {
 
   /** @param {string} name */
   setName(name) {
-    const title = this.#title;
-    title.className = "";
-    title.innerHTML = "";
-    title.innerText = name;
+    this.#title.innerText = name;
     this.refreshConnections();
     Connection.finishMassRedraw();
   }
 
-  /** @param {readonly string[]} issues */
-  setIssues(issues) {
-    const length = issues.length;
-
-    if (length < 1) {
-      return;
-    }
-
-    const title = this.#title;
-    title.className = ERROR_CLASS;
-    title.innerHTML = "";
-    title.appendChild(document.createTextNode(issues[0]));
-
-    for (let i = 1; i < length; ++i) {
-      title.appendChild(document.createElement("br"));
-      title.appendChild(document.createTextNode(issues[i]));
-    }
-
-    this.refreshConnections();
-    Connection.finishMassRedraw();
+  /** @param {boolean} isError */
+  setErrorState(isError) {
+    this.#title.className = isError ? ERROR_CLASS : "";
   }
 
   /** @param {string} color */
@@ -363,7 +343,7 @@ export class EditorNode {
   }
 
   transientAdd() {
-    this.#graph.addNode(this, this.#root);
+    this.#graph.addNode(this.#root);
     this.restoreConnections();
   }
 
@@ -378,7 +358,7 @@ export class EditorNode {
 
   transientDelete() {
     this.diselect();
-    this.#graph.removeNode(this, this.#root);
+    this.#graph.removeNode(this.#root);
     this.hideConnections();
   }
 
@@ -465,6 +445,8 @@ export class EditorNode {
       case "text":
         const txt = /** @type {TextSocketDef} */ (def);
         return new TextSocket(this, this.#root, name, txt.def, txt.connective, txt.min, txt.max, txt.valid);
+      case "repetetive":
+        return new RepetetiveSocket(this, this.#root);
       default:
         return new OutputSocket(this, this.#root, name);
     }
@@ -532,12 +514,12 @@ export class EditorNode {
 
     if (typeof(name) !== "string") {
       const func = name.func;
-      scs[name.socketId].listeners?.push({ allowOnRender: false, handler: value => this.setName(func(value)) });
+      scs[name.socketId]?.listeners?.push({ allowOnRender: false, handler: value => this.setName(func(value)) });
     }
 
     if (typeof(color) !== "string") {
       const func = color.func;
-      scs[color.socketId].listeners?.push({ allowOnRender: false, handler: value => this.setColor(func(value)) });
+      scs[color.socketId]?.listeners?.push({ allowOnRender: false, handler: value => this.setColor(func(value)) });
     }
 
     const len = sockets.length;
@@ -549,14 +531,14 @@ export class EditorNode {
 
       if (typeof(tempName) !== "string") {
         const func = tempName.func;
-        scs[tempName.socketId].listeners?.push({ allowOnRender: false, handler: value => target.setName(func(value)) });
+        scs[tempName.socketId]?.listeners?.push({ allowOnRender: false, handler: value => target.setName(func(value)) });
       }
 
       const tempVis = def.visible;
 
       if (tempVis !== undefined) {
         const func = tempVis.func;
-        scs[tempVis.socketId].listeners?.push({ allowOnRender: true, handler: value => target.setVisibility(value !== null && func(value)) });
+        scs[tempVis.socketId]?.listeners?.push({ allowOnRender: true, handler: value => target.setVisibility(value !== null && func(value)) });
 
         if (!tempVis.def) {
           target.setVisibility(false);

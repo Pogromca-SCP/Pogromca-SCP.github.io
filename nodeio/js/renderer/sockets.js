@@ -387,6 +387,27 @@ export class SocketBase {
     parent.appendChild(this.#root);
   }
 
+  /**
+   * @param {HTMLElement} parent
+   * @param {SocketBase | null} before
+   */
+  addBefore(parent, before) {
+    const root = this.#root;
+
+    if (root.parentElement === null) {
+      root.hidden = false;
+      parent.insertBefore(root, before === null ? null : before.#root);
+      this.restoreConnections();
+    }
+  }
+
+  delete() {
+    const root = this.#root;
+    root.hidden = true;
+    root.parentElement?.removeChild(root);
+    this.hideConnections();
+  }
+
   /** @param {boolean} visible */
   setVisibility(visible) {
     if (this.isVisible === visible) {
@@ -401,11 +422,10 @@ export class SocketBase {
       this.hideConnections();
     }
 
-    const value = /** @type {SocketValue} */ (this.#value);
     const listeners = this.#listeners;
 
     if (listeners !== null && listeners.length > 0) {
-      const toApply = visible ? value : null;
+      const toApply = visible ? /** @type {SocketValue} */ (this.#value) : null;
 
       for (const listener of listeners) {
         if (listener.allowOnRender) {
@@ -805,5 +825,48 @@ export class OutputSocket extends SocketBase {
   constructor(node, parent, name) {
     super(OUTPUT, node, name, null);
     this.render(parent);
+  }
+}
+
+/** @extends {SocketBase<null>} */
+export class RepetetiveSocket extends SocketBase {
+  /**
+   * @type {HTMLElement}
+   * @readonly
+   */
+  #parent;
+  /** @type {RepetetiveSocket | null} */
+  #next;
+  
+  /**
+   * @param {EditorNode} node
+   * @param {HTMLElement} parent
+   */
+  constructor(node, parent) {
+    super(INPUT, node, "", null);
+    this.#parent = parent;
+    this.#next = null;
+    this.render(parent);
+  }
+
+  get next() {
+    return this.#next;
+  }
+
+  /**
+   * @param {SocketBase | null} connection
+   * @param {boolean} updateOther
+   */
+  transientChangeConnection(connection, updateOther) {
+    const oldConnection = this.connection;
+    super.transientChangeConnection(connection, updateOther);
+    const parent = this.#parent;
+
+    if (oldConnection === null && connection !== null) {
+      this.addBefore(parent, this.#next);
+      this.#next ??= new RepetetiveSocket(this.node, parent);
+    } else if (oldConnection !== null && connection === null && parent.children.length > 2) {
+      this.delete();
+    }
   }
 }

@@ -28,12 +28,6 @@ export class NodeGraph {
    */
   #connections;
 
-  /**
-   * @type {Set<EditorNode>}
-   * @readonly
-   */
-  #nodes;
-
   /** @type {EditorNode | null} */
   #outputsNode;
 
@@ -47,7 +41,6 @@ export class NodeGraph {
     origin.appendChild(connections);
     this.#origin = origin;
     this.#connections = connections;
-    this.#nodes = new Set();
     this.#outputsNode = null;
     this.#inputsNode = null;
   }
@@ -150,27 +143,13 @@ export class NodeGraph {
     this.#outputsNode ??= outputs;
   }
 
-  /**
-   * @param {EditorNode} node
-   * @param {HTMLElement} child
-   */
-  addNode(node, child) {
-    if (node.type !== null) {
-      this.#nodes.add(node);
-    }
-
+  /** @param {HTMLElement} child */
+  addNode(child) {
     this.#origin.appendChild(child);
   }
 
-  /**
-   * @param {EditorNode} node
-   * @param {HTMLElement} child
-   */
-  removeNode(node, child) {
-    if (node.type !== null) {
-      this.#nodes.delete(node);
-    }
-
+  /** @param {HTMLElement} child */
+  removeNode(child) {
     this.#origin.removeChild(child);
   }
 

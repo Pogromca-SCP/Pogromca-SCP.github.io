@@ -191,7 +191,7 @@ export class RootNode extends EditableNode {
   constructor() {
     super(EDITABLE);
     const graph = this.graph;
-    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "console.log", BUILT_IN_COLOR, { type: "named", name: "out" }));
+    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "console.log", BUILT_IN_COLOR, { type: "repetetive", name: "" }));
   }
 }
 
@@ -199,7 +199,7 @@ export class CustomNode extends EditableNode {
   constructor() {
     super(EDITABLE | USABLE | ADDED);
     const graph = this.graph;
-    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "output", BUILT_IN_COLOR, { type: "named", name: "out" }));
-    graph.addInputs(new EditorNode(null, graph, INITIAL_POS, INITIAL_POS, "input", BUILT_IN_COLOR, { type: "output", name: "in" }));
+    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "output", BUILT_IN_COLOR, { type: "repetetive", name: "" }));
+    graph.addInputs(new EditorNode(null, graph, INITIAL_POS, INITIAL_POS, "input", BUILT_IN_COLOR, { type: "output", name: "" }));
   }
 }
