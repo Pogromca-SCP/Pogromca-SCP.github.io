@@ -212,8 +212,8 @@ export class JoinNode extends CompiledNode {
   instantiate(x, y, graph) {
     return new EditorNode(this, graph, x, y, "join", BUILT_IN_COLOR,
       { type: "text", name: "separator", def: "", connective: true, min: 0, max: 50, valid: "" },
-      { type: "repetetive", name: "" },
       { type: "output", name: "result" },
+      { type: "repetetive", name: "" },
     );
   }
 }
