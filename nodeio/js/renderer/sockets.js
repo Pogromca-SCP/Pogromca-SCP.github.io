@@ -397,7 +397,6 @@ export class SocketBase {
     if (root.parentElement === null) {
       root.hidden = false;
       parent.insertBefore(root, before === null ? null : before.#root);
-      this.restoreConnections();
     }
   }
 
@@ -405,7 +404,6 @@ export class SocketBase {
     const root = this.#root;
     root.hidden = true;
     root.parentElement?.removeChild(root);
-    this.hideConnections();
   }
 
   /** @param {boolean} visible */
@@ -878,11 +876,14 @@ export class RepetetiveSocket extends SocketBase {
       if (prev !== null) {
         prev.#next = this;
       }
-    } else if (oldConnection !== null && connection === null && this.#previous !== null) {
+    } else if (oldConnection !== null && connection === null) {
       this.delete();
       const next = this.#next;
       const prev = this.#previous;
-      prev.#next = next;
+
+      if (prev !== null) {
+        prev.#next = next;
+      }
       
       if (next !== null) {
         next.#previous = prev;
