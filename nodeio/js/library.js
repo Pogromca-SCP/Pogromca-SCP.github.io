@@ -1,5 +1,5 @@
 // @ts-check
-import { ConditionNode, OptionNode, SettingsNode, SocketNode, TypeNode } from "./compiler/built-in.js";
+import { ByteNode, ConditionNode, FormatNode, JoinNode, MathNode, OptionNode, RepeatNode, ReverseNode, SettingsNode, SizeNode, SocketNode, TypeNode, ValueNode } from "./compiler/built-in.js";
 import { CompiledNode, CustomNode, RootNode } from "./compiler/nodes.js";
 import { showContextMenu } from "./menu.js";
 import { DRAG_DROP_DATA_FORMAT, ROOT } from "./renderer/graph.js";
@@ -78,4 +78,20 @@ export const initialize = () => {
   node.transientChangeId("condition");
   node = new SettingsNode();
   node.transientChangeId("settings");
+  node = new ByteNode();
+  node.transientChangeId("byte");
+  node = new FormatNode();
+  node.transientChangeId("format");
+  node = new JoinNode();
+  node.transientChangeId("join");
+  node = new MathNode();
+  node.transientChangeId("math");
+  node = new RepeatNode();
+  node.transientChangeId("repeat");
+  node = new ReverseNode();
+  node.transientChangeId("reverse");
+  node = new SizeNode();
+  node.transientChangeId("size");
+  node = new ValueNode();
+  node.transientChangeId("value");
 };

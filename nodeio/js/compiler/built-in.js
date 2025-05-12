@@ -1,6 +1,7 @@
 // @ts-check
 import { BUILT_IN_COLOR, CompiledNode, USABLE } from "./nodes.js";
 import { EditorNode } from "../renderer/nodes.js";
+import { BOOLEAN, NUMBER, TEXT } from "./types.js";
 
 /**
  * @typedef {import("../renderer/graph.js").NodeGraph} NodeGraph
@@ -75,7 +76,7 @@ export class TypeNode extends CompiledNode {
       { type: "named", name: "channel" },
       { type: "switch", name: "", def: false, connective: false, active: "default", inactive: "not default" },
       { type: "switch", name: "", def: false, connective: false, active: "built in", inactive: "custom" },
-      { type: "select", name: "", def: "native/text", options: ["native/text", "native/number", "native/bool"], visible: builtInVisible },
+      { type: "select", name: "", def: TEXT, options: [TEXT, NUMBER, BOOLEAN], visible: builtInVisible },
       { type: "switch", name: "", def: true, connective: false, active: "connective", inactive: "not connective", visible: builtInVisible },
       { type: "text", name: "name", def: "", connective: true, min: 0, max: 20, valid: "", visible: { socketId: 2, func: x => !x, def: true } },
       { type: "output", name: "data" },
@@ -149,6 +150,166 @@ export class SettingsNode extends CompiledNode {
       { type: "output", name: "output" },
       { type: "text", name: "name", def: "", connective: true, min: 0, max: 50, valid: "" },
       { type: "text", name: "color", def: "333333", connective: true, min: 6, max: 6, valid: "0123456789abcdef" },
+    );
+  }
+}
+
+export class ByteNode extends CompiledNode {
+  constructor() {
+    super(USABLE);
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {NodeGraph} graph
+   */
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, { socketId: 1, func: x => `${x} byte`, def: "text byte" }, BUILT_IN_COLOR,
+      { type: "named", name: "activation" },
+      { type: "select", name: "type", def: TEXT, options: [TEXT, NUMBER, BOOLEAN] },
+      { type: "text", name: "", def: "", connective: false, min: 0, max: 8, valid: "01" },
+      { type: "output", name: "value" },
+    );
+  }
+}
+
+export class FormatNode extends CompiledNode {
+  constructor() {
+    super(USABLE);
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {NodeGraph} graph
+   */
+  instantiate(x, y, graph) {
+    const formats = ["binary", "hexadecimal", "boolean", "integer", "utf 8", "text"];
+    const integerVisible = { socketId: 2, func: x => x === "integer", def: false };
+
+    return new EditorNode(this, graph, x, y, "format", BUILT_IN_COLOR,
+      { type: "named", name: "data" },
+      { type: "select", name: "original", def: "binary", options: formats },
+      { type: "select", name: "target", def: "binary", options: formats },
+      { type: "switch", name: "sign", def: false, connective: true, active: "signed", inactive: "unsigned", visible: integerVisible },
+      { type: "number", name: "bytes", def: 4, connective: true, min: 1, max: 16, step: 1, visible: integerVisible },
+      { type: "output", name: "result" },
+    );
+  }
+}
+
+export class JoinNode extends CompiledNode {
+  constructor() {
+    super(USABLE);
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {NodeGraph} graph
+   */
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, "join", BUILT_IN_COLOR,
+      { type: "text", name: "separator", def: "", connective: true, min: 0, max: 50, valid: "" },
+      { type: "repetetive", name: "" },
+      { type: "output", name: "result" },
+    );
+  }
+}
+
+export class MathNode extends CompiledNode {
+  constructor() {
+    super(USABLE);
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {NodeGraph} graph
+   */
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, { socketId: 0, func: x => `${x}`, def: "add" }, BUILT_IN_COLOR,
+      { type: "select", name: "operation", def: "add", options: ["add", "subtract", "multiply", "divide", "modulo", "sin", "cos", "tan"] },
+      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 0.0001 },
+      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 0.0001, visible: { socketId: 0, func: x => x !== "sin" && x !== "cos" && x !== "tan", def: true } },
+      { type: "output", name: "result" },
+    );
+  }
+}
+
+export class RepeatNode extends CompiledNode {
+  constructor() {
+    super(USABLE);
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {NodeGraph} graph
+   */
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, "repeat sequence", BUILT_IN_COLOR,
+      { type: "text", name: "sequence", def: "", connective: true, min: 0, max: 50, valid: "" },
+      { type: "number", name: "amount", def: 2, connective: true, min: 1, max: 50, step: 1 },
+      { type: "output", name: "repetition" },
+    );
+  }
+}
+
+export class ReverseNode extends CompiledNode {
+  constructor() {
+    super(USABLE);
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {NodeGraph} graph
+   */
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, "reverse order", BUILT_IN_COLOR,
+      { type: "named", name: "sequence" },
+      { type: "output", name: "reversed sequence" },
+    );
+  }
+}
+
+export class SizeNode extends CompiledNode {
+  constructor() {
+    super(USABLE);
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {NodeGraph} graph
+   */
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, "length", BUILT_IN_COLOR,
+      { type: "named", name: "input" },
+      { type: "output", name: "size" },
+    );
+  }
+}
+
+export class ValueNode extends CompiledNode {
+  constructor() {
+    super(USABLE);
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {NodeGraph} graph
+   */
+  instantiate(x, y, graph) {
+    return new EditorNode(this, graph, x, y, "literal value", BUILT_IN_COLOR,
+      { type: "select", name: "type", def: TEXT, options: [TEXT, NUMBER, BOOLEAN] },
+      { type: "text", name: "", def: "", connective: false, min: 0, max: 50, valid: "", visible: { socketId: 0, func: x => x === TEXT, def: true } },
+      { type: "number", name: "", def: 5, connective: false, min: -100, max: 100, step: 0.0001, visible: { socketId: 0, func: x => x === NUMBER, def: false } },
+      { type: "switch", name: "", def: false, connective: false, active: "true", inactive: "false", visible: { socketId: 0, func: x => x === BOOLEAN, def: false } },
+      { type: "output", name: "data" },
     );
   }
 }
