@@ -164,7 +164,7 @@ export class ByteNode extends CompiledNode {
    * @param {NodeGraph} graph
    */
   instantiate(x, y, graph) {
-    const nameSrc =  { socketId: 1, func: x => `${x.substring(x.lastIndexOf('/') + 1)} byte`, def: "text byte" };
+    const nameSrc =  { socketId: 0, func: x => `${x.substring(x.lastIndexOf('/') + 1)} byte`, def: "text byte" };
 
     return new EditorNode(this, graph, x, y, nameSrc, BUILT_IN_COLOR,
       { type: "select", name: "type", def: TEXT, options: [TEXT, NUMBER, BOOLEAN] },
