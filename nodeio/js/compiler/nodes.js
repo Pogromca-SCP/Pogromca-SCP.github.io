@@ -5,6 +5,7 @@ import { nodeExists, NodeGraph, registerNode, unregiserNode } from "../renderer/
 import { EditorNode } from "../renderer/nodes.js";
 import { ERROR_CLASS, hasFlag } from "../utils.js";
 import { compileGraph, setCompilerContext } from "./compiler.js";
+import { BOOLEAN, INPUT_CHANNEL, NODE_METADATA, NUMBER, OUTPUT_DATA, TEXT } from "./types.js";
 
 class ChangeIdAction {
   /**
@@ -154,6 +155,9 @@ export class CompiledNode {
   openInEditor() {}
 
   closeInEditor() {}
+
+  /** @param {EditorNode} instance */
+  compile(instance) {}
 }
 
 /** @abstract */
@@ -194,7 +198,7 @@ export class RootNode extends EditableNode {
   constructor() {
     super(EDITABLE);
     const graph = this.graph;
-    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "console.log", BUILT_IN_COLOR, { type: "repetetive", name: "" }));
+    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "console.log", BUILT_IN_COLOR, { type: "repetetive", name: "", connectionType: [BOOLEAN, TEXT, NUMBER] }));
   }
 }
 
@@ -202,7 +206,7 @@ export class CustomNode extends EditableNode {
   constructor() {
     super(EDITABLE | USABLE | ADDED);
     const graph = this.graph;
-    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "output", BUILT_IN_COLOR, { type: "repetetive", name: "" }));
-    graph.addInputs(new EditorNode(null, graph, INITIAL_POS, INITIAL_POS, "input", BUILT_IN_COLOR, { type: "output", name: "" }));
+    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "output", BUILT_IN_COLOR, { type: "repetetive", name: "", connectionType: [OUTPUT_DATA, NODE_METADATA] }));
+    graph.addInputs(new EditorNode(null, graph, INITIAL_POS, INITIAL_POS, "input", BUILT_IN_COLOR, { type: "output", name: "", connectionType: INPUT_CHANNEL }));
   }
 }

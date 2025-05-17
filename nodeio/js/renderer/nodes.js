@@ -15,6 +15,7 @@ import { NamedSocket, NumberSocket, OutputSocket, RepetetiveSocket, SelectSocket
  * @typedef {object} SocketDef
  * @property {DataSource<string>} name
  * @property {"named" | "number" | "select" | "switch" | "text" | "output" | "repetetive"} type
+ * @property {string[] | string} [connectionType]
  * @property {DynamicData<boolean>} [visible]
  * 
  * @typedef {object} NumberDef
@@ -454,26 +455,27 @@ export class EditorNode {
   #loadSocket(def) {
     const tempName = def.name;
     const name = typeof(tempName) === "string" ? tempName : tempName.def;
+    const type = def.connectionType ?? null;
 
     switch (def.type) {
       case "named":
-        return new NamedSocket(this, this.#root, name);
+        return new NamedSocket(this, this.#root, name, type);
       case "number":
         const num = /** @type {NumberSocketDef} */ (def);
-        return new NumberSocket(this, this.#root, name, num.def, num.connective, num.min, num.max, num.step);
+        return new NumberSocket(this, this.#root, name, num.def, type, num.connective, num.min, num.max, num.step);
       case "select":
         const sel = /** @type {SelectSocketDef} */ (def);
         return new SelectSocket(this, this.#root, name, sel.def, sel.options);
       case "switch":
         const swt = /** @type {SwitchSocketDef} */ (def);
-        return new SwitchSocket(this, this.#root, name, swt.def, swt.connective, swt.active, swt.inactive);
+        return new SwitchSocket(this, this.#root, name, swt.def, type, swt.connective, swt.active, swt.inactive);
       case "text":
         const txt = /** @type {TextSocketDef} */ (def);
-        return new TextSocket(this, this.#root, name, txt.def, txt.connective, txt.min, txt.max, txt.valid);
+        return new TextSocket(this, this.#root, name, txt.def, type, txt.connective, txt.min, txt.max, txt.valid);
       case "repetetive":
-        return new RepetetiveSocket(this, this.#root);
+        return new RepetetiveSocket(this, this.#root, type);
       default:
-        return new OutputSocket(this, this.#root, name);
+        return new OutputSocket(this, this.#root, name, type);
     }
   }
 

@@ -147,6 +147,11 @@ export class SocketBase {
    * @readonly
    */
   #listeners;
+  /**
+   * @type {readonly string[] | string | null}
+   * @readonly
+   */
+  #type;
   /** @type {HTMLLabelElement | null} */
   #label;
   /** @type {T} */
@@ -159,8 +164,9 @@ export class SocketBase {
    * @param {EditorNode} node
    * @param {string} name
    * @param {T} def
+   * @param {readonly string[] | string | null} type
    */
-  constructor(flags, node, name, def) {
+  constructor(flags, node, name, def, type) {
     if (this.constructor === SocketBase) {
       throw new Error("Cannot instantiatea an abstract class: SocketBase");
     }
@@ -172,6 +178,7 @@ export class SocketBase {
     this.#input = hasFlag(flags, IN_WRITE) ? document.createElement("input") : (hasFlag(flags, IN_SELECT) ? document.createElement("select") : null);
     this.#connections = hasFlag(flags, OUTPUT) ? new Set() : null;
     this.#listeners = hasFlag(flags, INPUT | IN_SELECT | IN_WRITE) ? [] : null;
+    this.#type = type;
     this.#value = def;
     this.#connection = null;
     this.#createSocket(name);
@@ -187,6 +194,10 @@ export class SocketBase {
 
   get listeners() {
     return this.#listeners;
+  }
+
+  get type() {
+    return this.#type;
   }
 
   get value() {
@@ -306,7 +317,25 @@ export class SocketBase {
 
   /** @param {SocketBase | null} connection */
   validateConnection(connection) {
-    return hasFlag(this.#flags, INPUT) && (connection === null || hasFlag(connection.#flags, OUTPUT));
+    if (connection === null) {
+      return hasFlag(this.#flags, INPUT);
+    }
+
+    const otherType = connection.#type;
+
+    if (!hasFlag(this.#flags, INPUT) || !hasFlag(connection.#flags, OUTPUT) || typeof(otherType) !== "string") {
+      return false;
+    }
+
+    const thisType = this.#type;
+
+    if (typeof(thisType) === "string") {
+      return thisType === otherType;
+    } else if (thisType !== null) {
+      return thisType.includes(otherType);
+    }
+
+    return true;
   }
 
   restoreConnections() {
@@ -578,9 +607,10 @@ export class NamedSocket extends SocketBase {
    * @param {EditorNode} node
    * @param {HTMLElement} parent
    * @param {string} name
+   * @param {readonly string[] | string | null} type
    */
-  constructor(node, parent, name) {
-    super(INPUT, node, name, null);
+  constructor(node, parent, name, type) {
+    super(INPUT, node, name, null, type);
     this.render(parent);
   }
 }
@@ -608,13 +638,14 @@ export class NumberSocket extends SocketBase {
    * @param {HTMLElement} parent
    * @param {string} name
    * @param {number} def
+   * @param {readonly string[] | string | null} type
    * @param {boolean} connective
    * @param {number} min
    * @param {number} max
    * @param {number} step
    */
-  constructor(node, parent, name, def, connective, min, max, step) {
-    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, name, def);
+  constructor(node, parent, name, def, type, connective, min, max, step) {
+    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, name, def, type);
     this.#min = min;
     this.#max = max;
     this.#step = step;
@@ -662,7 +693,7 @@ export class SelectSocket extends SocketBase {
    * @param {readonly string[]} options
    */
   constructor(node, parent, name, def, options) {
-    super(IN_SELECT, node, name, def);
+    super(IN_SELECT, node, name, def, null);
     this.#options = options;
     this.render(parent);
   }
@@ -714,12 +745,13 @@ export class SwitchSocket extends SocketBase {
    * @param {HTMLElement} parent
    * @param {string} name
    * @param {boolean} def
+   * @param {readonly string[] | string | null} type
    * @param {boolean} connective
    * @param {string} active
    * @param {string} inactive
    */
-  constructor(node, parent, name, def, connective, active, inactive) {
-    super(connective ? INPUT | IN_SELECT : IN_SELECT, node, name, def);
+  constructor(node, parent, name, def, type, connective, active, inactive) {
+    super(connective ? INPUT | IN_SELECT : IN_SELECT, node, name, def, type);
     this.#active = active;
     this.#inactive = inactive;
     this.render(parent);
@@ -772,13 +804,14 @@ export class TextSocket extends SocketBase {
    * @param {HTMLElement} parent
    * @param {string} name
    * @param {string} def
+   * @param {readonly string[] | string | null} type
    * @param {boolean} connective
    * @param {number} min
    * @param {number} max
    * @param {string} valid
    */
-  constructor(node, parent, name, def, connective, min, max, valid) {
-    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, name, def);
+  constructor(node, parent, name, def, type, connective, min, max, valid) {
+    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, name, def, type);
     this.#min = min;
     this.#max = max;
     this.#valid = valid;
@@ -829,9 +862,10 @@ export class OutputSocket extends SocketBase {
    * @param {EditorNode} node
    * @param {HTMLElement} parent
    * @param {string} name
+   * @param {readonly string[] | string | null} type
    */
-  constructor(node, parent, name) {
-    super(OUTPUT, node, name, null);
+  constructor(node, parent, name, type) {
+    super(OUTPUT, node, name, null, type);
     this.render(parent);
   }
 }
@@ -851,9 +885,10 @@ export class RepetetiveSocket extends SocketBase {
   /**
    * @param {EditorNode} node
    * @param {HTMLElement} parent
+   * @param {readonly string[] | string | null} type
    */
-  constructor(node, parent) {
-    super(INPUT, node, "_", null);
+  constructor(node, parent, type) {
+    super(INPUT, node, "_", null, type);
     this.#parent = parent;
     this.#previous = null;
     this.#next = null;
@@ -879,7 +914,7 @@ export class RepetetiveSocket extends SocketBase {
     if (oldConnection === null && connection !== null) {
       const parent = this.#parent;
       this.addBefore(parent, this.#next);
-      this.#next ??= new RepetetiveSocket(this.node, parent);
+      this.#next ??= new RepetetiveSocket(this.node, parent, this.type);
       this.#next.#previous = this;
       const prev = this.#previous;
 
