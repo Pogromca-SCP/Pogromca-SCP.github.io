@@ -886,14 +886,11 @@ export class RepetetiveSocket extends SocketBase {
       if (prev !== null) {
         prev.#next = this;
       }
-    } else if (oldConnection !== null && connection === null) {
+    } else if (oldConnection !== null && connection === null && this.#previous !== null) {
       this.delete();
       const next = this.#next;
       const prev = this.#previous;
-
-      if (prev !== null) {
-        prev.#next = next;
-      }
+      prev.#next = next;
       
       if (next !== null) {
         next.#previous = prev;
