@@ -1,7 +1,8 @@
 // @ts-check
+import { compileGraph } from "../compiler/compiler.js";
 import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
-import { dontPropagate, hasFlag, textToInt } from "../utils.js";
+import { dontPropagate, ERROR_CLASS, hasFlag, textToInt } from "../utils.js";
 import { Connection, DraggableConnection } from "./connections.js";
 
 /**
@@ -56,10 +57,12 @@ class ChangeValueAction {
 
   do() {
     this.socket.transientChangeValue(this.newValue);
+    compileGraph();
   }
 
   undo() {
     this.socket.transientChangeValue(this.oldValue);
+    compileGraph();
   }
 }
 
@@ -94,11 +97,13 @@ class ChangeConnectionAction {
   do() {
     this.socket.transientChangeConnection(this.newValue, true);
     Connection.finishMassRedraw();
+    compileGraph();
   }
 
   undo() {
     this.socket.transientChangeConnection(this.oldValue, true);
     Connection.finishMassRedraw();
+    compileGraph();
   }
 }
 
@@ -404,6 +409,11 @@ export class SocketBase {
     const root = this.#root;
     root.hidden = true;
     root.parentElement?.removeChild(root);
+  }
+
+  /** @param {boolean} isError */
+  setErrorState(isError) {
+    this.#root.className = isError ? ERROR_CLASS : "";
   }
 
   /** @param {boolean} visible */

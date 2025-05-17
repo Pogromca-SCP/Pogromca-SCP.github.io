@@ -189,6 +189,10 @@ path {
   min-width: 150px;
 }
 
+.node:has(span:last-child) {
+  padding-bottom: 0;
+}
+
 .node > [hidden] {
   display: none;
 }
@@ -254,8 +258,16 @@ path {
   border:#aa6000 solid var(--selection-size);
 }
 
-.error, .node > p.error {
+.error, .node > p.error, .node > div.error > label {
   color: var(--error-color);
+}
+
+.node > span, .node > div.error > div {
+  background-color: var(--error-color);
+}
+
+.node > span {
+  color: #ffffff;
 }
 
 #context-menu {

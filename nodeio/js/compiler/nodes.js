@@ -4,6 +4,7 @@ import { showContextMenu } from "../menu.js";
 import { nodeExists, NodeGraph, registerNode, unregiserNode } from "../renderer/graph.js";
 import { EditorNode } from "../renderer/nodes.js";
 import { ERROR_CLASS, hasFlag } from "../utils.js";
+import { compileGraph, setCompilerContext } from "./compiler.js";
 
 class ChangeIdAction {
   /**
@@ -156,7 +157,7 @@ export class CompiledNode {
 }
 
 /** @abstract */
-class EditableNode extends CompiledNode {
+export class EditableNode extends CompiledNode {
   /**
    * @type {NodeGraph}
    * @readonly
@@ -180,6 +181,8 @@ class EditableNode extends CompiledNode {
 
   openInEditor() {
     NodeGraph.switchGraph(this.#graph);
+    setCompilerContext(this);
+    compileGraph();
   }
 
   closeInEditor() {

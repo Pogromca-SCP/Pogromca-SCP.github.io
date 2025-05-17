@@ -1,4 +1,5 @@
 // @ts-check
+import { compileGraph } from "../compiler/compiler.js";
 import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
 import { ERROR_CLASS } from "../utils.js";
@@ -108,12 +109,15 @@ class PlaceNodesAction {
     }
 
     Connection.finishMassRedraw();
+    compileGraph();
   }
 
   #hideNodes() {
     for (const node of this.nodes) {
       node.transientDelete();
     }
+
+    compileGraph();
   }
 }
 
@@ -317,9 +321,30 @@ export class EditorNode {
     Connection.finishMassRedraw();
   }
 
-  /** @param {boolean} isError */
-  setErrorState(isError) {
-    this.#title.className = isError ? ERROR_CLASS : "";
+  /** @param {readonly string[]} issues */
+  setIssues(issues) {
+    const root = this.#root;
+
+    for (const child of Array.from(root.children).filter(el => el.nodeName.toLowerCase() === "span")) {
+      root.removeChild(child);
+    }
+
+    if (issues.length < 1) {
+      this.#title.className = "";
+      this.refreshConnections();
+      Connection.finishMassRedraw();
+      return;
+    }
+
+    for (const issue of issues) {
+      const element = document.createElement("span");
+      element.innerText = issue;
+      root.appendChild(element);
+    }
+
+    this.#title.className = ERROR_CLASS;
+    this.refreshConnections();
+    Connection.finishMassRedraw();
   }
 
   /** @param {string} color */
@@ -343,7 +368,7 @@ export class EditorNode {
   }
 
   transientAdd() {
-    this.#graph.addNode(this.#root);
+    this.#graph.addNode(this.#root, this);
     this.restoreConnections();
   }
 
@@ -358,7 +383,7 @@ export class EditorNode {
 
   transientDelete() {
     this.diselect();
-    this.#graph.removeNode(this.#root);
+    this.#graph.removeNode(this.#root, this);
     this.hideConnections();
   }
 
