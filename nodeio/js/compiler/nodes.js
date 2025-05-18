@@ -7,6 +7,12 @@ import { ERROR_CLASS, hasFlag } from "../utils.js";
 import { compileGraph, setCompilerContext } from "./compiler.js";
 import { BOOLEAN, INPUT_CHANNEL, NODE_METADATA, NUMBER, OUTPUT_DATA, TEXT } from "./types.js";
 
+/**
+ * @typedef {import("./compiler.js").CacheValue} CacheValue
+ * @typedef {import("../renderer/nodes.js").SocketDefinition} SocketDefinition
+ * @typedef {import("./compiler.js").NodeMetadata} NodeMetadata
+ */
+
 class ChangeIdAction {
   /**
    * @type {CompiledNode}
@@ -156,8 +162,11 @@ export class CompiledNode {
 
   closeInEditor() {}
 
-  /** @param {EditorNode} instance */
-  compile(instance) {}
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {}
 }
 
 /** @abstract */
@@ -185,6 +194,7 @@ export class EditableNode extends CompiledNode {
 
   openInEditor() {
     NodeGraph.switchGraph(this.#graph);
+    this.setMetadata({ name: this.id ?? "", color: BUILT_IN_COLOR });
     setCompilerContext(this);
     compileGraph();
   }
@@ -192,21 +202,58 @@ export class EditableNode extends CompiledNode {
   closeInEditor() {
     NodeGraph.switchToRootIfDeleted(this.#graph);
   }
+
+  /** @param {SocketDefinition[]} defs */
+  setSockets(defs) {}
+
+  /** @param {NodeMetadata} data */
+  setMetadata(data) {}
 }
 
 export class RootNode extends EditableNode {
   constructor() {
     super(EDITABLE);
     const graph = this.graph;
-    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "console.log", BUILT_IN_COLOR, { type: "repetetive", name: "", connectionType: [BOOLEAN, TEXT, NUMBER] }));
+    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "console.log", BUILT_IN_COLOR, [{ type: "repetetive", name: "", connectionType: [BOOLEAN, TEXT, NUMBER] }]));
   }
 }
 
 export class CustomNode extends EditableNode {
+  /** @type {NodeMetadata} */
+  #meta;
+  /** @type {SocketDefinition[]} */
+  #sockets;
+
   constructor() {
     super(EDITABLE | USABLE | ADDED);
     const graph = this.graph;
-    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "output", BUILT_IN_COLOR, { type: "repetetive", name: "", connectionType: [OUTPUT_DATA, NODE_METADATA] }));
-    graph.addInputs(new EditorNode(null, graph, INITIAL_POS, INITIAL_POS, "input", BUILT_IN_COLOR, { type: "output", name: "", connectionType: INPUT_CHANNEL }));
+    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "output", BUILT_IN_COLOR, [{ type: "repetetive", name: "", connectionType: [OUTPUT_DATA, NODE_METADATA] }]));
+    graph.addInputs(new EditorNode(null, graph, INITIAL_POS, INITIAL_POS, "input", BUILT_IN_COLOR, [{ type: "output", name: "", connectionType: INPUT_CHANNEL }]));
+    this.#sockets = [];
+
+    this.#meta = {
+      name: "",
+      color: BUILT_IN_COLOR,
+    };
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {NodeGraph} graph
+   */
+  instantiate(x, y, graph) {
+    const meta = this.#meta;
+    return new EditorNode(this, graph, x, y, meta.name, meta.color, this.#sockets);
+  }
+
+  /** @param {SocketDefinition[]} defs */
+  setSockets(defs) {
+    this.#sockets = defs;
+  }
+
+  /** @param {NodeMetadata} data */
+  setMetadata(data) {
+    this.#meta = data;
   }
 }

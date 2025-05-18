@@ -46,6 +46,7 @@ import { NamedSocket, NumberSocket, OutputSocket, RepetetiveSocket, SelectSocket
  * @typedef {SocketDef & SelectDef} SelectSocketDef
  * @typedef {SocketDef & SwitchDef} SwitchSocketDef
  * @typedef {SocketDef & TextDef} TextSocketDef
+ * @typedef {SocketDef | NumberSocketDef | SelectSocketDef | SwitchSocketDef | TextSocketDef} SocketDefinition
  */
 
 /**
@@ -216,9 +217,9 @@ export class EditorNode {
    * @param {number} y
    * @param {Readonly<DataSource<string>>} name
    * @param {Readonly<DataSource<string>>} color
-   * @param {...Readonly<SocketDef | NumberSocketDef | SelectSocketDef | SwitchSocketDef | TextSocketDef>} sockets
+   * @param {Readonly<SocketDefinition>[]} sockets
    */
-  constructor(type, graph, x, y, name, color, ...sockets) {
+  constructor(type, graph, x, y, name, color, sockets) {
     this.#type = type;
     this.#graph = graph;
     this.#x = getOffsetLeft(x, graph);

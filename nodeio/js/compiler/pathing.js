@@ -17,13 +17,13 @@ let nodeHandler;
  * @param {SocketBase} socket
  */
 const visitSocket = (state, socket) => {
-  socketHandler(socket);
   const targetNode = socket.connection?.node;
 
   if (targetNode?.isVisible) {
     visitNode(state, targetNode);
   }
 
+  socketHandler(socket);
   const nextSocket = /** @type {RepetetiveSocket} */ (socket).next;
 
   if (nextSocket) {
@@ -41,11 +41,12 @@ const visitNode = (state, node) => {
   }
 
   state.push(node);
-  nodeHandler(node);
 
   for (const sc of node.sockets.filter(s => s.isVisible)) {
     visitSocket(state, sc);
   }
+
+  nodeHandler(node);
 };
 
 /**
