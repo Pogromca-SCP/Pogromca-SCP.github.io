@@ -10,48 +10,67 @@ import { NamedSocket, NumberSocket, OutputSocket, RepetetiveSocket, SelectSocket
 /**
  * @typedef {import("../compiler/nodes.js").CompiledNode} CompiledNode
  * @typedef {import("./sockets.js").SocketBase} SocketBase
- * @typedef {import("./sockets.js").SocketValue} SocketValue
  * 
  * @typedef {object} SocketDef
  * @property {DataSource<string>} name
- * @property {"named" | "number" | "select" | "switch" | "text" | "output" | "repetetive"} type
  * @property {string[] | string} [connectionType]
  * @property {DynamicData<boolean>} [visible]
  * 
+ * @typedef {object} NamedDef
+ * @property {"named" | "output" | "repetetive"} type
+ * 
  * @typedef {object} NumberDef
+ * @property {"number"} type
  * @property {number} def
- * @property {boolean} connective
  * @property {number} min
  * @property {number} max
  * @property {number} step
  * 
  * @typedef {object} SelectDef
+ * @property {"select"} type
  * @property {string} def
  * @property {string[]} options
  * 
  * @typedef {object} SwitchDef
+ * @property {"switch"} type
  * @property {boolean} def
- * @property {boolean} connective
  * @property {string} active
  * @property {string} inactive
  * 
  * @typedef {object} TextDef
+ * @property {"text"} type
  * @property {string} def
- * @property {boolean} connective
  * @property {number} min
  * @property {number} max
  * @property {string} valid
  * 
+ * @typedef {SocketDef & NamedDef} NamedSocketDef
  * @typedef {SocketDef & NumberDef} NumberSocketDef
  * @typedef {SocketDef & SelectDef} SelectSocketDef
  * @typedef {SocketDef & SwitchDef} SwitchSocketDef
  * @typedef {SocketDef & TextDef} TextSocketDef
- * @typedef {SocketDef | NumberSocketDef | SelectSocketDef | SwitchSocketDef | TextSocketDef} SocketDefinition
+ * @typedef {NamedSocketDef | NumberSocketDef | SelectSocketDef | SwitchSocketDef | TextSocketDef} SocketDefinition
  */
 
 /**
  * @template T
- * @typedef {{ socketId: number, func: (x: SocketValue) => T, def: T }} DynamicData
+ * @typedef {object} PredefinedDynamicData
+ * @property {number} socketId
+ * @property {(x: boolean | number | string) => T} func
+ * @property {T} def
+ */
+
+/**
+ * @template T
+ * @typedef {object} ResolvableDynamicData
+ * @property {SocketDefinition} socket
+ * @property {(x: boolean | number | string) => T} func
+ * @property {T} def
+ */
+
+/**
+ * @template T
+ * @typedef {PredefinedDynamicData<T> | ResolvableDynamicData<T>} DynamicData
  */
 
 /**
@@ -452,7 +471,20 @@ export class EditorNode {
     }
   }
 
-  /** @param {Readonly<SocketDef>} def */
+  /**
+   * @template T
+   * @param {DynamicData<T>} data
+   * @param {readonly Readonly<SocketDefinition>[]} socketDefs
+   */
+  static #resolveDynamicData(data, socketDefs) {
+    if ("socketId" in data) {
+      return data;
+    }
+
+    return { socketId: socketDefs.indexOf(data.socket), func: data.func, def: data.def };
+  }
+
+  /** @param {Readonly<SocketDefinition>} def */
   #loadSocket(def) {
     const tempName = def.name;
     const name = typeof(tempName) === "string" ? tempName : tempName.def;
@@ -462,17 +494,13 @@ export class EditorNode {
       case "named":
         return new NamedSocket(this, this.#root, name, type);
       case "number":
-        const num = /** @type {NumberSocketDef} */ (def);
-        return new NumberSocket(this, this.#root, name, num.def, type, num.connective, num.min, num.max, num.step);
+        return new NumberSocket(this, this.#root, name, def.def, type,  def.min, def.max, def.step);
       case "select":
-        const sel = /** @type {SelectSocketDef} */ (def);
-        return new SelectSocket(this, this.#root, name, sel.def, sel.options);
+        return new SelectSocket(this, this.#root, name, def.def, def.options);
       case "switch":
-        const swt = /** @type {SwitchSocketDef} */ (def);
-        return new SwitchSocket(this, this.#root, name, swt.def, type, swt.connective, swt.active, swt.inactive);
+        return new SwitchSocket(this, this.#root, name, def.def, type, def.active, def.inactive);
       case "text":
-        const txt = /** @type {TextSocketDef} */ (def);
-        return new TextSocket(this, this.#root, name, txt.def, type, txt.connective, txt.min, txt.max, txt.valid);
+        return new TextSocket(this, this.#root, name, def.def, type, def.min, def.max, def.valid);
       case "repetetive":
         return new RepetetiveSocket(this, this.#root, type);
       default:
@@ -533,19 +561,21 @@ export class EditorNode {
   }
 
   /**
-   * @param {Readonly<DataSource<string>>} name 
-   * @param {Readonly<DataSource<string>>} color 
-   * @param {readonly Readonly<SocketDef>[]} sockets 
+   * @param {DataSource<string>} name 
+   * @param {DataSource<string>} color 
+   * @param {readonly Readonly<SocketDefinition>[]} sockets 
    */
   #setupListeners(name, color, sockets) {
     const scs = this.#sockets;
 
     if (typeof(name) !== "string") {
+      name = EditorNode.#resolveDynamicData(name, sockets);
       const func = name.func;
       scs[name.socketId]?.listeners?.push({ allowOnRender: false, handler: value => this.setName(func(value)) });
     }
 
     if (typeof(color) !== "string") {
+      color = EditorNode.#resolveDynamicData(color, sockets);
       const func = color.func;
       scs[color.socketId]?.listeners?.push({ allowOnRender: false, handler: value => this.setColor(func(value)) });
     }
@@ -555,16 +585,18 @@ export class EditorNode {
     for (let i = 0; i < len; ++i) {
       const def = sockets[i];
       const target = scs[i];
-      const tempName = def.name;
+      let tempName = def.name;
 
       if (typeof(tempName) !== "string") {
+        tempName = EditorNode.#resolveDynamicData(tempName, sockets);
         const func = tempName.func;
         scs[tempName.socketId]?.listeners?.push({ allowOnRender: false, handler: value => target.setName(func(value)) });
       }
 
-      const tempVis = def.visible;
+      let tempVis = def.visible;
 
       if (tempVis !== undefined) {
+        tempVis = EditorNode.#resolveDynamicData(tempVis, sockets);
         const func = tempVis.func;
         scs[tempVis.socketId]?.listeners?.push({ allowOnRender: true, handler: value => target.setVisibility(value !== null && func(value)) });
 

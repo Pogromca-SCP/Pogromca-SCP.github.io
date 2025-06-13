@@ -7,12 +7,25 @@ import { Connection, DraggableConnection } from "./connections.js";
 
 /**
  * @typedef {import("./nodes.js").EditorNode} EditorNode
- * 
- * @typedef {string | number | boolean | null} SocketValue
- * 
- * @typedef {object} Listener
- * @property {boolean} allowOnRender
- * @property {(x: SocketValue) => void} handler
+ */
+
+/**
+ * @template T
+ * @typedef {object} NormalListener
+ * @property {false} allowOnRender
+ * @property {(x: T) => void} handler
+ */
+
+/**
+ * @template T
+ * @typedef {object} RenderListener
+ * @property {true} allowOnRender
+ * @property {(x: T | null) => void} handler
+ */
+
+/**
+ * @template T
+ * @typedef {NormalListener<T> | RenderListener<T>} Listener
  */
 
 const borderSize = textToInt(getComputedStyle(document.body).getPropertyValue("--selection-size"));
@@ -143,7 +156,7 @@ export class SocketBase {
    */
   #connections;
   /**
-   * @type {Listener[] | null}
+   * @type {Listener<T>[] | null}
    * @readonly
    */
   #listeners;
@@ -225,6 +238,10 @@ export class SocketBase {
     return !this.#root.hidden;
   }
 
+  get isOutput() {
+    return hasFlag(this.#flags, OUTPUT);
+  }
+
   /** @param {HTMLInputElement} input */
   setupDirectInput(input) {}
 
@@ -257,7 +274,7 @@ export class SocketBase {
 
     if (listeners !== null && listeners.length > 0) {
       for (const listener of listeners) {
-        listener.handler(/** @type {SocketValue} */ (value));
+        listener.handler(value);
       }
 
       this.#node.refreshConnections();
@@ -325,6 +342,10 @@ export class SocketBase {
 
     if (!hasFlag(this.#flags, INPUT) || !hasFlag(connection.#flags, OUTPUT) || typeof(otherType) !== "string") {
       return false;
+    }
+
+    if (otherType === "compiler/any") {
+      return true;
     }
 
     const thisType = this.#type;
@@ -462,7 +483,7 @@ export class SocketBase {
     const listeners = this.#listeners;
 
     if (listeners !== null && listeners.length > 0) {
-      const toApply = visible ? /** @type {SocketValue} */ (this.#value) : null;
+      const toApply = visible ? this.#value : null;
 
       for (const listener of listeners) {
         if (listener.allowOnRender) {
@@ -639,13 +660,12 @@ export class NumberSocket extends SocketBase {
    * @param {string} name
    * @param {number} def
    * @param {readonly string[] | string | null} type
-   * @param {boolean} connective
    * @param {number} min
    * @param {number} max
    * @param {number} step
    */
-  constructor(node, parent, name, def, type, connective, min, max, step) {
-    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, name, def, type);
+  constructor(node, parent, name, def, type, min, max, step) {
+    super(type === null ? IN_WRITE : INPUT | IN_WRITE, node, name, def, type);
     this.#min = min;
     this.#max = max;
     this.#step = step;
@@ -746,12 +766,11 @@ export class SwitchSocket extends SocketBase {
    * @param {string} name
    * @param {boolean} def
    * @param {readonly string[] | string | null} type
-   * @param {boolean} connective
    * @param {string} active
    * @param {string} inactive
    */
-  constructor(node, parent, name, def, type, connective, active, inactive) {
-    super(connective ? INPUT | IN_SELECT : IN_SELECT, node, name, def, type);
+  constructor(node, parent, name, def, type, active, inactive) {
+    super(type === null ? IN_SELECT : INPUT | IN_SELECT, node, name, def, type);
     this.#active = active;
     this.#inactive = inactive;
     this.render(parent);
@@ -805,13 +824,12 @@ export class TextSocket extends SocketBase {
    * @param {string} name
    * @param {string} def
    * @param {readonly string[] | string | null} type
-   * @param {boolean} connective
    * @param {number} min
    * @param {number} max
    * @param {string} valid
    */
-  constructor(node, parent, name, def, type, connective, min, max, valid) {
-    super(connective ? INPUT | IN_WRITE : IN_WRITE, node, name, def, type);
+  constructor(node, parent, name, def, type, min, max, valid) {
+    super(type === null ? IN_WRITE : INPUT | IN_WRITE, node, name, def, type);
     this.#min = min;
     this.#max = max;
     this.#valid = valid;

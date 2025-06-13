@@ -1,13 +1,38 @@
 // @ts-check
-import { BUILT_IN_COLOR, CompiledNode, USABLE } from "./nodes.js";
+import { CompiledNode, USABLE } from "./nodes.js";
 import { EditorNode } from "../renderer/nodes.js";
 import { BOOLEAN, INPUT_CHANNEL, INPUT_DATA, NODE_METADATA, NUMBER, OPTION_FLOW, OUTPUT_CHANNEL, OUTPUT_DATA, SELECT_DATA, TEXT, TRUTH_FLOW } from "./types.js";
-import { getCurrentSocketDefinition, removeSocketDefinition, setSocketDefinition } from "./compiler.js";
+import { BUILT_IN_COLOR, getSocketDefinition, removeSocketDefinition, setMetadata, setSocketDefinition } from "./compiler.js";
 
 /**
  * @typedef {import("../renderer/graph.js").NodeGraph} NodeGraph
  * @typedef {import("./compiler.js").CacheValue} CacheValue
  */
+
+/**
+ * @template T
+ * @typedef {import("./compiler.js").ResolvableDynamicData<T>} ResolvableDynamicData
+ */
+
+/**
+ * @template T
+ * @param {CacheValue} x
+ * @param {T} def
+ */
+const getDataSource = (x, def) => typeof(x) !== "object" || x === null || Array.isArray(x) || typeof(x.def) !== typeof(def) ? def : /** @type {ResolvableDynamicData<T>} */ (x);
+
+/** @param {CacheValue} x */
+const asNumber = x => typeof(x) === "number" ? x : getDataSource(x, /** @type {number} */ (0));
+/** @param {CacheValue} x */
+const asString = x => typeof(x) === "string" ? x : getDataSource(x, /** @type {string} */ (""));
+/** @param {CacheValue} x */
+const asBool = x => typeof(x) === "boolean" ? x : getDataSource(x, /** @type {boolean} */ (false));
+/** @param {CacheValue} x */
+const toNumber = x => typeof(x) === "number" ? x : 0;
+/** @param {CacheValue} x */
+const toString = x => typeof(x) === "string" ? x : "";
+/** @param {CacheValue} x */
+const toBool = x => typeof(x) === "boolean" ? x : false;
 
 export class SocketNode extends CompiledNode {
   constructor() {
@@ -26,6 +51,7 @@ export class SocketNode extends CompiledNode {
     const numberVisible = { socketId: 5, func: x => x === "number", def: false };
     const switchVisible = { socketId: 5, func: x => x === "switch", def: false };
 
+    /** @param {boolean | number | string} x */
     const typeToOutput = x => {
       switch (x) {
         case "switch":
@@ -33,7 +59,7 @@ export class SocketNode extends CompiledNode {
         case "named":
           return "data";
         default:
-          return x;
+          return x.toString();
       }
     };
 
@@ -41,18 +67,18 @@ export class SocketNode extends CompiledNode {
       { type: "select", name: "", def: "input", options: ["input", "output"] },
       { type: "named", name: "channel", visible: inputVisible, connectionType: [INPUT_CHANNEL, OPTION_FLOW, TRUTH_FLOW] },
       { type: "output", name: "channel", visible: outputVisible, connectionType: OUTPUT_CHANNEL },
-      { type: "number", name: "slot", def: 1, connective: false, min: 1, max: 100, step: 1 },
-      { type: "text", name: "name", def: "", connective: true, min: 0, max: 50, valid: "", connectionType: TEXT },
+      { type: "number", name: "slot", def: 1, min: 1, max: 100, step: 1 },
+      { type: "text", name: "name", def: "", min: 0, max: 50, valid: "", connectionType: TEXT },
       { type: "select", name: "type", def: "text", options: ["named", "number", "select", "switch", "text"], visible: inputVisible },
-      { type: "number", name: "minimum", def: 0, connective: true, min: 0, max: 100, step: 1, visible: textOrNumberVisible, connectionType: NUMBER },
-      { type: "number", name: "maximum", def: 20, connective: true, min: 0, max: 100, step: 1, visible: textOrNumberVisible, connectionType: NUMBER },
-      { type: "text", name: "valid", def: "", connective: true, min: 0, max: 50, valid: "", visible: { socketId: 5, func: x => x === "text", def: true }, connectionType: TEXT },
-      { type: "number", name: "step", def: 1, connective: true, min: 1, max: 20, step: 0.5, visible: numberVisible, connectionType: NUMBER },
-      { type: "text", name: "inactive", def: "off", connective: true, min: 1, max: 20, valid: "", visible: switchVisible, connectionType: BOOLEAN },
-      { type: "text", name: "active", def: "on", connective: true, min: 1, max: 20, valid: "", visible: switchVisible, connectionType: BOOLEAN },
-      { type: "text", name: "default", def: "", connective: true, min: 0, max: 50, valid: "", visible: { socketId: 5, func: x => x !== "number" && x !== "switch", def: true }, connectionType: TEXT },
-      { type: "number", name: "default", def: 5, connective: true, min: 0, max: 10, step: 1, visible: numberVisible, connectionType: NUMBER },
-      { type: "switch", name: "default", def: false, connective: true, active: "on", inactive: "off", visible: switchVisible, connectionType: BOOLEAN },
+      { type: "number", name: "minimum", def: 0, min: 0, max: 100, step: 1, visible: textOrNumberVisible, connectionType: NUMBER },
+      { type: "number", name: "maximum", def: 20, min: 0, max: 100, step: 1, visible: textOrNumberVisible, connectionType: NUMBER },
+      { type: "text", name: "valid", def: "", min: 0, max: 50, valid: "", visible: { socketId: 5, func: x => x === "text", def: true }, connectionType: TEXT },
+      { type: "number", name: "step", def: 1, min: 1, max: 20, step: 0.5, visible: numberVisible, connectionType: NUMBER },
+      { type: "text", name: "inactive", def: "off", min: 1, max: 20, valid: "", visible: switchVisible, connectionType: BOOLEAN },
+      { type: "text", name: "active", def: "on", min: 1, max: 20, valid: "", visible: switchVisible, connectionType: BOOLEAN },
+      { type: "text", name: "default", def: "", min: 0, max: 50, valid: "", visible: { socketId: 5, func: x => x !== "number" && x !== "switch", def: true }, connectionType: TEXT },
+      { type: "number", name: "default", def: 5, min: 0, max: 10, step: 1, visible: numberVisible, connectionType: NUMBER },
+      { type: "switch", name: "default", def: false, active: "on", inactive: "off", visible: switchVisible, connectionType: BOOLEAN },
       { type: "output", name: { socketId: 5, func: typeToOutput, def: "text" }, visible: { socketId: 5, func: x => x !== "select", def: true }, connectionType: INPUT_DATA },
       { type: "output", name: "selection", visible: { socketId: 5, func: x => x === "select", def: false }, connectionType: SELECT_DATA },
       { type: "named", name: "data", visible: outputVisible, connectionType: [TEXT, NUMBER, BOOLEAN] },
@@ -64,41 +90,41 @@ export class SocketNode extends CompiledNode {
    * @param {CacheValue[]} values
    */
   compile(instance, values) {
-    if (values[0] === "input") {
-      const channel = values[1];
-      values[15] = false;
-      values[16] = false;
-
-      if (!channel) {
-        removeSocketDefinition(instance);
-        return;
-      }
-
-      switch (values[5]) {
-        case "named":
-          setSocketDefinition(instance, { slot: values[3], type: "named", name: values[4] });
-          values[15] = channel;
-          return;
-        case "number":
-          setSocketDefinition(instance, { slot: values[3], type: "number", name: values[4], def: values[13], connective: false, min: values[6], max: values[7], step: values[9] });
-          values[15] = channel;
-          return;
-        case "select":
-          setSocketDefinition(instance, { slot: values[3], type: "select", name: values[4], def: values[12], options: [] });
-          values[16] = channel;
-          return;
-        case "switch":
-          setSocketDefinition(instance, { slot: values[3], type: "switch", name: values[4], def: values[14], connective: false, active: values[11], inactive: values[10] });
-          values[15] = channel;
-          return;
-        default:
-          setSocketDefinition(instance, { slot: values[3], type: "text", name: values[4], def: values[12], connective: false, min: values[6], max: values[7], valid: values[8] });
-          values[15] = channel;
-          return;
-      }
-    } else {
+    if (values[0] === "output") {
       values[2] = true;
-      setSocketDefinition(instance, { slot: values[3], type: "output", name: values[4] });
+      setSocketDefinition(instance, { slot: toNumber(values[3]), def: { type: "output", name: asString(values[4]) } });
+      return true;
+    }
+
+    values[15] = false;
+    values[16] = false;
+    const channel = asBool(values[1]);
+
+    if (channel === false) {
+      return true;
+    }
+
+    switch (values[5]) {
+      case "named":
+        setSocketDefinition(instance, { slot: toNumber(values[3]), def: { type: "named", name: asString(values[4]) } });
+        values[15] = channel;
+        return true;
+      case "number":
+        setSocketDefinition(instance, { slot: toNumber(values[3]), def: { type: "number", name: asString(values[4]), def: toNumber(values[13]), min: toNumber(values[6]), max: toNumber(values[7]), step: toNumber(values[9]) } });
+        values[15] = channel;
+        return true;
+      case "select":
+        setSocketDefinition(instance, { slot: toNumber(values[3]), def: { type: "select", name: asString(values[4]), def: toString(values[12]), options: [] } });
+        values[16] = channel;
+        return true;
+      case "switch":
+        setSocketDefinition(instance, { slot: toNumber(values[3]), def: { type: "switch", name: asString(values[4]), def: toBool(values[14]), active: toString(values[11]), inactive: toString(values[10]) } });
+        values[15] = channel;
+        return true;
+      default:
+        setSocketDefinition(instance, { slot: toNumber(values[3]), def: { type: "text", name: asString(values[4]), def: toString(values[12]), min: toNumber(values[6]), max: toNumber(values[7]), valid: toString(values[8]) } });
+        values[15] = channel;
+        return true;
     }
   }
 }
@@ -118,12 +144,12 @@ export class TypeNode extends CompiledNode {
 
     return new EditorNode(this, graph, x, y, "type", BUILT_IN_COLOR, [
       { type: "named", name: "channel", connectionType: [INPUT_DATA, OUTPUT_CHANNEL] },
-      { type: "switch", name: "", def: false, connective: false, active: "default", inactive: "not default" },
-      { type: "switch", name: "", def: false, connective: false, active: "built in", inactive: "custom" },
+      { type: "switch", name: "", def: false, active: "default", inactive: "not default" },
+      { type: "switch", name: "", def: false, active: "built in", inactive: "custom" },
       { type: "select", name: "", def: TEXT, options: [TEXT, NUMBER, BOOLEAN], visible: builtInVisible },
-      { type: "switch", name: "", def: true, connective: false, active: "connective", inactive: "not connective", visible: builtInVisible },
-      { type: "text", name: "name", def: "", connective: true, min: 0, max: 20, valid: "", visible: { socketId: 2, func: x => !x, def: true }, connectionType: TEXT },
-      { type: "output", name: "data", connectionType: OUTPUT_DATA },
+      { type: "switch", name: "", def: true, active: "connective", inactive: "not connective", visible: builtInVisible },
+      { type: "text", name: "name", def: "", min: 1, max: 50, valid: "", visible: { socketId: 2, func: x => !x, def: true }, connectionType: TEXT },
+      { type: "output", name: "data", connectionType: "compiler/any" },
     ]);
   }
 
@@ -132,12 +158,53 @@ export class TypeNode extends CompiledNode {
    * @param {CacheValue[]} values
    */
   compile(instance, values) {
-    if (!values[0]) {
-      return;
+    const channel = asBool(values[0]);
+
+    if (channel === false) {
+      values[6] = null;
+      return true;
     }
 
-    const def = getCurrentSocketDefinition();
-    values[6] = { socket: def, func: x => x, def: null };
+    const socketNode = instance.sockets[0].connection?.node;
+
+    if (socketNode === undefined) {
+      instance.setIssues(["Input connection node is missing"]);
+      instance.sockets[0].setErrorState(true);
+      values[6] = null;
+      return false;
+    }
+
+    const socket = getSocketDefinition(socketNode)?.def;
+
+    if (socket === undefined) {
+      instance.setIssues(["Socket definition is undefined"]);
+      instance.sockets[0].setErrorState(true);
+      values[6] = null;
+      return false;
+    }
+
+    if (typeof(channel) !== "boolean") {
+      socket.visible = channel;
+    }
+
+    switch (socket.type) {
+      case "named":
+        values[6] = { socket: socket, func: x => x, def: "" };
+        return true;
+      case "number":
+        values[6] = { socket: socket, func: x => x, def: socket.def };
+        return true;
+      case "switch":
+        values[6] = { socket: socket, func: x => x, def: socket.def };
+        return true;
+      case "text":
+        values[6] = { socket: socket, func: x => x, def: socket.def };
+        return true;
+      default:
+        instance.setIssues(["Invalid socket definition type"]);
+        values[6] = null;
+        return false;
+    }
   }
 }
 
@@ -154,7 +221,7 @@ export class OptionNode extends CompiledNode {
   instantiate(x, y, graph) {
     return new EditorNode(this, graph, x, y, "option", BUILT_IN_COLOR, [
       { type: "named", name: "when", connectionType: SELECT_DATA },
-      { type: "text", name: "", def: "", connective: false, min: 0, max: 50, valid: "" },
+      { type: "text", name: "", def: "", min: 1, max: 50, valid: "" },
       { type: "output", name: "then", connectionType: OPTION_FLOW },
     ]);
   }
@@ -164,13 +231,45 @@ export class OptionNode extends CompiledNode {
    * @param {CacheValue[]} values
    */
   compile(instance, values) {
-    if (!values[0]) {
-      return;
+    const input = asBool(values[0]);
+
+    if (input === false) {
+      values[2] = false;
+      return true;
     }
 
-    const def = getCurrentSocketDefinition();
-    values[2] = { socket: def, func: x => x, def: null };
-    def.options?.push(values[1]);
+    const socketNode = instance.sockets[0].connection?.node;
+
+    if (socketNode === undefined) {
+      instance.setIssues(["Input connection node is missing"]);
+      instance.sockets[0].setErrorState(true);
+      values[2] = false;
+      return false;
+    }
+
+    const socket = getSocketDefinition(socketNode)?.def;
+
+    if (socket?.type !== "select") {
+      instance.setIssues(["Only select sockets can have options"]);
+      instance.sockets[0].setErrorState(true);
+      values[2] = false;
+      return false;
+    }
+
+    const optionName = toString(values[1]);
+
+    if (optionName.trim().length < 1) {
+      instance.setIssues(["Option name cannot be blank"]);
+      instance.sockets[1].setErrorState(true);
+      values[2] = false;
+      return false;
+    }
+
+    const isDefault = socket.def === optionName;
+    values[2] = typeof(input) === "boolean" ? { socket: socket, func: x => x === optionName, def: isDefault } : { socket: input.socket, func: x => input.func(x) && x === optionName, def: input.def && isDefault };
+    socket.options.push(optionName);
+    socket.options.sort();
+    return true;
   }
 }
 
@@ -194,12 +293,12 @@ export class ConditionNode extends CompiledNode {
       { type: "select", name: "operation", def: "equals", options: ["equals", "not equals", "less than", "greater than", "less or equal", "greater or equal"], visible: numberVisible },
       { type: "select", name: "operation", def: "equals", options: ["equals", "not equals"], visible: textOrTypeVisible },
       { type: "select", name: "operation", def: "equals", options: ["equals", "not equals", "and", "or", "not"], visible: boolVisible },
-      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 1, visible: numberVisible, connectionType: NUMBER },
-      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 1, visible: numberVisible, connectionType: NUMBER },
-      { type: "text", name: "", def: "", connective: true, min: 0, max: 50, valid: "", visible: textOrTypeVisible, connectionType: TEXT },
-      { type: "text", name: "", def: "", connective: true, min: 0, max: 50, valid: "", visible: textOrTypeVisible, connectionType: TEXT },
-      { type: "switch", name: "", def: false, connective: true, active: "true", inactive: "false", visible: boolVisible, connectionType: [BOOLEAN, TRUTH_FLOW] },
-      { type: "switch", name: "", def: false, connective: true, active: "true", inactive: "false", visible: { socketId: 3, func: x => x !== "not", def: false }, connectionType: [BOOLEAN, TRUTH_FLOW] },
+      { type: "number", name: "", def: 0, min: -100, max: 100, step: 1, visible: numberVisible, connectionType: NUMBER },
+      { type: "number", name: "", def: 0, min: -100, max: 100, step: 1, visible: numberVisible, connectionType: NUMBER },
+      { type: "text", name: "", def: "", min: 0, max: 50, valid: "", visible: textOrTypeVisible, connectionType: TEXT },
+      { type: "text", name: "", def: "", min: 0, max: 50, valid: "", visible: textOrTypeVisible, connectionType: TEXT },
+      { type: "switch", name: "", def: false, active: "true", inactive: "false", visible: boolVisible, connectionType: [BOOLEAN, TRUTH_FLOW] },
+      { type: "switch", name: "", def: false, active: "true", inactive: "false", visible: { socketId: 3, func: x => x !== "not", def: false }, connectionType: [BOOLEAN, TRUTH_FLOW] },
       { type: "output", name: "true", connectionType: TRUTH_FLOW },
       { type: "output", name: "false", connectionType: TRUTH_FLOW },
     ]);
@@ -219,9 +318,26 @@ export class SettingsNode extends CompiledNode {
   instantiate(x, y, graph) {
     return new EditorNode(this, graph, x, y, "settings", BUILT_IN_COLOR, [
       { type: "output", name: "output", connectionType: NODE_METADATA },
-      { type: "text", name: "name", def: "", connective: true, min: 0, max: 50, valid: "", connectionType: TEXT },
-      { type: "text", name: "color", def: "333333", connective: true, min: 6, max: 6, valid: "0123456789abcdef", connectionType: TEXT },
+      { type: "text", name: "name", def: "", min: 0, max: 50, valid: "", connectionType: TEXT },
+      { type: "text", name: "color", def: "333333", min: 6, max: 6, valid: "0123456789abcdef", connectionType: TEXT },
     ]);
+  }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    const color = asString(values[2]);
+
+    if (typeof(color) === "string" && color.length !== 6) {
+      instance.setIssues(["Invalid color input value"]);
+      instance.sockets[2].setErrorState(true);
+      return false;
+    }
+
+    setMetadata({ name: asString(values[1]), color: color });
+    return true;
   }
 }
 
@@ -240,7 +356,7 @@ export class ByteNode extends CompiledNode {
 
     return new EditorNode(this, graph, x, y, nameSrc, BUILT_IN_COLOR, [
       { type: "select", name: "type", def: TEXT, options: [TEXT, NUMBER, BOOLEAN] },
-      { type: "text", name: "", def: "", connective: false, min: 0, max: 8, valid: "01" },
+      { type: "text", name: "", def: "", min: 0, max: 8, valid: "01" },
       { type: "output", name: "value", visible: { socketId: 0, func: x => x === TEXT, def: true }, connectionType: TEXT },
       { type: "output", name: "value", visible: { socketId: 0, func: x => x === NUMBER, def: false }, connectionType: NUMBER },
       { type: "output", name: "value", visible: { socketId: 0, func: x => x === BOOLEAN, def: false }, connectionType: BOOLEAN },
@@ -266,8 +382,8 @@ export class FormatNode extends CompiledNode {
       { type: "named", name: "data", connectionType: TEXT },
       { type: "select", name: "original", def: "binary", options: formats },
       { type: "select", name: "target", def: "binary", options: formats },
-      { type: "switch", name: "sign", def: false, connective: true, active: "signed", inactive: "unsigned", visible: integerVisible, connectionType: BOOLEAN },
-      { type: "number", name: "bytes", def: 4, connective: true, min: 1, max: 16, step: 1, visible: integerVisible, connectionType: NUMBER },
+      { type: "switch", name: "sign", def: false, active: "signed", inactive: "unsigned", visible: integerVisible, connectionType: BOOLEAN },
+      { type: "number", name: "bytes", def: 4, min: 1, max: 16, step: 1, visible: integerVisible, connectionType: NUMBER },
       { type: "output", name: "result", connectionType: TEXT },
     ]);
   }
@@ -285,7 +401,7 @@ export class JoinNode extends CompiledNode {
    */
   instantiate(x, y, graph) {
     return new EditorNode(this, graph, x, y, "join", BUILT_IN_COLOR, [
-      { type: "text", name: "separator", def: "", connective: true, min: 0, max: 50, valid: "", connectionType: [TEXT, NUMBER, BOOLEAN] },
+      { type: "text", name: "separator", def: "", min: 0, max: 50, valid: "", connectionType: [TEXT, NUMBER, BOOLEAN] },
       { type: "output", name: "result", connectionType: TEXT },
       { type: "repetetive", name: "", connectionType: [TEXT, NUMBER, BOOLEAN] },
     ]);
@@ -305,8 +421,8 @@ export class MathNode extends CompiledNode {
   instantiate(x, y, graph) {
     return new EditorNode(this, graph, x, y, { socketId: 0, func: x => `${x}`, def: "add" }, BUILT_IN_COLOR, [
       { type: "select", name: "operation", def: "add", options: ["add", "subtract", "multiply", "divide", "modulo", "sin", "cos", "tan"] },
-      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 0.0001, connectionType: NUMBER },
-      { type: "number", name: "", def: 0, connective: true, min: -100, max: 100, step: 0.0001, visible: { socketId: 0, func: x => x !== "sin" && x !== "cos" && x !== "tan", def: true }, connectionType: NUMBER },
+      { type: "number", name: "", def: 0, min: -100, max: 100, step: 0.0001, connectionType: NUMBER },
+      { type: "number", name: "", def: 0, min: -100, max: 100, step: 0.0001, visible: { socketId: 0, func: x => x !== "sin" && x !== "cos" && x !== "tan", def: true }, connectionType: NUMBER },
       { type: "output", name: "result", connectionType: NUMBER },
     ]);
   }
@@ -324,8 +440,8 @@ export class RepeatNode extends CompiledNode {
    */
   instantiate(x, y, graph) {
     return new EditorNode(this, graph, x, y, "repeat sequence", BUILT_IN_COLOR, [
-      { type: "text", name: "sequence", def: "", connective: true, min: 0, max: 50, valid: "", connectionType: TEXT },
-      { type: "number", name: "amount", def: 2, connective: true, min: 1, max: 50, step: 1, connectionType: NUMBER },
+      { type: "text", name: "sequence", def: "", min: 0, max: 50, valid: "", connectionType: TEXT },
+      { type: "number", name: "amount", def: 2, min: 1, max: 50, step: 1, connectionType: NUMBER },
       { type: "output", name: "repetition", connectionType: TEXT },
     ]);
   }
@@ -384,9 +500,9 @@ export class ValueNode extends CompiledNode {
 
     return new EditorNode(this, graph, x, y, "literal value", BUILT_IN_COLOR, [
       { type: "select", name: "type", def: TEXT, options: [TEXT, NUMBER, BOOLEAN] },
-      { type: "text", name: "", def: "", connective: false, min: 0, max: 50, valid: "", visible: textVisible },
-      { type: "number", name: "", def: 5, connective: false, min: -100, max: 100, step: 0.0001, visible: numberVisible },
-      { type: "switch", name: "", def: false, connective: false, active: "true", inactive: "false", visible: booleanVisible },
+      { type: "text", name: "", def: "", min: 0, max: 50, valid: "", visible: textVisible },
+      { type: "number", name: "", def: 5, min: -100, max: 100, step: 0.0001, visible: numberVisible },
+      { type: "switch", name: "", def: false, active: "true", inactive: "false", visible: booleanVisible },
       { type: "output", name: "data", visible: textVisible, connectionType: TEXT },
       { type: "output", name: "data", visible: numberVisible, connectionType: NUMBER },
       { type: "output", name: "data", visible: booleanVisible, connectionType: BOOLEAN },

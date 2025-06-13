@@ -4,7 +4,7 @@ import { showContextMenu } from "../menu.js";
 import { nodeExists, NodeGraph, registerNode, unregiserNode } from "../renderer/graph.js";
 import { EditorNode } from "../renderer/nodes.js";
 import { ERROR_CLASS, hasFlag } from "../utils.js";
-import { compileGraph, setCompilerContext } from "./compiler.js";
+import { BUILT_IN_COLOR, compileGraph, setCompilerContext } from "./compiler.js";
 import { BOOLEAN, INPUT_CHANNEL, NODE_METADATA, NUMBER, OUTPUT_DATA, TEXT } from "./types.js";
 
 /**
@@ -51,7 +51,6 @@ class ChangeIdAction {
 }
 
 const INITIAL_POS = 400;
-export const BUILT_IN_COLOR = "333";
 export const USABLE = 1;
 export const EDITABLE = 2;
 export const ADDED = 4;
@@ -165,8 +164,11 @@ export class CompiledNode {
   /**
    * @param {EditorNode} instance
    * @param {CacheValue[]} values
+   * @returns {boolean}
    */
-  compile(instance, values) {}
+  compile(instance, values) {
+    throw new Error("Cannot execute an abstract method: compile(instance, values)");
+  }
 }
 
 /** @abstract */
@@ -194,7 +196,6 @@ export class EditableNode extends CompiledNode {
 
   openInEditor() {
     NodeGraph.switchGraph(this.#graph);
-    this.setMetadata({ name: this.id ?? "", color: BUILT_IN_COLOR });
     setCompilerContext(this);
     compileGraph();
   }
@@ -255,5 +256,13 @@ export class CustomNode extends EditableNode {
   /** @param {NodeMetadata} data */
   setMetadata(data) {
     this.#meta = data;
+  }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    return true;
   }
 }
