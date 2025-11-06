@@ -86,6 +86,10 @@ main > div > a > img {
   align-self: center;
 }
 
+main > div > div > h2 {
+  font-size: 1rem;
+}
+
 #loader {
   border: 16px solid transparent;
   border-top: 16px solid var(--color-text);

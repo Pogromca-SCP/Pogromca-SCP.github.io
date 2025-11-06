@@ -87,6 +87,13 @@ const run = () => {
   inputVars.count = 0;
   const pxSize = parseInt(pixelsSize.value);
   const pxCount = parseInt(pixelsCount.value);
+
+  if (Number.isNaN(pxSize) || Number.isNaN(pxCount)) {
+    addError("Provided numeric parameters are invalid.");
+    runButton.disabled = false;
+    return;
+  }
+
   const code = compile(input.value, inputVars, outputs, addError);
 
   if (code === null) {
