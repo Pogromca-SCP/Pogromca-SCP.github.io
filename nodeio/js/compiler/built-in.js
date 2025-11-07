@@ -7,6 +7,8 @@ import { BUILT_IN_COLOR, getSocketDefinition, removeSocketDefinition, setMetadat
 /**
  * @typedef {import("../renderer/graph.js").NodeGraph} NodeGraph
  * @typedef {import("./compiler.js").CacheValue} CacheValue
+ * 
+ * @typedef {string | number | boolean} Param
  */
 
 /**
@@ -45,11 +47,11 @@ export class SocketNode extends CompiledNode {
    * @param {NodeGraph} graph
    */
   instantiate(x, y, graph) {
-    const inputVisible = { socketId: 0, func: x => x === "input", def: true };
-    const outputVisible = { socketId: 0, func: x => x === "output", def: false };
-    const textOrNumberVisible = { socketId: 5, func: x => x === "text" || x === "number", def: true };
-    const numberVisible = { socketId: 5, func: x => x === "number", def: false };
-    const switchVisible = { socketId: 5, func: x => x === "switch", def: false };
+    const inputVisible = { socketId: 0, func: (/** @type {Param} */ x) => x === "input", def: true };
+    const outputVisible = { socketId: 0, func: (/** @type {Param} */ x) => x === "output", def: false };
+    const textOrNumberVisible = { socketId: 5, func: (/** @type {Param} */ x) => x === "text" || x === "number", def: true };
+    const numberVisible = { socketId: 5, func: (/** @type {Param} */ x) => x === "number", def: false };
+    const switchVisible = { socketId: 5, func: (/** @type {Param} */ x) => x === "switch", def: false };
 
     /** @param {boolean | number | string} x */
     const typeToOutput = x => {
@@ -140,7 +142,7 @@ export class TypeNode extends CompiledNode {
    * @param {NodeGraph} graph
    */
   instantiate(x, y, graph) {
-    const builtInVisible = { socketId: 2, func: x => x, def: false };
+    const builtInVisible = { socketId: 2, func: (/** @type {any} */ x) => x, def: false };
 
     return new EditorNode(this, graph, x, y, "type", BUILT_IN_COLOR, [
       { type: "named", name: "channel", connectionType: [INPUT_DATA, OUTPUT_CHANNEL] },
@@ -284,9 +286,9 @@ export class ConditionNode extends CompiledNode {
    * @param {NodeGraph} graph
    */
   instantiate(x, y, graph) {
-    const numberVisible = { socketId: 0, func: x => x === "number", def: true };
-    const textOrTypeVisible = { socketId: 0, func: x => x === "text" || x === "type", def: false };
-    const boolVisible = { socketId: 0, func: x => x === "bool", def: false };
+    const numberVisible = { socketId: 0, func: (/** @type {Param} */ x) => x === "number", def: true };
+    const textOrTypeVisible = { socketId: 0, func: (/** @type {Param} */ x) => x === "text" || x === "type", def: false };
+    const boolVisible = { socketId: 0, func: (/** @type {Param} */ x) => x === "bool", def: false };
 
     return new EditorNode(this, graph, x, y, "condition", BUILT_IN_COLOR, [
       { type: "select", name: "input", def: "number", options: ["number", "text", "bool", "type"] },
@@ -352,7 +354,7 @@ export class ByteNode extends CompiledNode {
    * @param {NodeGraph} graph
    */
   instantiate(x, y, graph) {
-    const nameSrc =  { socketId: 0, func: x => `${x.substring(x.lastIndexOf('/') + 1)} byte`, def: "text byte" };
+    const nameSrc =  { socketId: 0, func: (/** @type {Param} */ x) => typeof(x) === "string" ? `${x.substring(x.lastIndexOf('/') + 1)} byte` : "text byte", def: "text byte" };
 
     return new EditorNode(this, graph, x, y, nameSrc, BUILT_IN_COLOR, [
       { type: "select", name: "type", def: TEXT, options: [TEXT, NUMBER, BOOLEAN] },
@@ -376,7 +378,7 @@ export class FormatNode extends CompiledNode {
    */
   instantiate(x, y, graph) {
     const formats = ["binary", "hexadecimal", "boolean", "integer", "utf 8", "text"];
-    const integerVisible = { socketId: 2, func: x => x === "integer", def: false };
+    const integerVisible = { socketId: 2, func: (/** @type {Param} */ x) => x === "integer", def: false };
 
     return new EditorNode(this, graph, x, y, "format", BUILT_IN_COLOR, [
       { type: "named", name: "data", connectionType: TEXT },
@@ -494,9 +496,9 @@ export class ValueNode extends CompiledNode {
    * @param {NodeGraph} graph
    */
   instantiate(x, y, graph) {
-    const textVisible = { socketId: 0, func: x => x === TEXT, def: true };
-    const numberVisible = { socketId: 0, func: x => x === NUMBER, def: false };
-    const booleanVisible = { socketId: 0, func: x => x === BOOLEAN, def: false };
+    const textVisible = { socketId: 0, func: (/** @type {Param} */ x) => x === TEXT, def: true };
+    const numberVisible = { socketId: 0, func: (/** @type {Param} */ x) => x === NUMBER, def: false };
+    const booleanVisible = { socketId: 0, func: (/** @type {Param} */ x) => x === BOOLEAN, def: false };
 
     return new EditorNode(this, graph, x, y, "literal value", BUILT_IN_COLOR, [
       { type: "select", name: "type", def: TEXT, options: [TEXT, NUMBER, BOOLEAN] },

@@ -9,7 +9,7 @@ import { NamedSocket, NumberSocket, OutputSocket, RepetetiveSocket, SelectSocket
 
 /**
  * @typedef {import("../compiler/nodes.js").CompiledNode} CompiledNode
- * @typedef {import("./sockets.js").SocketBase} SocketBase
+ * @typedef {import("./sockets.js").SocketBase<any>} SocketBase
  * 
  * @typedef {object} SocketDef
  * @property {DataSource<string>} name

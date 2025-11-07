@@ -81,25 +81,25 @@ class ChangeValueAction {
 
 class ChangeConnectionAction {
   /**
-   * @type {SocketBase}
+   * @type {SocketBase<any>}
    * @readonly
    */
   socket;
   /**
-   * @type {SocketBase | null}
+   * @type {SocketBase<any> | null}
    * @readonly
    */
   oldValue;
   /**
-   * @type {SocketBase | null}
+   * @type {SocketBase<any> | null}
    * @readonly
    */
   newValue;
 
   /**
-   * @param {SocketBase} socket
-   * @param {SocketBase | null} oldValue
-   * @param {SocketBase | null} newValue
+   * @param {SocketBase<any>} socket
+   * @param {SocketBase<any> | null} oldValue
+   * @param {SocketBase<any> | null} newValue
    */
   constructor(socket, oldValue, newValue) {
     this.socket = socket;
@@ -169,7 +169,7 @@ export class SocketBase {
   #label;
   /** @type {T} */
   #value;
-  /** @type {SocketBase | null} */
+  /** @type {SocketBase<any> | null} */
   #connection;
 
   /**
@@ -300,7 +300,7 @@ export class SocketBase {
     return "";
   }
 
-  /** @param {SocketBase | null} connection */
+  /** @param {SocketBase<any> | null} connection */
   changeConnection(connection) {
     if (this.#connection === connection || !this.validateConnection(connection)) {
       return false;
@@ -311,7 +311,7 @@ export class SocketBase {
   }
 
   /**
-   * @param {SocketBase | null} connection
+   * @param {SocketBase<any> | null} connection
    * @param {boolean} updateOther
    */
   transientChangeConnection(connection, updateOther) {
@@ -332,7 +332,7 @@ export class SocketBase {
     }
   }
 
-  /** @param {SocketBase | null} connection */
+  /** @param {SocketBase<any> | null} connection */
   validateConnection(connection) {
     if (connection === null) {
       return hasFlag(this.#flags, INPUT);
@@ -444,7 +444,7 @@ export class SocketBase {
 
   /**
    * @param {HTMLElement} parent
-   * @param {SocketBase | null} before
+   * @param {SocketBase<any> | null} before
    */
   addBefore(parent, before) {
     const root = this.#root;
@@ -592,7 +592,7 @@ export class SocketBase {
   }
 
   /**
-   * @param {SocketBase} connection
+   * @param {SocketBase<any>} connection
    * @param {boolean} updateOther
    */
   #addConnection(connection, updateOther) {
@@ -922,7 +922,7 @@ export class RepetetiveSocket extends SocketBase {
   }
 
   /**
-   * @param {SocketBase | null} connection
+   * @param {SocketBase<any> | null} connection
    * @param {boolean} updateOther
    */
   transientChangeConnection(connection, updateOther) {

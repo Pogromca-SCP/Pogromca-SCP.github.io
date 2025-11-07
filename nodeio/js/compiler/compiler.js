@@ -4,7 +4,7 @@ import { travelGraphFromOutputs } from "./pathing.js";
 /**
  * @typedef {import("./nodes.js").EditableNode} EditableNode
  * @typedef {import("../renderer/nodes.js").EditorNode} EditorNode
- * @typedef {import("../renderer/sockets.js").SocketBase} SocketBase
+ * @typedef {import("../renderer/sockets.js").SocketBase<any>} SocketBase
  * @typedef {import("../renderer/nodes.js").SocketDefinition} SocketDefinition
  * 
  * @typedef {undefined | null | boolean | number | string | ResolvableDynamicData<boolean | number | string>} Value

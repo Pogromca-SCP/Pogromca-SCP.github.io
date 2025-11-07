@@ -223,6 +223,7 @@ const updatePixel = (pixel, i) => {
         let value = stdFunctions[op]?.func;
 
         if (value === undefined) {
+          // @ts-ignore
           value = inputVars[op];
 
           if (value === undefined) {
@@ -382,11 +383,17 @@ const runFunctionCall = argNum => {
   return true;
 };
 
+// @ts-ignore
 window["hideRef"] = hideRef;
+// @ts-ignore
 window["showRef"] = showRef;
+// @ts-ignore
 window["clearConsole"] = clearConsole;
+// @ts-ignore
 window["run"] = run;
+// @ts-ignore
 window["displayLineNumbers"] = displayLineNumbers;
+// @ts-ignore
 window["updateLinesScroll"] = updateLinesScroll;
 displayLineNumbers();
 updateLinesScroll();

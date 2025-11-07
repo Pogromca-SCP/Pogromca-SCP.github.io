@@ -204,7 +204,7 @@ const gameLoop = () => {
   }
 
   for (const row in rows) {
-    hide(rows[row].root);
+    hide(rows[/** @type {RowId} */ (row)].root);
   }
 
   const current = gameState.questions.pop();
@@ -248,6 +248,8 @@ const answer = id => {
   }
 };
 
+// @ts-ignore
 window["startGame"] = loadQuestions;
+// @ts-ignore
 window["answer"] = answer;
 loadCategories();

@@ -1,0 +1,66 @@
+@media all and (prefers-color-scheme: light) {
+  :root {
+    --color-text: #000000;
+    --color-bg-main: #ffffff;
+    --color-bg-inputs: #dddddd;
+  }
+}
+
+@media all and (prefers-color-scheme: dark) {
+  :root {
+    --color-text: #888888;
+    --color-bg-main: #000000;
+    --color-bg-inputs: #444444;
+  }
+}
+
+:root {
+  --output-size: 50px;
+}
+
+html {
+  font-family: sans-serif;
+  background-color: var(--color-bg-main);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 3rem;
+  border-radius: 100%;
+  width: var(--output-size);
+  height: var(--output-size);
+  color: #ffffff;
+  background-color: #000000;
+}
+
+label, input, noscript {
+  font-size: large;
+  margin-top: 1rem;
+}
+
+input, noscript {
+  border-radius: 8px;
+}
+
+label, input {
+  color: var(--color-text);
+}
+
+input {
+  background-color: var(--color-bg-inputs);
+  width: 100%;
+}
+
+noscript {
+  background-color: #aa0000;
+  color: #ffffff;
+  padding-left: 0.5rem;
+}

@@ -3,7 +3,7 @@
 /**
  * @typedef {import("../renderer/graph.js").NodeGraph} NodeGraph
  * @typedef {import("../renderer/nodes.js").EditorNode} EditorNode
- * @typedef {import("../renderer/sockets.js").SocketBase} SocketBase
+ * @typedef {import("../renderer/sockets.js").SocketBase<any>} SocketBase
  * @typedef {import("../renderer/sockets.js").RepetetiveSocket} RepetetiveSocket
  */
 

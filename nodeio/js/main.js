@@ -6,13 +6,21 @@ import { NodeGraph } from "./renderer/graph.js";
 
 const emptyOp = () => {};
 
+// @ts-ignore
 window["closeMenu"] = closeContextMenu;
+// @ts-ignore
 window["newGraph"] = emptyOp;
+// @ts-ignore
 window["openGraph"] = emptyOp;
+// @ts-ignore
 window["saveGraph"] = emptyOp;
+// @ts-ignore
 window["undoAction"] = undoAction;
+// @ts-ignore
 window["redoAction"] = redoAction;
+// @ts-ignore
 window["centerView"] = NodeGraph.centerCurrent;
+// @ts-ignore
 window["addNode"] = createNode;
 
 window.addEventListener("beforeunload", e => {
