@@ -94,6 +94,12 @@ const run = () => {
     return;
   }
 
+  if (pxSize < 1 || pxCount < 1 || pxSize > 20 || pxCount > 100) {
+    addError("Provided numeric parameters are out of supported range ([1-100] [1-20]).");
+    runButton.disabled = false;
+    return;
+  }
+
   const code = compile(input.value, inputVars, outputs, addError);
 
   if (code === null) {
