@@ -28,7 +28,6 @@ body {
   grid-template-columns: 1fr 2fr;
   grid-template-rows: 2fr 1fr;
   gap: 5px;
-  min-height: 600px;
   height: 100dvh;
 }
 

@@ -248,8 +248,6 @@ const answer = id => {
   }
 };
 
-// @ts-ignore
-window["startGame"] = loadQuestions;
-// @ts-ignore
-window["answer"] = answer;
+globalThis.startGame = loadQuestions;
+globalThis.answer = answer;
 loadCategories();
