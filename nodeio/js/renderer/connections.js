@@ -22,7 +22,7 @@ class ConnectionBase {
   /** @param {NodeGraph} graph */
   constructor(graph) {
     if (this.constructor === ConnectionBase) {
-      throw new Error("Cannot instantiatea an abstract class: ConnectionBase");
+      throw new Error("Cannot instantiate an abstract class: ConnectionBase");
     }
 
     this.#path = document.createElementNS(SVG_URL, "path");

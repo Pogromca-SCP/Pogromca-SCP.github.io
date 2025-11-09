@@ -181,7 +181,7 @@ export class SocketBase {
    */
   constructor(flags, node, name, def, type) {
     if (this.constructor === SocketBase) {
-      throw new Error("Cannot instantiatea an abstract class: SocketBase");
+      throw new Error("Cannot instantiate an abstract class: SocketBase");
     }
 
     this.#flags = flags;
