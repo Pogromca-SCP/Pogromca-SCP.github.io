@@ -9,7 +9,7 @@
 
 @media all and (prefers-color-scheme: dark) {
   :root {
-    --color-text: #888888;
+    --color-text: #dbdbdb;
     --color-bg-secondary: #000000;
     --color-bg-primary: #222222;
     --color-bg-inputs: #444444;

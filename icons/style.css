@@ -8,7 +8,7 @@
 
 @media all and (prefers-color-scheme: dark) {
   :root {
-    --color-text: #888888;
+    --color-text: #dbdbdb;
     --color-bg-main: #000000;
     --color-bg-inputs: #444444;
   }
@@ -46,17 +46,26 @@ label, input, noscript {
   margin-top: 1rem;
 }
 
-input, noscript {
+input, button, noscript {
   border-radius: 8px;
 }
 
-label, input {
+label, input, button {
   color: var(--color-text);
 }
 
-input {
+input, button {
   background-color: var(--color-bg-inputs);
   width: 100%;
+}
+
+button {
+  font-size: large;
+  margin-top: 2rem;
+}
+
+a {
+  display: contents;
 }
 
 noscript {
