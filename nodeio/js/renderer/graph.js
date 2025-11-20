@@ -13,6 +13,7 @@ export const SVG_URL = "http://www.w3.org/2000/svg";
 export const ROOT = "root";
 
 export class NodeGraph {
+  static onGraphChange = () => {};
   /** @type {NodeGraph} */
   static #currentGraph = /** @type {NodeGraph} */ ({ remove() {} });
 
@@ -141,6 +142,7 @@ export class NodeGraph {
 
     if (org.parentElement !== null) {
       graph.removeChild(org);
+      NodeGraph.onGraphChange();
     }
   }
 
@@ -171,12 +173,7 @@ export class NodeGraph {
    * @param {EditorNode} node
    */
   removeNode(child, node) {
-    const nodes = this.#nodes;
-
-    if (nodes.has(node)) {
-      nodes.delete(node);
-    }
-
+    this.#nodes.delete(node);
     this.#origin.removeChild(child);
   }
 
@@ -313,11 +310,9 @@ graph.addEventListener("dragover", stopDefault);
 graph.addEventListener("drop", e => {
   const node = library.get(e.dataTransfer?.getData(DRAG_DROP_DATA_FORMAT) ?? "");
 
-  if (node === undefined) {
-    return;
+  if (node !== undefined) {
+    node.instantiate(e.clientX, e.clientY, NodeGraph.currentGraph).add();
   }
-
-  node.instantiate(e.clientX, e.clientY, NodeGraph.currentGraph).add();
 });
 
 graph.addEventListener("mousedown", startBgDrag);

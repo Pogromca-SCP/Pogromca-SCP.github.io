@@ -112,6 +112,10 @@ export class CompiledNode {
     return this.#id;
   }
 
+  get hash() {
+    return 0;
+  }
+
   /** @param {boolean} isError */
   setErrorState(isError) {
     this.#display.className = isError ? ERROR_CLASS : "";
@@ -119,32 +123,36 @@ export class CompiledNode {
 
   /** @param {string | null} id */
   changeId(id) {
-    if (this.#id === id || (id !== null && (id.trim().length < 1 || nodeExists(id)))) {
+    const currrentId = this.#id;
+
+    if (currrentId === id || (id !== null && (id.trim().length < 1 || nodeExists(id)))) {
       return false;
     }
 
-    doAction(new ChangeIdAction(this, this.#id, id));
+    doAction(new ChangeIdAction(this, currrentId, id));
     return true;
   }
 
   /** @param {string | null} id */
   transientChangeId(id) {
     const display = this.#display;
+    const currrentId = this.#id;
 
-    if (this.#id !== null) {
-      unregiserNode(this.#id);
+    if (currrentId !== null) {
+      unregiserNode(currrentId);
       CompiledNode.rendererCallback(display, false);
     }
 
     this.#id = id;
-    
-    if (id !== null) {
-      registerNode(id, this);
-      display.innerText = id;
-      CompiledNode.rendererCallback(display, true);
-    } else {
+
+    if (id === null) {
       this.closeInEditor();
+      return;
     }
+    
+    registerNode(id, this);
+    display.innerText = id;
+    CompiledNode.rendererCallback(display, true);
   }
 
   /**
@@ -154,7 +162,7 @@ export class CompiledNode {
    * @returns {EditorNode}
    */
   instantiate(x, y, graph) {
-    throw new Error("Cannot execute an abstract method: instantiate(x, y)");
+    throw new Error("Cannot execute an abstract method: instantiate(x, y, graph)");
   }
 
   openInEditor() {}
@@ -204,6 +212,8 @@ export class EditableNode extends CompiledNode {
     NodeGraph.switchToRootIfDeleted(this.#graph);
   }
 
+  updateHash() {}
+
   /** @param {SocketDefinition[]} defs */
   setSockets(defs) {}
 
@@ -224,6 +234,8 @@ export class CustomNode extends EditableNode {
   #meta;
   /** @type {SocketDefinition[]} */
   #sockets;
+  /** @type {number} */
+  #hash;
 
   constructor() {
     super(EDITABLE | USABLE | ADDED);
@@ -231,11 +243,16 @@ export class CustomNode extends EditableNode {
     graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "output", BUILT_IN_COLOR, [{ type: "repetetive", name: "", connectionType: [OUTPUT_DATA, NODE_METADATA] }]));
     graph.addInputs(new EditorNode(null, graph, INITIAL_POS, INITIAL_POS, "input", BUILT_IN_COLOR, [{ type: "output", name: "", connectionType: INPUT_CHANNEL }]));
     this.#sockets = [];
+    this.#hash = 0;
 
     this.#meta = {
       name: "",
       color: BUILT_IN_COLOR,
     };
+  }
+
+  get hash() {
+    return this.#hash;
   }
 
   /**
@@ -246,6 +263,10 @@ export class CustomNode extends EditableNode {
   instantiate(x, y, graph) {
     const meta = this.#meta;
     return new EditorNode(this, graph, x, y, meta.name, meta.color, this.#sockets);
+  }
+
+  updateHash() {
+    ++this.#hash;
   }
 
   /** @param {SocketDefinition[]} defs */
@@ -263,6 +284,11 @@ export class CustomNode extends EditableNode {
    * @param {CacheValue[]} values
    */
   compile(instance, values) {
+    if (this.#hash !== instance.hash) {
+      instance.setIssues(["This node is outdated, replace it with newer version"]);
+      return false;
+    }
+
     return true;
   }
 }

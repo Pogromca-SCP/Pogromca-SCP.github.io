@@ -4,10 +4,11 @@ import { travelGraphFromOutputs } from "./pathing.js";
 /**
  * @typedef {import("./nodes.js").EditableNode} EditableNode
  * @typedef {import("../renderer/nodes.js").EditorNode} EditorNode
+ * @typedef {import("../renderer/nodes.js").Param} Param
  * @typedef {import("../renderer/sockets.js").SocketBase<any>} SocketBase
  * @typedef {import("../renderer/nodes.js").SocketDefinition} SocketDefinition
  * 
- * @typedef {undefined | null | boolean | number | string | ResolvableDynamicData<boolean | number | string>} Value
+ * @typedef {undefined | null | boolean | number | string | ResolvableDynamicData<Param>} Value
  * @typedef {Value | Value[]} CacheValue
  * 
  * @typedef {object} SocketSlotDefinition
@@ -21,7 +22,7 @@ import { travelGraphFromOutputs } from "./pathing.js";
 
 /**
  * @template T
- * @typedef {import("../renderer/nodes.js").ResolvableDynamicData<T>} ResolvableDynamicData 
+ * @typedef {import("../renderer/nodes.js").ResolvableDynamicData<T>} ResolvableDynamicData
  */
 
 /**

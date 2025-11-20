@@ -1,14 +1,14 @@
 // @ts-check
+import { BUILT_IN_COLOR, getSocketDefinition, setMetadata, setSocketDefinition } from "./compiler.js";
 import { CompiledNode, USABLE } from "./nodes.js";
 import { EditorNode } from "../renderer/nodes.js";
-import { BOOLEAN, INPUT_CHANNEL, INPUT_DATA, NODE_METADATA, NUMBER, OPTION_FLOW, OUTPUT_CHANNEL, OUTPUT_DATA, SELECT_DATA, TEXT, TRUTH_FLOW } from "./types.js";
-import { BUILT_IN_COLOR, getSocketDefinition, removeSocketDefinition, setMetadata, setSocketDefinition } from "./compiler.js";
+import { BOOLEAN, INPUT_CHANNEL, INPUT_DATA, NODE_METADATA, NUMBER, OPTION_FLOW, OUTPUT_CHANNEL, SELECT_DATA, TEXT, TRUTH_FLOW } from "./types.js";
+import { binaryToInt } from "../utils.js";
 
 /**
  * @typedef {import("../renderer/graph.js").NodeGraph} NodeGraph
+ * @typedef {import("../renderer/nodes.js").Param} Param
  * @typedef {import("./compiler.js").CacheValue} CacheValue
- * 
- * @typedef {string | number | boolean} Param
  */
 
 /**
@@ -35,6 +35,11 @@ const toNumber = x => typeof(x) === "number" ? x : 0;
 const toString = x => typeof(x) === "string" ? x : "";
 /** @param {CacheValue} x */
 const toBool = x => typeof(x) === "boolean" ? x : false;
+
+const MAX_NAME = 50;
+const MAX_LENGTH = 255;
+const MIN_NUMBER = Number.MIN_VALUE;
+const MAX_NUMBER = Number.MAX_VALUE;
 
 export class SocketNode extends CompiledNode {
   constructor() {
@@ -320,7 +325,7 @@ export class SettingsNode extends CompiledNode {
   instantiate(x, y, graph) {
     return new EditorNode(this, graph, x, y, "settings", BUILT_IN_COLOR, [
       { type: "output", name: "output", connectionType: NODE_METADATA },
-      { type: "text", name: "name", def: "", min: 0, max: 50, valid: "", connectionType: TEXT },
+      { type: "text", name: "name", def: "", min: 0, max: MAX_NAME, valid: "", connectionType: TEXT },
       { type: "text", name: "color", def: "333333", min: 6, max: 6, valid: "0123456789abcdef", connectionType: TEXT },
     ]);
   }
@@ -363,6 +368,28 @@ export class ByteNode extends CompiledNode {
       { type: "output", name: "value", visible: { socketId: 0, func: x => x === NUMBER, def: false }, connectionType: NUMBER },
       { type: "output", name: "value", visible: { socketId: 0, func: x => x === BOOLEAN, def: false }, connectionType: BOOLEAN },
     ]);
+  }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    switch (values[0]) {
+      case TEXT:
+        values[2] = String.fromCharCode(binaryToInt(toString(values[1])));
+        return true;
+      case NUMBER:
+        values[3] = binaryToInt(toString(values[1]));
+        return true;
+      case BOOLEAN:
+        values[4] = toString(values[1]).includes('1');
+        return true;
+      default:
+        instance.setIssues(["Invalid data type"]);
+        instance.sockets[0].setErrorState(true);
+        return false;
+    }
   }
 }
 
@@ -502,12 +529,34 @@ export class ValueNode extends CompiledNode {
 
     return new EditorNode(this, graph, x, y, "literal value", BUILT_IN_COLOR, [
       { type: "select", name: "type", def: TEXT, options: [TEXT, NUMBER, BOOLEAN] },
-      { type: "text", name: "", def: "", min: 0, max: 50, valid: "", visible: textVisible },
-      { type: "number", name: "", def: 5, min: -100, max: 100, step: 0.0001, visible: numberVisible },
+      { type: "text", name: "", def: "", min: 0, max: MAX_LENGTH, valid: "", visible: textVisible },
+      { type: "number", name: "", def: 5, min: -MAX_NUMBER, max: MAX_NUMBER, step: MIN_NUMBER, visible: numberVisible },
       { type: "switch", name: "", def: false, active: "true", inactive: "false", visible: booleanVisible },
       { type: "output", name: "data", visible: textVisible, connectionType: TEXT },
       { type: "output", name: "data", visible: numberVisible, connectionType: NUMBER },
       { type: "output", name: "data", visible: booleanVisible, connectionType: BOOLEAN },
     ]);
+  }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    switch (values[0]) {
+      case TEXT:
+        values[4] = toString(values[1]);
+        return true;
+      case NUMBER:
+        values[5] = toNumber(values[2]);
+        return true;
+      case BOOLEAN:
+        values[6] = toBool(values[3]);
+        return true;
+      default:
+        instance.setIssues(["Invalid data type"]);
+        instance.sockets[0].setErrorState(true);
+        return false;
+    }
   }
 }

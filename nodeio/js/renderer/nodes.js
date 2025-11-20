@@ -50,13 +50,15 @@ import { NamedSocket, NumberSocket, OutputSocket, RepetetiveSocket, SelectSocket
  * @typedef {SocketDef & SwitchDef} SwitchSocketDef
  * @typedef {SocketDef & TextDef} TextSocketDef
  * @typedef {NamedSocketDef | NumberSocketDef | SelectSocketDef | SwitchSocketDef | TextSocketDef} SocketDefinition
+ * 
+ * @typedef {string | number | boolean} Param
  */
 
 /**
  * @template T
  * @typedef {object} PredefinedDynamicData
  * @property {number} socketId
- * @property {(x: boolean | number | string) => T} func
+ * @property {(x: Param) => T} func
  * @property {T} def
  */
 
@@ -64,7 +66,7 @@ import { NamedSocket, NumberSocket, OutputSocket, RepetetiveSocket, SelectSocket
  * @template T
  * @typedef {object} ResolvableDynamicData
  * @property {SocketDefinition} socket
- * @property {(x: boolean | number | string) => T} func
+ * @property {(x: Param) => T} func
  * @property {T} def
  */
 
@@ -205,6 +207,11 @@ export class EditorNode {
    */
   #type;
   /**
+   * @type {number}
+   * @readonly
+   */
+  #hash;
+  /**
    * @type {NodeGraph}
    * @readonly
    */
@@ -240,6 +247,7 @@ export class EditorNode {
    */
   constructor(type, graph, x, y, name, color, sockets) {
     this.#type = type;
+    this.#hash = type === null ? 0 : type.hash;
     this.#graph = graph;
     this.#x = getOffsetLeft(x, graph);
     this.#y = getOffsetTop(y, graph);
@@ -263,6 +271,10 @@ export class EditorNode {
 
   get type() {
     return this.#type;
+  }
+
+  get hash() {
+    return this.#hash;
   }
 
   get graph() {
@@ -609,3 +621,4 @@ export class EditorNode {
 }
 
 bindGraphClick(EditorNode.clearSelection);
+NodeGraph.onGraphChange = EditorNode.clearSelection;

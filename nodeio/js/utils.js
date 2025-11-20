@@ -30,3 +30,22 @@ export const textToInt = str => {
 
   return result;
 };
+
+/** @param {string} str */
+export const binaryToInt = str => {
+  let result = 0;
+
+  for (const ch of str) {
+    if (ch < '0' || ch > '1') {
+      return result;
+    }
+
+    result *= 2;
+
+    if (ch === '1') {
+      result += 1;
+    }
+  }
+
+  return result;
+};
