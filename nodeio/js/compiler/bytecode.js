@@ -133,8 +133,19 @@ export const calculate = (chunk, node) => {
       }
       case OP_FORMAT:
         break;
-      case OP_JOIN:
+      case OP_JOIN: {
+        const num = /** @type {number} */ (stack.pop());
+        /** @type {string[]} */
+        const values = Array(num);
+        
+        for (let i = 0; i < num; ++i) {
+          values[i] = /** @type {Param} */ (stack.pop()).toString();
+        }
+
+        const separator = /** @type {Param} */ (stack.pop()).toString();
+        stack.push(values.join(separator));
         break;
+      }
       case OP_REPEAT: {
         const amount = /** @type {number} */ (stack.pop());
         const text = /** @type {string} */ (stack.pop());

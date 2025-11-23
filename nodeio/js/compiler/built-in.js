@@ -11,6 +11,7 @@ import { binaryToInt } from "../utils.js";
  * @typedef {import("../renderer/nodes.js").Param} Param
  * @typedef {import("../renderer/nodes.js").SocketDefinition} SocketDefinition
  * @typedef {import("./compiler.js").CacheValue} CacheValue
+ * @typedef {import("./compiler.js").Value} Value
  */
 
 /**
@@ -320,15 +321,24 @@ export class ConditionNode extends CompiledNode {
       { type: "select", name: "operation", def: "equals", options: ["equals", "not equals", "less than", "greater than", "less or equal", "greater or equal"], visible: numberVisible },
       { type: "select", name: "operation", def: "equals", options: ["equals", "not equals"], visible: textOrTypeVisible },
       { type: "select", name: "operation", def: "equals", options: ["equals", "not equals", "and", "or", "not"], visible: boolVisible },
-      { type: "number", name: "", def: 0, min: -100, max: 100, step: 1, visible: numberVisible, connectionType: NUMBER },
-      { type: "number", name: "", def: 0, min: -100, max: 100, step: 1, visible: numberVisible, connectionType: NUMBER },
-      { type: "text", name: "", def: "", min: 0, max: 50, valid: "", visible: textOrTypeVisible, connectionType: TEXT },
-      { type: "text", name: "", def: "", min: 0, max: 50, valid: "", visible: textOrTypeVisible, connectionType: TEXT },
+      { type: "number", name: "", def: 5, min: -MAX_NUMBER, max: MAX_NUMBER, step: MIN_NUMBER, visible: numberVisible, connectionType: NUMBER },
+      { type: "number", name: "", def: 5, min: -MAX_NUMBER, max: MAX_NUMBER, step: MIN_NUMBER, visible: numberVisible, connectionType: NUMBER },
+      { type: "text", name: "", def: "", min: 0, max: MAX_LENGTH, valid: "", visible: textOrTypeVisible, connectionType: TEXT },
+      { type: "text", name: "", def: "", min: 0, max: MAX_LENGTH, valid: "", visible: textOrTypeVisible, connectionType: TEXT },
       { type: "switch", name: "", def: false, active: "true", inactive: "false", visible: boolVisible, connectionType: [BOOLEAN, TRUTH_FLOW] },
       { type: "switch", name: "", def: false, active: "true", inactive: "false", visible: { socketId: 3, func: x => x !== "not", def: false }, connectionType: [BOOLEAN, TRUTH_FLOW] },
       { type: "output", name: "true", connectionType: TRUTH_FLOW },
       { type: "output", name: "false", connectionType: TRUTH_FLOW },
     ]);
+  }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    instance.setIssues(["Not implemented yet"]);
+    return false;
   }
 }
 
@@ -436,6 +446,15 @@ export class FormatNode extends CompiledNode {
       { type: "output", name: "result", connectionType: TEXT },
     ]);
   }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    instance.setIssues(["Not implemented yet"]);
+    return false;
+  }
 }
 
 export class JoinNode extends CompiledNode {
@@ -450,10 +469,77 @@ export class JoinNode extends CompiledNode {
    */
   instantiate(x, y, graph) {
     return new EditorNode(this, graph, x, y, "join", BUILT_IN_COLOR, [
-      { type: "text", name: "separator", def: "", min: 0, max: 50, valid: "", connectionType: [TEXT, NUMBER, BOOLEAN] },
+      { type: "text", name: "separator", def: "", min: 0, max: MAX_NAME, valid: "", connectionType: [TEXT, NUMBER, BOOLEAN] },
       { type: "output", name: "result", connectionType: TEXT },
       { type: "repetetive", name: "", connectionType: [TEXT, NUMBER, BOOLEAN] },
     ]);
+  }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    const separator = values[0];
+
+    if (separator === undefined || separator === null || Array.isArray(separator)) {
+      instance.setIssues(["Unsupported separator type"]);
+      instance.sockets[0].setErrorState(true);
+      return false;
+    }
+
+    const code = typeof(separator) === "object" ? [...separator.code] : [OP_CONSTANT, separator];
+    const defSep = typeof(separator) === "object" ? separator.def.toString() : separator.toString();
+    const vals = values[2];
+
+    /**
+     * @param {(Param | SocketDefinition)[]} arr
+     * @param {Value} value
+     */
+    const processValue = (arr, value) => {
+      if (value === undefined || value === null) {
+        return false;
+      }
+
+      if (typeof(value) === "object") {
+        for (const val of value.code) {
+          arr.push(val);
+        }
+
+        return value.def.toString();
+      }
+
+      arr.push(OP_CONSTANT);
+      arr.push(value);
+      return value.toString()
+    };
+
+    let count = 0;
+    /** @type {string | null} */
+    let defStr = null;
+
+    if (Array.isArray(vals)) {
+      for (const val of vals) {
+        const res = processValue(code, val);
+
+        if (res !== false) {
+          ++count;
+          defStr = defStr === null ? res : `${defStr}${defSep}${res}`;
+        }
+      }
+    } else {
+      const res = processValue(code, vals);
+
+      if (res !== false) {
+        ++count;
+        defStr = res;
+      }
+    }
+
+    code.push(OP_CONSTANT);
+    code.push(count);
+    values[1] = { code: code, def: defStr ?? "" };
+    return true;
   }
 }
 
