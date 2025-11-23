@@ -1,4 +1,5 @@
 // @ts-check
+import { OP_ADD, OP_CONSTANT, OP_COS, OP_DIVIDE, OP_LENGTH, OP_MODULO, OP_MULTIPLY, OP_REPEAT, OP_REVERSE, OP_SIN, OP_SUBTRACT, OP_TAN } from "./bytecode.js";
 import { BUILT_IN_COLOR, getSocketDefinition, setMetadata, setSocketDefinition } from "./compiler.js";
 import { CompiledNode, USABLE } from "./nodes.js";
 import { EditorNode } from "../renderer/nodes.js";
@@ -58,7 +59,7 @@ export class SocketNode extends CompiledNode {
     const numberVisible = { socketId: 5, func: (/** @type {Param} */ x) => x === "number", def: false };
     const switchVisible = { socketId: 5, func: (/** @type {Param} */ x) => x === "switch", def: false };
 
-    /** @param {boolean | number | string} x */
+    /** @param {Param} x */
     const typeToOutput = x => {
       switch (x) {
         case "switch":
@@ -450,10 +451,103 @@ export class MathNode extends CompiledNode {
   instantiate(x, y, graph) {
     return new EditorNode(this, graph, x, y, { socketId: 0, func: x => `${x}`, def: "add" }, BUILT_IN_COLOR, [
       { type: "select", name: "operation", def: "add", options: ["add", "subtract", "multiply", "divide", "modulo", "sin", "cos", "tan"] },
-      { type: "number", name: "", def: 0, min: -100, max: 100, step: 0.0001, connectionType: NUMBER },
-      { type: "number", name: "", def: 0, min: -100, max: 100, step: 0.0001, visible: { socketId: 0, func: x => x !== "sin" && x !== "cos" && x !== "tan", def: true }, connectionType: NUMBER },
+      { type: "number", name: "", def: 5, min: -MAX_NUMBER, max: MAX_NUMBER, step: MIN_NUMBER, connectionType: NUMBER },
+      { type: "number", name: "", def: 5, min: -MAX_NUMBER, max: MAX_NUMBER, step: MIN_NUMBER, visible: { socketId: 0, func: x => x !== "sin" && x !== "cos" && x !== "tan", def: true }, connectionType: NUMBER },
       { type: "output", name: "result", connectionType: NUMBER },
     ]);
+  }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    /**
+     * @param {number} opcode
+     * @param {(a: number, b: number) => number} func
+     */
+    const addOpCode2Params = (opcode, func) => {
+      const a = asNumber(values[1]);
+      const b = asNumber(values[2]);
+
+      if (typeof(a) === "number") {
+        if (typeof(b) === "number") {
+          values[3] = func(a, b);
+        } else {
+          const code = [...b.code];
+          code.unshift(a);
+          code.unshift(OP_CONSTANT);
+          code.push(opcode);
+          values[3] = { code: code, def: func(a, b.def) };
+        }
+      } else {
+        const code = [...a.code];
+        /** @type {number} */
+        let num;
+
+        if (typeof(b) === "number") {
+          code.push(OP_CONSTANT);
+          code.push(b);
+          num = b;
+        } else {
+          for (const op of b.code) {
+            code.push(op);
+          }
+
+          num = b.def;
+        }
+
+        code.push(opcode);
+        values[3] = { code: code, def: func(a.def, num) };
+      }
+    };
+
+    /**
+     * @param {number} opcode
+     * @param {(x: number) => number} func
+     */
+    const addOpCode1Param = (opcode, func) => {
+      const value = asNumber(values[1]);
+
+      if (typeof(value) === "number") {
+        values[3] = func(value);
+      } else {
+        const code = [...value.code];
+        code.push(opcode);
+        values[3] = { code: code, def: func(value.def) };
+      }
+    };
+
+    switch (values[0]) {
+      case "add":
+        addOpCode2Params(OP_ADD, (a, b) => a + b);
+        return true;
+      case "subtract":
+        addOpCode2Params(OP_SUBTRACT, (a, b) => a - b);
+        return true;
+      case "multiply":
+        addOpCode2Params(OP_MULTIPLY, (a, b) => a * b);
+        return true;
+      case "divide":
+        addOpCode2Params(OP_DIVIDE, (a, b) => a / b);
+        return true;
+      case "modulo":
+        addOpCode2Params(OP_MODULO, (a, b) => a % b);
+        return true;
+      case "sin":
+        addOpCode1Param(OP_SIN, x => Math.sin(x));
+        return true;
+      case "cos":
+        addOpCode1Param(OP_COS, x => Math.cos(x));
+        return true;
+      case "tan":
+        addOpCode1Param(OP_TAN, x => Math.tan(x));
+        return true;
+      default:
+        instance.setIssues(["Invalid math operation"]);
+        instance.sockets[0].setErrorState(true);
+        return false;
+    }
   }
 }
 
@@ -469,10 +563,52 @@ export class RepeatNode extends CompiledNode {
    */
   instantiate(x, y, graph) {
     return new EditorNode(this, graph, x, y, "repeat sequence", BUILT_IN_COLOR, [
-      { type: "text", name: "sequence", def: "", min: 0, max: 50, valid: "", connectionType: TEXT },
-      { type: "number", name: "amount", def: 2, min: 1, max: 50, step: 1, connectionType: NUMBER },
+      { type: "text", name: "sequence", def: "", min: 0, max: MAX_LENGTH, valid: "", connectionType: TEXT },
+      { type: "number", name: "amount", def: 2, min: 1, max: MAX_NAME, step: 1, connectionType: NUMBER },
       { type: "output", name: "repetition", connectionType: TEXT },
     ]);
+  }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    const value = asString(values[0]);
+    const amount = asNumber(values[1]);
+
+    if (typeof(value) === "string") {
+      if (typeof(amount) === "number") {
+        values[2] = value.repeat(amount);
+      } else {
+        const code = [...amount.code];
+        code.unshift(value);
+        code.unshift(OP_CONSTANT);
+        code.push(OP_REPEAT);
+        values[2] = { code: code, def: value.repeat(amount.def) };
+      }
+    } else {
+      const code = [...value.code];
+      /** @type {number} */
+      let num;
+
+      if (typeof(amount) === "number") {
+        code.push(OP_CONSTANT);
+        code.push(amount);
+        num = amount;
+      } else {
+        for (const op of amount.code) {
+          code.push(op);
+        }
+
+        num = amount.def;
+      }
+
+      code.push(OP_REPEAT);
+      values[2] = { code: code, def: value.def.repeat(num) };
+    }
+
+    return true;
   }
 }
 
@@ -492,6 +628,24 @@ export class ReverseNode extends CompiledNode {
       { type: "output", name: "reversed sequence", connectionType: TEXT },
     ]);
   }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    const value = asString(values[0]);
+
+    if (typeof(value) === "string") {
+      values[1] = value.split("").reverse().join("");
+    } else {
+      const code = [...value.code];
+      code.push(OP_REVERSE);
+      values[1] = { code: code, def: value.def.split("").reverse().join("") };
+    }
+
+    return true;
+  }
 }
 
 export class SizeNode extends CompiledNode {
@@ -509,6 +663,24 @@ export class SizeNode extends CompiledNode {
       { type: "named", name: "input", connectionType: TEXT },
       { type: "output", name: "size", connectionType: NUMBER },
     ]);
+  }
+
+  /**
+   * @param {EditorNode} instance
+   * @param {CacheValue[]} values
+   */
+  compile(instance, values) {
+    const value = asString(values[0]);
+
+    if (typeof(value) === "string") {
+      values[1] = value.length;
+    } else {
+      const code = [...value.code];
+      code.push(OP_LENGTH);
+      values[1] = { code: code, def: value.def.length };
+    }
+
+    return true;
   }
 }
 

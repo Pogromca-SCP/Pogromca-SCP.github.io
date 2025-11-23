@@ -1,4 +1,5 @@
 // @ts-check
+import { calculate } from "../compiler/bytecode.js";
 import { compileGraph } from "../compiler/compiler.js";
 import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
@@ -65,8 +66,7 @@ import { NamedSocket, NumberSocket, OutputSocket, RepetetiveSocket, SelectSocket
 /**
  * @template T
  * @typedef {object} ResolvableDynamicData
- * @property {SocketDefinition} socket
- * @property {(x: Param) => T} func
+ * @property {(Param | SocketDefinition)[]} code
  * @property {T} def
  */
 
@@ -483,19 +483,6 @@ export class EditorNode {
     }
   }
 
-  /**
-   * @template T
-   * @param {DynamicData<T>} data
-   * @param {readonly Readonly<SocketDefinition>[]} socketDefs
-   */
-  static #resolveDynamicData(data, socketDefs) {
-    if ("socketId" in data) {
-      return data;
-    }
-
-    return { socketId: socketDefs.indexOf(data.socket), func: data.func, def: data.def };
-  }
-
   /** @param {Readonly<SocketDefinition>} def */
   #loadSocket(def) {
     const tempName = def.name;
@@ -581,15 +568,21 @@ export class EditorNode {
     const scs = this.#sockets;
 
     if (typeof(name) !== "string") {
-      name = EditorNode.#resolveDynamicData(name, sockets);
-      const func = name.func;
-      scs[name.socketId]?.listeners?.push({ allowOnRender: false, handler: value => this.setName(func(value)) });
+      const tmpName = this.#resolveDynamicData(name, sockets);
+      const func = tmpName.func;
+
+      for (const soc of tmpName.sockets) {
+        scs[soc]?.listeners?.push({ allowOnRender: false, handler: value => this.setName(func(value)) });
+      }
     }
 
     if (typeof(color) !== "string") {
-      color = EditorNode.#resolveDynamicData(color, sockets);
-      const func = color.func;
-      scs[color.socketId]?.listeners?.push({ allowOnRender: false, handler: value => this.setColor(func(value)) });
+      const tmpColor = this.#resolveDynamicData(color, sockets);
+      const func = tmpColor.func;
+      
+      for (const soc of tmpColor.sockets) {
+        scs[soc]?.listeners?.push({ allowOnRender: false, handler: value => this.setColor(func(value)) });
+      }
     }
 
     const len = sockets.length;
@@ -597,26 +590,62 @@ export class EditorNode {
     for (let i = 0; i < len; ++i) {
       const def = sockets[i];
       const target = scs[i];
-      let tempName = def.name;
+      const tempName = def.name;
 
       if (typeof(tempName) !== "string") {
-        tempName = EditorNode.#resolveDynamicData(tempName, sockets);
-        const func = tempName.func;
-        scs[tempName.socketId]?.listeners?.push({ allowOnRender: false, handler: value => target.setName(func(value)) });
+        const tmpName = this.#resolveDynamicData(tempName, sockets);
+        const func = tmpName.func;
+        
+        for (const soc of tmpName.sockets) {
+          scs[soc]?.listeners?.push({ allowOnRender: false, handler: value => target.setName(func(value)) });
+        }
       }
 
-      let tempVis = def.visible;
+      const tempVis = def.visible;
 
       if (tempVis !== undefined) {
-        tempVis = EditorNode.#resolveDynamicData(tempVis, sockets);
-        const func = tempVis.func;
-        scs[tempVis.socketId]?.listeners?.push({ allowOnRender: true, handler: value => target.setVisibility(value !== null && func(value)) });
+        const tmpVis = this.#resolveDynamicData(tempVis, sockets);
+        const func = tmpVis.func;
+        
+        for (const soc of tmpVis.sockets) {
+          scs[soc]?.listeners?.push({ allowOnRender: true, handler: value => target.setVisibility(value !== null && func(value)) });
+        }
 
-        if (!tempVis.def) {
+        if (!tmpVis.def) {
           target.setVisibility(false);
         }
       }
     }
+  }
+
+  /**
+   * @template T
+   * @param {DynamicData<T>} data
+   * @param {readonly Readonly<SocketDefinition>[]} socketDefs
+   */
+  #resolveDynamicData(data, socketDefs) {
+    if ("socketId" in data) {
+      return { sockets: [data.socketId], func: data.func, def: data.def };
+    }
+
+    /** @type {Map<SocketDefinition, number>} */
+    const sockets = new Map();
+    const code = [...data.code];
+    const length = code.length;
+
+    for (let i = 0; i < length; ++i) {
+      const value = code[i];
+
+      if (typeof(value) === "object") {
+        if (!sockets.has(value)) {
+          sockets.set(value, socketDefs.indexOf(value));
+        }
+        
+        code[i] = /** @type {number} */ (sockets.get(value));
+      }
+    }
+
+    return { sockets: [...sockets.values()], func: (/** @type {Param} */ x) => calculate(/** @type {Param[]} */ (code), this), def: data.def };
   }
 }
 

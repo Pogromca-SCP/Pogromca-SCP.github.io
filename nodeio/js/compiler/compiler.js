@@ -34,8 +34,12 @@ import { travelGraphFromOutputs } from "./pathing.js";
 let currentState;
 /** @type {Map<EditorNode, SocketSlotDefinition>} */
 let currentSockets;
+/** @type {NodeMetadata} */
+let currentMetadata;
 /** @type {EditableNode} */
 let context;
+/** @type {boolean} */
+let hadError;
 
 /**
  * @param {SocketBase} socket
@@ -77,6 +81,7 @@ const processSocket = socket => {
 
   if (otherValues === undefined) {
     context.setErrorState(true);
+    hadError = true;
     throw new Error("Socket node isn't present in currentState");
   }
   
@@ -102,11 +107,15 @@ const processNode = node => {
     return;
   }
 
-  const socketValues = currentState.get(node);
+  const socketValues = currentState.get(node) ?? [];
+  console.debug(`Compiling '${node.type?.id}' node...`, socketValues);
 
-  if (!nodeType.compile(node, socketValues ?? [])) {
+  if (!nodeType.compile(node, socketValues)) {
     context.setErrorState(true);
+    hadError = true;
   }
+
+  console.debug(`Compiled '${node.type?.id}' node.`, socketValues);
 };
 
 export const BUILT_IN_COLOR = "333";
@@ -124,13 +133,14 @@ export const removeSocketDefinition = node => currentSockets.delete(node);
 export const getSocketDefinition = node => currentSockets.get(node);
 
 /** @param {NodeMetadata} meta */
-export const setMetadata = meta => context.setMetadata(meta);
+export const setMetadata = meta => currentMetadata = meta;
 
 /** @param {EditableNode} node */
 export const setCompilerContext = node => context = node;
 
 export const compileGraph = () => {
   context.setErrorState(false);
+  hadError = false;
   const graph = context.graph;
 
   for (const node of graph.addedNodes) {
@@ -143,8 +153,15 @@ export const compileGraph = () => {
 
   currentState = new Map();
   currentSockets = new Map();
-  context.setMetadata({ name: context.id ?? "", color: BUILT_IN_COLOR });
+  currentMetadata = { name: context.id ?? "", color: BUILT_IN_COLOR };
   travelGraphFromOutputs(graph, processSocket, processNode);
+
+  if (hadError) {
+    return;
+  }
+
+  context.setMetadata(currentMetadata);
   const sockets = Array.from(currentSockets.values()).sort((s1, s2) => s1.slot - s2.slot);
   context.setSockets(sockets.map(s => s.def));
+  context.updateHash();
 };
