@@ -269,6 +269,10 @@ const loadConnection = (node, targetSocket, socketId) => {
  * @param {EditorNode | null} outputs
  */
 const loadValue = (nodes, targetSocket, value, inputs, outputs) => {
+  if (value === null) {
+    return;
+  }
+
   if (Array.isArray(value)) {
     let index = 0;
     let nextSocket = /** @type {RepetetiveSocket | null} */ (targetSocket);
@@ -282,7 +286,7 @@ const loadValue = (nodes, targetSocket, value, inputs, outputs) => {
     return;
   }
 
-  if (typeof(value) === "object" && value !== null) {
+  if (typeof(value) === "object") {
     const node = value.node;
     const socket = value.socket;
 
