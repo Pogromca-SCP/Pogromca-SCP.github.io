@@ -5,7 +5,7 @@ import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
 import { ERROR_CLASS } from "../utils.js";
 import { Connection } from "./connections.js";
-import { bindGraphClick, getOffsetLeft, getOffsetTop, NodeGraph, startDrag } from "./graph.js";
+import { bindGraphClick, NodeGraph, startDrag } from "./graph.js";
 import { NamedSocket, NumberSocket, OutputSocket, RepetetiveSocket, SelectSocket, SwitchSocket, TextSocket } from "./sockets.js";
 
 /**
@@ -249,8 +249,8 @@ export class EditorNode {
     this.#type = type;
     this.#hash = type === null ? 0 : type.hash;
     this.#graph = graph;
-    this.#x = getOffsetLeft(x, graph);
-    this.#y = getOffsetTop(y, graph);
+    this.#x = x;
+    this.#y = y;
     const root = document.createElement("div");
     this.#root = root;
     this.#title = document.createElement("p");

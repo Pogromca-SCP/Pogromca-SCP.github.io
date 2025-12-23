@@ -405,6 +405,7 @@ const loadRoot = (id, graph, graphs, visited) => {
     throw new Error(`Cannot find root graph: ${id}`);
   }
 
+  rootType.openInEditor();
   const innerGraph = rootType.graph;
 
   if (innerGraph === null) {
@@ -413,8 +414,9 @@ const loadRoot = (id, graph, graphs, visited) => {
 
   const inputs = innerGraph.inputsNode;
   const outputs = innerGraph.outputsNode;
+  const outputsDef = graph.outputs;
   moveNode(graph.inputs, inputs);
-  moveNode(graph.outputs, outputs);
+  moveNode(outputsDef, outputs);
   const nodes = graph.nodes;
   /** @type {EditorNode[]} */
   const placedNodes = [];
@@ -435,7 +437,21 @@ const loadRoot = (id, graph, graphs, visited) => {
     }
   }
 
-  rootType.openInEditor();
+  if (outputs !== null && outputsDef !== null) {
+    const socketsData = outputsDef.sockets;
+    const nodeSockets = outputs.sockets;
+    const socketsLength = socketsData.length;
+
+    if (socketsLength !== nodeSockets.length) {
+      throw new Error(`Inconsistent output sockets layouts: ${socketsLength} -> ${nodeSockets.length}`);
+    }
+
+    for (let j = 0; j < socketsLength; ++j) {
+      loadValue(placedNodes, nodeSockets[j], socketsData[j], inputs, outputs);
+    }
+  }
+
+  compileGraph();
 };
 
 /** @param {Readonly<ProjectData>} project */

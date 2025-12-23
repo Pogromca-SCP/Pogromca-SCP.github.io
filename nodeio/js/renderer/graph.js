@@ -294,13 +294,13 @@ export const getNode = id => library.get(id);
  * @param {number} x
  * @param {NodeGraph} gr
  */
-export const getOffsetTop = (x, gr) => x - gr.offsetTop - graph.offsetTop;
+const getOffsetTop = (x, gr) => x - gr.offsetTop - graph.offsetTop;
 
 /**
  * @param {number} x
  * @param {NodeGraph} gr
  */
-export const getOffsetLeft = (x, gr) => x - gr.offsetLeft - graph.offsetLeft;
+const getOffsetLeft = (x, gr) => x - gr.offsetLeft - graph.offsetLeft;
 
 /** @param {() => void} handler */
 export const bindGraphClick = handler => graph.addEventListener("click", handler);
@@ -311,7 +311,8 @@ graph.addEventListener("drop", e => {
   const node = library.get(e.dataTransfer?.getData(DRAG_DROP_DATA_FORMAT) ?? "");
 
   if (node !== undefined) {
-    node.instantiate(e.clientX, e.clientY, NodeGraph.currentGraph).add();
+    const gr = NodeGraph.currentGraph;
+    node.instantiate(getOffsetTop(e.clientX, gr), getOffsetLeft(e.clientY, gr), gr).add();
   }
 });
 
