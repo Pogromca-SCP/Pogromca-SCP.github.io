@@ -1,5 +1,5 @@
 // @ts-check
-import { compileGraph, setCompilerContext } from "../compiler/compiler.js";
+import { compileGraph } from "../compiler/compiler.js";
 import { CustomNode } from "../compiler/nodes.js";
 import { getNode, nodeExists, ROOT } from "./graph.js";
 import { EditorNode } from "./nodes.js";
@@ -104,7 +104,7 @@ const saveGraph = graph => {
   /** @type {EditorNode[]} */
   const nodes = [];
 
-  for (const node of graph.addedNodes) {
+  for (const node of graph.addedNodes.filter(n => n.isVisible)) {
     const type = node.type;
 
     if (type !== null) {
@@ -193,8 +193,8 @@ const moveNode = (data, target) => {
 
   const x = data.x;
   const y = data.y;
-  const offsetX = typeof(x) === "number" ? x : 0;
-  const offsetY = typeof(y) === "number" ? y : 0;
+  const offsetX = (typeof(x) === "number" ? x : 0) - target.x;
+  const offsetY = (typeof(y) === "number" ? y : 0) - target.y;
   target.transientMove(offsetX, offsetY);
 };
 
@@ -339,6 +339,7 @@ const loadGraph = (id, graph, graphs, visited) => {
   processDependencies(id, graph, graphs, visited);
   const createdType = new CustomNode();
   createdType.transientChangeId(id);
+  createdType.openInEditor();
   const innerGraph = createdType.graph;
   const inputs = innerGraph.inputsNode;
   const outputs = innerGraph.outputsNode;
@@ -383,7 +384,6 @@ const loadGraph = (id, graph, graphs, visited) => {
     }
   }
 
-  setCompilerContext(createdType);
   compileGraph();
 };
 

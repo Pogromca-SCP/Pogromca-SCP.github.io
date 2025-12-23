@@ -11,10 +11,6 @@ const graph = /** @type {HTMLDivElement} */ (document.getElementById("graph"));
 export const DRAG_DROP_DATA_FORMAT = "text/plain";
 export const SVG_URL = "http://www.w3.org/2000/svg";
 export const ROOT = "root";
-/** @type {number} */
-let initTop;
-/** @type {number} */
-let initLeft;
 
 export class NodeGraph {
   static onGraphChange = () => {};
@@ -139,9 +135,6 @@ export class NodeGraph {
     if (org.parentElement === null) {
       graph.appendChild(org);
     }
-
-    initTop ??= org.offsetTop;
-    initLeft ??= org.offsetLeft;
   }
 
   remove() {
@@ -297,11 +290,17 @@ export const nodeExists = id => library.has(id);
 /** @param {string} id */
 export const getNode = id => library.get(id);
 
-/** @param {number} x */
-export const getOffsetTop = x => x - initTop - graph.offsetTop;
+/**
+ * @param {number} x
+ * @param {NodeGraph} gr
+ */
+export const getOffsetTop = (x, gr) => x - gr.offsetTop - graph.offsetTop;
 
-/** @param {number} x */
-export const getOffsetLeft = x => x - initLeft - graph.offsetLeft;
+/**
+ * @param {number} x
+ * @param {NodeGraph} gr
+ */
+export const getOffsetLeft = (x, gr) => x - gr.offsetLeft - graph.offsetLeft;
 
 /** @param {() => void} handler */
 export const bindGraphClick = handler => graph.addEventListener("click", handler);
