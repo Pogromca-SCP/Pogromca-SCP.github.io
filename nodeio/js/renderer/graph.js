@@ -312,7 +312,7 @@ graph.addEventListener("drop", e => {
 
   if (node !== undefined) {
     const gr = NodeGraph.currentGraph;
-    node.instantiate(getOffsetTop(e.clientX, gr), getOffsetLeft(e.clientY, gr), gr).add();
+    node.instantiate(getOffsetLeft(e.clientX, gr), getOffsetTop(e.clientY, gr), gr).add();
   }
 });
 

@@ -1,12 +1,11 @@
 // @ts-check
 import { compileGraph } from "../compiler/compiler.js";
 import { CustomNode } from "../compiler/nodes.js";
-import { getNode, nodeExists, ROOT } from "./graph.js";
+import { getNode, nodeExists, NodeGraph, ROOT } from "./graph.js";
 import { EditorNode } from "./nodes.js";
 
 /**
  * @typedef {import("../compiler/nodes.js").CompiledNode} CompiledNode
- * @typedef {import("./graph.js").NodeGraph} NodeGraph
  * @typedef {import("./sockets.js").SocketBase<any>} SocketBase 
  * @typedef {import("./sockets.js").RepetetiveSocket} RepetetiveSocket
  * 
@@ -485,4 +484,5 @@ export const deserializeProject = project => {
   }
 
   loadRoot(ROOT, root, graphs, visited);
+  NodeGraph.centerCurrent();
 };
