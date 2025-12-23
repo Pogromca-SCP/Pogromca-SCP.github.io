@@ -38,7 +38,7 @@ import { EditorNode } from "./nodes.js";
  * @param {readonly EditorNode[]} nodes
  */
 const getValue = (socket, inputs, outputs, nodes) => {
-  if (socket.isOutput) {
+  if (socket.isOutput || !socket.isVisible) {
     return null;
   }
 
@@ -342,8 +342,9 @@ const loadGraph = (id, graph, graphs, visited) => {
   const innerGraph = createdType.graph;
   const inputs = innerGraph.inputsNode;
   const outputs = innerGraph.outputsNode;
+  const outputsDef = graph.outputs;
   moveNode(graph.inputs, inputs);
-  moveNode(graph.outputs, outputs);
+  moveNode(outputsDef, outputs);
   const nodes = graph.nodes;
   /** @type {EditorNode[]} */
   const placedNodes = [];
@@ -358,6 +359,24 @@ const loadGraph = (id, graph, graphs, visited) => {
     const socketsData = nodes[i].sockets;
     const nodeSockets = placedNodes[i].sockets;
     const socketsLength = socketsData.length;
+
+    if (socketsLength !== nodeSockets.length) {
+      throw new Error(`Inconsistent sockets layouts: ${socketsLength} -> ${nodeSockets.length}`);
+    }
+
+    for (let j = 0; j < socketsLength; ++j) {
+      loadValue(placedNodes, nodeSockets[j], socketsData[j], inputs, outputs);
+    }
+  }
+
+  if (outputs !== null && outputsDef !== null) {
+    const socketsData = outputsDef.sockets;
+    const nodeSockets = outputs.sockets;
+    const socketsLength = socketsData.length;
+
+    if (socketsLength !== nodeSockets.length) {
+      throw new Error(`Inconsistent output sockets layouts: ${socketsLength} -> ${nodeSockets.length}`);
+    }
 
     for (let j = 0; j < socketsLength; ++j) {
       loadValue(placedNodes, nodeSockets[j], socketsData[j], inputs, outputs);
