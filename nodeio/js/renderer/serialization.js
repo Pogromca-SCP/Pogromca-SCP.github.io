@@ -71,11 +71,12 @@ const saveNode = (node, graph, nodes) => {
   for (const socket of node.sockets) {
     let nextSocket = /** @type {RepetetiveSocket} */ (socket).next;
 
-    if (nextSocket === null) {
+    if (nextSocket === undefined) {
       values.push(getValue(socket, inputs, outputs, nodes));
     } else {
       /** @type {ConnectionData[]} */
       const conns = [];
+      conns.push(getValue(socket, inputs, outputs, nodes));
 
       while (nextSocket) {
         conns.push(getValue(nextSocket, inputs, outputs, nodes));
