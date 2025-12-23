@@ -151,5 +151,5 @@ export const saveProject = () => {
   }
 
   const data = serializeProject(root, graphs);
-  saveFile("", JSON.stringify(data));
+  saveFile("project.json", JSON.stringify(data));
 };
