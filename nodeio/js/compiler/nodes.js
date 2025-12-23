@@ -116,6 +116,11 @@ export class CompiledNode {
     return 0;
   }
 
+  /** @return {NodeGraph | null} */
+  get graph() {
+    return null;
+  }
+
   /** @param {boolean} isError */
   setErrorState(isError) {
     this.#display.className = isError ? ERROR_CLASS : "";
@@ -240,7 +245,7 @@ export class CustomNode extends EditableNode {
   constructor() {
     super(EDITABLE | USABLE | ADDED);
     const graph = this.graph;
-    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "output", BUILT_IN_COLOR, [{ type: "repetetive", name: "", connectionType: [TEXT, NODE_METADATA] }]));
+    graph.addOutputs(new EditorNode(null, graph, INITIAL_POS * 3, INITIAL_POS, "output", BUILT_IN_COLOR, [{ type: "repetetive", name: "", connectionType: [OUTPUT_DATA, NODE_METADATA] }]));
     graph.addInputs(new EditorNode(null, graph, INITIAL_POS, INITIAL_POS, "input", BUILT_IN_COLOR, [{ type: "output", name: "", connectionType: INPUT_CHANNEL }]));
     this.#sockets = [];
     this.#hash = 0;

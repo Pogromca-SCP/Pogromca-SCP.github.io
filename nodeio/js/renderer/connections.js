@@ -109,7 +109,10 @@ export class Connection extends ConnectionBase {
   redraw() {
     const start = this.#output;
     const end = this.#input;
-    this.draw(start.right, start.height, end.left, end.height);
+
+    if (start.isVisible && end.isVisible) {
+      this.draw(start.right, start.height, end.left, end.height);
+    }
   }
 
   queueRedraw() {

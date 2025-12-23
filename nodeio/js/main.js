@@ -1,15 +1,13 @@
 // @ts-check
 import { redoAction, undoAction } from "./history.js";
-import { createNode, initialize } from "./library.js";
+import { createNode, initialize, newProject, openProject, saveProject } from "./library.js";
 import { closeContextMenu } from "./menu.js";
 import { NodeGraph } from "./renderer/graph.js";
 
-const emptyOp = () => {};
-
 globalThis.closeMenu = closeContextMenu;
-globalThis.newGraph = emptyOp;
-globalThis.openGraph = emptyOp;
-globalThis.saveGraph = emptyOp;
+globalThis.newGraph = newProject;
+globalThis.openGraph = openProject;
+globalThis.saveGraph = saveProject;
 globalThis.undoAction = undoAction;
 globalThis.redoAction = redoAction;
 globalThis.centerView = NodeGraph.centerCurrent;
@@ -22,8 +20,8 @@ window.addEventListener("beforeunload", e => {
 
 /** @type {Readonly<Record<string, () => void>>} */
 const binds = {
-  o: emptyOp,
-  s: emptyOp,
+  o: openProject,
+  s: saveProject,
   z: undoAction,
   y: redoAction,
 };

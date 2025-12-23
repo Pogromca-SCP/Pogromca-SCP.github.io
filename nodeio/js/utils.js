@@ -24,8 +24,7 @@ export const textToInt = str => {
       return result;
     }
 
-    result *= 10;
-    result += parseInt(ch);
+    result = result * 10 + parseInt(ch);
   }
 
   return result;
