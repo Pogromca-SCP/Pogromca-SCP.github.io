@@ -1,14 +1,14 @@
 @media all and (prefers-color-scheme: light) {
   :root {
     --color-text: #000000;
-    --color-bg: rgba(219, 218, 215, 1);
+    --color-bg: #dbdad7;
   }
 }
 
 @media all and (prefers-color-scheme: dark) {
   :root {
     --color-text: #dbdad7;
-    --color-bg: rgba(51, 51, 51, 1);
+    --color-bg: #333333;
   }
 }
 

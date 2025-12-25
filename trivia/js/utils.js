@@ -3,14 +3,14 @@
 /** @param {...HTMLElement} items */
 export const show = (...items) => {
   for (const item of items) {
-    item.className = "";
+    item.hidden = false;
   }
 };
 
 /** @param {...HTMLElement} items */
 export const hide = (...items) => {
   for (const item of items) {
-    item.className = "hidden";
+    item.hidden = true;
   }
 };
 

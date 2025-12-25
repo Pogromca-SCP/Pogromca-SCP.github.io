@@ -207,24 +207,24 @@ const gameLoop = () => {
     hide(rows[/** @type {RowId} */ (row)].root);
   }
 
-  const current = gameState.questions.pop();
+  const nextQuestion = gameState.questions.pop();
 
-  if (current === undefined) {
+  if (nextQuestion === undefined) {
     timer.innerHTML = "";
     question.innerText = `Game finished. Final score: ${gameState.score}/${gameState.rounds}`;
     gameState.state = gameStates.settings;
     return;
   }
 
-  const isBoolean = current.type === "boolean";
-  current.incorrect_answers = shuffle(current.incorrect_answers);
-  gameState.correct = isBoolean ? (current.correct_answer === "True" ? rowsIds[0] : rowsIds[1]) : rowsIds[randRange(0, rowsIds.length - 1)];
-  question.innerText = decode(current.question);
+  const isBoolean = nextQuestion.type === "boolean";
+  nextQuestion.incorrect_answers = shuffle(nextQuestion.incorrect_answers);
+  gameState.correct = isBoolean ? (nextQuestion.correct_answer === "True" ? rowsIds[0] : rowsIds[1]) : rowsIds[randRange(0, rowsIds.length - 1)];
+  question.innerText = decode(nextQuestion.question);
   const rowSrc = isBoolean ? [rowsIds[0], rowsIds[1]] : shuffle(rowsIds);
 
   for (const row of rowSrc) {
     const tmp = rows[row];
-    tmp.display.innerText = decode(row === gameState.correct ? current.correct_answer : current.incorrect_answers.pop() ?? "");
+    tmp.display.innerText = decode(row === gameState.correct ? nextQuestion.correct_answer : nextQuestion.incorrect_answers.pop() ?? "");
     show(tmp.root);
   }
 

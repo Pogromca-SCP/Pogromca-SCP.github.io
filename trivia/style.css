@@ -77,8 +77,8 @@ ul {
   list-style-type: "!  ";
 }
 
-ul:empty, .hidden {
-  display: none !important;
+ul:empty, div[hidden] > button, div[hidden] > h2 {
+  display: none;
 }
 
 main > div > a > img {
