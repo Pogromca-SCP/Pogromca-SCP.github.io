@@ -68,6 +68,7 @@ const inputVars = {
 };
 
 const outputs = ["x'", "y'", "h", "s", "l", "a"];
+let frameId = 0;
 
 const displayLineNumbers = () => {
   const len = input.value.split("\n").length;
@@ -85,6 +86,7 @@ const updateLinesScroll = () => lines.scrollTop = input.scrollTop;
 const run = () => {
   runButton.disabled = true;
   inputVars.count = 0;
+  window.cancelAnimationFrame(frameId);
   const pxSize = parseInt(pixelsSize.value);
   const pxCount = parseInt(pixelsCount.value);
 
@@ -194,7 +196,7 @@ const preparePixels = () => {
     });
   }
 
-  window.requestAnimationFrame(execute);
+  frameId = window.requestAnimationFrame(execute);
 };
 
 const execute = () => {
@@ -216,7 +218,7 @@ const execute = () => {
     context.fillRect(round(pixel.x - halfSize), round(pixel.y - halfSize), pxSize, pxSize);
   }
 
-  window.requestAnimationFrame(execute);
+  frameId = window.requestAnimationFrame(execute);
 };
 
 /**
