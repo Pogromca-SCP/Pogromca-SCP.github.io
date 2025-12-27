@@ -122,11 +122,12 @@ const compiler = {
       return;
     }
 
+    const tokenType = token.type;
     let infix = "";
 
-    if (token.type === tokenTypes.end) {
+    if (tokenType === tokenTypes.end) {
       infix = " at end";
-    } else if (token.type !== tokenTypes.error) {
+    } else if (tokenType !== tokenTypes.error) {
       infix = ` at '${token.lexeme}'`;
     }
 
@@ -206,8 +207,10 @@ const compile = (src, inputVars, outputs, onError) => {
     compiler.emitNum(opCodes.pop);
   }
 
-  for (const name in compiler.variables) {
-    if (compiler.variables[name] < 1) {
+  const variables = compiler.variables;
+
+  for (const name in variables) {
+    if (variables[name] < 1) {
       compiler.error(`Variable '${name}' is assigned but its value is never used.`);
     }
   }
@@ -336,36 +339,52 @@ const namedVariable = (name, canAssign) => {
     return;
   }
 
+  const lexeme = name.lexeme;
+
   if (canAssign && compiler.match(tokenTypes.equal)) {
     let define = true;
 
-    if (stdFunctions[name.lexeme] !== undefined) {
-      compiler.error(`Cannot assign value to '${name.lexeme}' because it's a function.`);
+    if (stdFunctions[lexeme] !== undefined) {
+      compiler.error(`Cannot assign value to '${lexeme}' because it's a function.`);
       define = false;
     }
 
-    if (compiler.inputVars[name.lexeme] !== undefined) {
-      compiler.error(`Cannot assign value to '${name.lexeme}' because it's readonly.`);
+    if (compiler.inputVars[lexeme] !== undefined) {
+      compiler.error(`Cannot assign value to '${lexeme}' because it's readonly.`);
       define = false;
     }
 
     expression();
-    compiler.emitNums(opCodes.set, name.lexeme);
+    compiler.emitNums(opCodes.set, lexeme);
 
-    if (define && compiler.variables[name.lexeme] === undefined) {
-      compiler.variables[name.lexeme] = compiler.outputs.includes(name.lexeme) ? 1 : 0;
+    if (define && compiler.variables[lexeme] === undefined) {
+      compiler.variables[lexeme] = compiler.outputs.includes(lexeme) ? 1 : 0;
     }
   } else {
-    if (stdFunctions[name.lexeme] === undefined && compiler.inputVars[name.lexeme] === undefined && compiler.variables[name.lexeme] === undefined) {
-      compiler.error(`Cannot read value of '${name.lexeme}' because it's undefined.`);
+    const vars = compiler.variables;
+    const isStdFunc = stdFunctions[lexeme] !== undefined;
+    const isInputVar = compiler.inputVars[lexeme] !== undefined;
+
+    if (!isStdFunc && !isInputVar && vars[lexeme] === undefined) {
+      compiler.error(`Cannot read value of '${lexeme}' because it's undefined.`);
     }
 
-    if (stdFunctions[name.lexeme] !== undefined && compiler.scanner.peekPrevious !== "(") {
-      compiler.error(`Function '${name.lexeme}' can only be used for calling.`);
+    if (isStdFunc) {
+      if (compiler.scanner.peekPrevious !== "(") {
+        compiler.error(`Function '${lexeme}' can only be used for calling.`);
+      }
+
+      compiler.emitNums(opCodes.getFunc, lexeme);
+      return;
     }
 
-    ++compiler.variables[name.lexeme];
-    compiler.emitNums(opCodes.get, name.lexeme);
+    if (isInputVar) {
+      compiler.emitNums(opCodes.getInput, lexeme);
+      return;
+    }
+
+    ++vars[lexeme];
+    compiler.emitNums(opCodes.get, lexeme);
   }
 };
 

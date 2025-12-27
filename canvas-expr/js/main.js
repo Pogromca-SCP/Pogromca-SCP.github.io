@@ -16,7 +16,6 @@ const output = /** @type {HTMLDivElement} */ (document.getElementById("console")
 const runButton = /** @type {HTMLButtonElement} */ (document.getElementById("run"));
 const pixelsCount = /** @type {Readonly<HTMLInputElement>} */ (document.getElementById("count"));
 const pixelsSize = /** @type {Readonly<HTMLInputElement>} */ (document.getElementById("size"));
-const HIDDEN_CLASS = "hidden";
 
 /**
  * @typedef {object} Pixel
@@ -40,6 +39,9 @@ const vm = {
   pixels: [],
   pixelSize: 0,
   halfSize: 0,
+
+  /** @type {Record<string, number>} */
+  variables: {},
 };
 
 const inputVars = {
@@ -60,7 +62,7 @@ const inputVars = {
   tau: Math.PI * 2,
   time: () => new Date(Date.now()).getTime() / 1000,
   simulationTime: () => new Date(Date.now() - vm.started.getTime()).getTime() / 1000,
-  simulationStartTime: () => vm.started.getTime() / 1000,
+  simulationStartTime: 0,
   width: () => canvas.width,
   height: () => canvas.height,
 };
@@ -78,9 +80,7 @@ const displayLineNumbers = () => {
   lines.innerHTML = value;
 };
 
-const updateLinesScroll = () => {
-  lines.scrollTop = input.scrollTop;
-};
+const updateLinesScroll = () => lines.scrollTop = input.scrollTop;
 
 const run = () => {
   runButton.disabled = true;
@@ -115,12 +115,14 @@ const run = () => {
   vm.pixels = [];
   vm.pixelSize = pxSize;
   vm.halfSize = pxSize / 2;
+  vm.variables = {};
   inputVars.x = [];
   inputVars.y = [];
   inputVars.index = [];
   inputVars.count = pxCount;
   inputVars.fraction = [];
   inputVars.size = pxSize;
+  inputVars.simulationStartTime = vm.started.getTime() / 1000;
   addInfo(`Running expression with ${pxCount} elements of size: ${pxSize}.`);
   preparePixels();
   runButton.disabled = false;
@@ -129,13 +131,13 @@ const run = () => {
 const clearConsole = () => output.innerHTML = "";
 
 const showRef = () => {
-  popupContainer.className = "";
-  popupCover.className = "";
+  popupContainer.hidden = false;
+  popupCover.hidden = false;
 };
 
 const hideRef = () => {
-  popupContainer.className = HIDDEN_CLASS;
-  popupCover.className = HIDDEN_CLASS;
+  popupContainer.hidden = true;
+  popupCover.hidden = true;
 };
 
 /**
@@ -159,22 +161,30 @@ const addError = message => addMessage(message, "error");
 const addSuccess = message => addMessage(message, "success");
 
 const preparePixels = () => {
-  if (inputVars.count < 1) {
+  const pxCount = inputVars.count;
+
+  if (pxCount < 1) {
     return;
   }
 
-  const columns = Math.floor(Math.sqrt(inputVars.count));
-  const rows = Math.ceil(inputVars.count / columns);
+  const floor = Math.floor;
+  const columns = floor(Math.sqrt(pxCount));
+  const rows = Math.ceil(pxCount / columns);
   const dx = canvas.width / columns;
   const dy = canvas.height / rows;
+  const inputX = inputVars.x;
+  const inputY = inputVars.y;
+  const inputIndex = inputVars.index;
+  const inputFrac = inputVars.fraction;
+  const pixels = vm.pixels;
 
-  for (let i = 0; i < inputVars.count; ++i) {
-    inputVars.x.push((i % columns + 0.5) * dx);
-    inputVars.y.push((Math.floor(i / columns) % rows + 0.5) * dy);
-    inputVars.index.push(i);
-    inputVars.fraction.push(i / inputVars.count);
+  for (let i = 0; i < pxCount; ++i) {
+    inputX.push((i % columns + 0.5) * dx);
+    inputY.push((floor(i / columns) % rows + 0.5) * dy);
+    inputIndex.push(i);
+    inputFrac.push(i / pxCount);
 
-    vm.pixels.push({
+    pixels.push({
       x: 0,
       y: 0,
       h: 0,
@@ -189,16 +199,21 @@ const preparePixels = () => {
 
 const execute = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
+  const pxCount = inputVars.count;
+  const pixels = vm.pixels;
+  const round = Math.round;
+  const halfSize = vm.halfSize;
+  const pxSize = vm.pixelSize;
 
-  for (let i = 0; i < inputVars.count; ++i) {
-    const pixel = vm.pixels[i];
+  for (let i = 0; i < pxCount; ++i) {
+    const pixel = pixels[i];
 
     if (!updatePixel(pixel, i)) {
       return;
     }
 
     context.fillStyle = `hsla(${pixel.h}, ${pixel.s}%, ${pixel.l}%, ${pixel.a})`;
-    context.fillRect(Math.round(pixel.x - vm.halfSize), Math.round(pixel.y - vm.halfSize), vm.pixelSize, vm.pixelSize);
+    context.fillRect(round(pixel.x - halfSize), round(pixel.y - halfSize), pxSize, pxSize);
   }
 
   window.requestAnimationFrame(execute);
@@ -209,99 +224,87 @@ const execute = () => {
  * @param {number} i
  */
 const updatePixel = (pixel, i) => {
-  /** @type {Record<string, number>} */
-  const data = {};
+  const data = vm.variables;
+  const chunk = vm.chunk;
+  const chunkLength = chunk.length;
+  const stack = vm.stack;
   let index = 0;
 
-  while (index < vm.chunk.length) {
-    let op = vm.chunk[index++];
+  while (index < chunkLength) {
+    let op = chunk[index++];
 
     switch (op) {
       case opCodes.constant:
-        vm.stack.push(vm.chunk[index++]);
+        stack.push(chunk[index++]);
         break;
       case opCodes.pop:
-        vm.stack.pop();
+        stack.pop();
         break;
       case opCodes.get: {
-        op = vm.chunk[index++];
-        /** @type {StdFuncBody | readonly number[] | number | undefined} */
-        let value = stdFunctions[op]?.func;
-
-        if (value === undefined) {
-          value = /** @type {Record<string | number, number | readonly number[] | StdFuncBody | undefined>} */ (inputVars)[op];
-
-          if (value === undefined) {
-            value = data[op];
-          } else if (typeof(value) === "function") {
-            value = value();
-          } else if (typeof(value) !== "number") {
-            value = value[i];
-          }
-        }
-
-        vm.stack.push(value);
+        op = chunk[index++];
+        const value = data[op];
+        stack.push(value);
         break;
       }
       case opCodes.set: {
-        op = vm.chunk[index++];
-        data[op] = /** @type {number} */ (vm.stack.pop());
+        op = chunk[index++];
+        data[op] = /** @type {number} */ (stack.pop());
         break;
       }
       case opCodes.equal: {
-        const b = vm.stack.pop();
-        const a = vm.stack.pop();
-        vm.stack.push(a === b ? 1 : 0);
+        const b = stack.pop();
+        const a = stack.pop();
+        stack.push(a === b ? 1 : 0);
         break;
       }
       case opCodes.greater: {
-        const b = /** @type {number} */ (vm.stack.pop());
-        const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(a > b ? 1 : 0);
+        const b = /** @type {number} */ (stack.pop());
+        const a = /** @type {number} */ (stack.pop());
+        stack.push(a > b ? 1 : 0);
         break;
       }
       case opCodes.less: {
-        const b = /** @type {number} */ (vm.stack.pop());
-        const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(a < b ? 1 : 0);
+        const b = /** @type {number} */ (stack.pop());
+        const a = /** @type {number} */ (stack.pop());
+        stack.push(a < b ? 1 : 0);
         break;
       }
       case opCodes.add: {
-        const b = /** @type {number} */ (vm.stack.pop());
-        const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(a + b);
+        const b = /** @type {number} */ (stack.pop());
+        const a = /** @type {number} */ (stack.pop());
+        stack.push(a + b);
         break;
       }
       case opCodes.subtract: {
-        const b = /** @type {number} */ (vm.stack.pop());
-        const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(a - b);
+        const b = /** @type {number} */ (stack.pop());
+        const a = /** @type {number} */ (stack.pop());
+        stack.push(a - b);
         break;
       }
       case opCodes.multiply: {
-        const b = /** @type {number} */ (vm.stack.pop());
-        const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(a * b);
+        const b = /** @type {number} */ (stack.pop());
+        const a = /** @type {number} */ (stack.pop());
+        stack.push(a * b);
         break;
       }
       case opCodes.divide: {
-        const b = /** @type {number} */ (vm.stack.pop());
-        const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(b === 0 ? 0 : a / b);
+        const b = /** @type {number} */ (stack.pop());
+        const a = /** @type {number} */ (stack.pop());
+        stack.push(b === 0 ? 0 : a / b);
         break;
       }
       case opCodes.not: {
-        const value = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(value === 0 ? 1 : 0);
+        const value = /** @type {number} */ (stack.pop());
+        stack.push(value === 0 ? 1 : 0);
         break;
       }
       case opCodes.negate: {
-        const value = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(-value);
+        const value = /** @type {number} */ (stack.pop());
+        stack.push(-value);
         break;
       }
       case opCodes.call: {
-        op = /** @type {number} */ (vm.chunk[index++]);
+        op = /** @type {number} */ (chunk[index++]);
 
         if (!runFunctionCall(op)) {
           return false;
@@ -310,27 +313,46 @@ const updatePixel = (pixel, i) => {
         break;
       }
       case opCodes.exp: {
-        const b = /** @type {number} */ (vm.stack.pop());
-        const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(a ** b);
+        const b = /** @type {number} */ (stack.pop());
+        const a = /** @type {number} */ (stack.pop());
+        stack.push(a ** b);
         break;
       }
       case opCodes.mod: {
-        const b = /** @type {number} */ (vm.stack.pop());
-        const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push(b === 0 ? 0 : a % b);
+        const b = /** @type {number} */ (stack.pop());
+        const a = /** @type {number} */ (stack.pop());
+        stack.push(b === 0 ? 0 : a % b);
         break;
       }
       case opCodes.and: {
-        const b = /** @type {number} */ (vm.stack.pop());
-        const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push((a === 0 || b === 0) ? 0 : 1);
+        const b = /** @type {number} */ (stack.pop());
+        const a = /** @type {number} */ (stack.pop());
+        stack.push((a === 0 || b === 0) ? 0 : 1);
         break;
       }
       case opCodes.or: {
-        const b = /** @type {number} */ (vm.stack.pop());
-        const a = /** @type {number} */ (vm.stack.pop());
-        vm.stack.push((a === 0 && b === 0) ? 0 : 1);
+        const b = /** @type {number} */ (stack.pop());
+        const a = /** @type {number} */ (stack.pop());
+        stack.push((a === 0 && b === 0) ? 0 : 1);
+        break;
+      }
+      case opCodes.getFunc: {
+        op = chunk[index++];
+        const func = stdFunctions[op].func;
+        stack.push(func);
+        break;
+      }
+      case opCodes.getInput: {
+        op = chunk[index++];
+        const value = /** @type {Record<string | number, number | readonly number[] | StdFuncBody>} */ (inputVars)[op];
+
+        if (typeof(value) === "function") {
+          stack.push(value());
+        } else if (typeof(value) === "number") {
+          stack.push(value);
+        } else {
+          stack.push(value[i]);
+        }
         break;
       }
       default:
@@ -353,31 +375,33 @@ const clamp = x => x < 0 ? 0 : (x > 1 ? 1 : x);
 
 /** @param {number} argNum */
 const runFunctionCall = argNum => {
+  const stack = vm.stack;
+
   switch (argNum) {
     case 0: {
-      const func = /** @type {StdFuncBody} */ (vm.stack.pop());
-      vm.stack.push(func());
+      const func = /** @type {StdFuncBody} */ (stack.pop());
+      stack.push(func());
       break;
     }
     case 1: {
-      const a = /** @type {number} */ (vm.stack.pop());
-      const func = /** @type {StdFuncBody} */ (vm.stack.pop());
-      vm.stack.push(func(a));
+      const a = /** @type {number} */ (stack.pop());
+      const func = /** @type {StdFuncBody} */ (stack.pop());
+      stack.push(func(a));
       break;
     }
     case 2: {
-      const b = /** @type {number} */ (vm.stack.pop());
-      const a = /** @type {number} */ (vm.stack.pop());
-      const func = /** @type {StdFuncBody} */ (vm.stack.pop());
-      vm.stack.push(func(a, b));
+      const b = /** @type {number} */ (stack.pop());
+      const a = /** @type {number} */ (stack.pop());
+      const func = /** @type {StdFuncBody} */ (stack.pop());
+      stack.push(func(a, b));
       break;
     }
     case 3: {
-      const c = /** @type {number} */ (vm.stack.pop());
-      const b = /** @type {number} */ (vm.stack.pop());
-      const a = /** @type {number} */ (vm.stack.pop());
-      const func = /** @type {StdFuncBody} */ (vm.stack.pop());
-      vm.stack.push(func(a, b, c));
+      const c = /** @type {number} */ (stack.pop());
+      const b = /** @type {number} */ (stack.pop());
+      const a = /** @type {number} */ (stack.pop());
+      const func = /** @type {StdFuncBody} */ (stack.pop());
+      stack.push(func(a, b, c));
       break;
     }
     default:

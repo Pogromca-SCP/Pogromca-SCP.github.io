@@ -64,6 +64,10 @@ const showInstruction = (chunk, offset) => {
       return simple("OP_AND", offset);
     case opCodes.or:
       return simple("OP_OR", offset);
+    case opCodes.getFunc:
+      return constant(chunk, "OP_GET_FUNC", offset);
+    case opCodes.getInput:
+      return constant(chunk, "OP_GET_INPUT", offset);
     default:
       debugMessage += `\nUnknown opcode ${chunk[offset]}`;
       return offset + 1;
@@ -71,10 +75,11 @@ const showInstruction = (chunk, offset) => {
 };
 
 /** @param {readonly (number | string)[]} chunk */
-const showChunk = (chunk) => {
+const showChunk = chunk => {
   debugMessage = "Compiled chunk:";
+  const chunkLength = chunk.length;
 
-  for (let i = 0; i < chunk.length; ) {
+  for (let i = 0; i < chunkLength; ) {
     i = showInstruction(chunk, i);
   }
 

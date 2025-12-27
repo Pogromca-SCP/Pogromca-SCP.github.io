@@ -144,6 +144,6 @@ h1 {
   text-align: center;
 }
 
-.hidden {
-  display: none !important;
+#popup-cover[hidden], #popup-container[hidden] {
+  display: none;
 }

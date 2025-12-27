@@ -95,6 +95,10 @@ export const opCodes = {
   and: 16,
   /** @readonly */
   or: 17,
+  /** @readonly */
+  getFunc: 18,
+  /** @readonly */
+  getInput: 19,
 };
 
 /** @enum {number} */
