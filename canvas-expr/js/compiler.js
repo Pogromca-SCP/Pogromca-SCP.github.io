@@ -40,13 +40,14 @@ const compiler = {
 
   advance() {
     this.previous = this.current;
+    const errorTk = tokenTypes.error;
 
     while (true) {
       do {
         this.current = this.scanner.scanToken();
       } while (this.current === null);
 
-      if (this.current.type !== tokenTypes.error) {
+      if (this.current.type !== errorTk) {
         return;
       }
 
@@ -200,11 +201,14 @@ const compile = (src, inputVars, outputs, onError) => {
   compiler.outputs = outputs;
   compiler.onError = onError;
   compiler.advance();
+  const end = tokenTypes.end;
+  const semicolon = tokenTypes.semicolon;
+  const pop = opCodes.pop;
 
-  while (!compiler.match(tokenTypes.end)) {
+  while (!compiler.match(end)) {
     expression();
-    compiler.consume(tokenTypes.semicolon, "Expected ';' after expression.");
-    compiler.emitNum(opCodes.pop);
+    compiler.consume(semicolon, "Expected ';' after expression.");
+    compiler.emitNum(pop);
   }
 
   const variables = compiler.variables;
@@ -313,10 +317,12 @@ const argumentsList = () => {
   let count = 0;
 
   if (!compiler.check(tokenTypes.rightParen)) {
+    const comma = tokenTypes.comma;
+
     do {
       expression();
       ++count;
-    } while (compiler.match(tokenTypes.comma));
+    } while (compiler.match(comma));
   }
 
   compiler.consume(tokenTypes.rightParen, "Expected ')' after arguments.");

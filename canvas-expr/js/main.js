@@ -250,7 +250,9 @@ const updatePixel = (pixel, i) => {
       }
       case opCodes.set: {
         op = chunk[index++];
-        data[op] = /** @type {number} */ (stack.pop());
+        const value = /** @type {number} */ (stack.pop());
+        data[op] = value;
+        stack.push(value);
         break;
       }
       case opCodes.equal: {
