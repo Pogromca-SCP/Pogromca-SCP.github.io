@@ -5,7 +5,7 @@ import { doAction } from "../history.js";
 import { closeContextMenu, showContextMenu } from "../menu.js";
 import { ERROR_CLASS } from "../utils.js";
 import { Connection } from "./connections.js";
-import { bindGraphClick, NodeGraph, startDrag } from "./graph.js";
+import { bindGraphClick, NodeGraph, startDrag, startTouch } from "./graph.js";
 import { NamedSocket, NumberSocket, OutputSocket, RepetetiveSocket, SelectSocket, SwitchSocket, TextSocket } from "./sockets.js";
 
 /**
@@ -533,6 +533,14 @@ export class EditorNode {
 
       if (this.isSelected) {
         startDrag(e, EditorNode.moveSelectionVisualOnly, nodeDragEnd);
+      }
+    };
+
+    root.ontouchstart = e => {
+      e.stopPropagation();
+
+      if (this.isSelected) {
+        startTouch(e, EditorNode.moveSelectionVisualOnly, nodeDragEnd);
       }
     };
 

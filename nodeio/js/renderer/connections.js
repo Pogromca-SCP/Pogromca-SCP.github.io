@@ -1,5 +1,5 @@
 // @ts-check
-import { startDrag, SVG_URL } from "./graph.js";
+import { startDrag, startTouch, SVG_URL } from "./graph.js";
 
 /**
  * @typedef {import("./graph.js").NodeGraph} NodeGraph
@@ -160,6 +160,11 @@ export class DraggableConnection extends ConnectionBase {
   /** @param {MouseEvent} e */
   startDraw(e) {
     startDrag(e, (x, y) => this.drawInProgress(x, y), () => this.remove());
+  }
+
+  /** @param {TouchEvent} e */
+  startTouchDraw(e) {
+    startTouch(e, (x, y) => this.drawInProgress(x, y), () => this.remove());
   }
 
   /**

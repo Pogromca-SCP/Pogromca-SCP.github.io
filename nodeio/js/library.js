@@ -4,7 +4,7 @@ import { ADDED, CompiledNode, CustomNode, RootNode } from "./compiler/nodes.js";
 import { loadFile, saveFile } from "./files.js";
 import { clearActionHistory } from "./history.js";
 import { showContextMenu } from "./menu.js";
-import { DRAG_DROP_DATA_FORMAT, getAllNodes, getNode, ROOT } from "./renderer/graph.js";
+import { DRAG_DROP_DATA_FORMAT, getAllNodes, getNode, ROOT, setDraggedNode } from "./renderer/graph.js";
 import { deserializeProject, serializeProject } from "./renderer/serialization.js";
 import { hasFlag } from "./utils.js";
 
@@ -63,6 +63,7 @@ const updateLibraryElement = (element, show) => {
   if (element.draggable) {
     const id = element.innerText;
     element.ondragstart = e => e.dataTransfer?.setData(DRAG_DROP_DATA_FORMAT, id);
+    element.ontouchstart = e => setDraggedNode(id);
   }
 
   const filter = search.value;

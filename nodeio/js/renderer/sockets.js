@@ -533,6 +533,7 @@ export class SocketBase {
     if (input !== null) {
       input.onclick = removeContext;
       input.onmousedown = dontPropagate;
+      input.ontouchstart = dontPropagate;
       input.oncontextmenu = removeContext;
       root.appendChild(input);
     }
@@ -553,13 +554,22 @@ export class SocketBase {
         tmpConnection.startDraw(e);
       };
 
-      element.onmouseup = e => {
+      element.ontouchstart = e => {
+        e.stopPropagation();
+        tmpConnection = new DraggableConnection(this.#node.graph, this, true);
+        tmpConnection.startTouchDraw(e);
+      };
+
+      const clearFunc = () => {
         if (tmpConnection !== null) {
           this.changeConnection(tmpConnection.socket);
         }
 
         tmpConnection = null;
       };
+
+      element.onmouseup = clearFunc;
+      element.ontouchend = clearFunc;
 
       element.oncontextmenu = e => {
         if (this.#connection === null) {
@@ -582,10 +592,19 @@ export class SocketBase {
         tmpConnection.startDraw(e);
       };
 
-      element.onmouseup = e => {
+      element.ontouchstart = e => {
+        e.stopPropagation();
+        tmpConnection = new DraggableConnection(this.#node.graph, this, false);
+        tmpConnection.startTouchDraw(e);
+      };
+
+      const clearFunc = () => {
         tmpConnection?.socket.changeConnection(this);
         tmpConnection = null;
       };
+
+      element.onmouseup = clearFunc;
+      element.ontouchend = clearFunc;
     }
 
     return element;

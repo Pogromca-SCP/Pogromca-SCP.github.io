@@ -196,14 +196,17 @@ const coords = [0, 0, 0, 0];
 let onDrag = null;
 /** @type {(() => void) | null} */
 let onEnd = null;
+let draggedType = "";
 
 /** @param {MouseEvent} e */
 const continueDrag = e => {
   e.preventDefault();
-  coords[0] = coords[2] - e.clientX;
-  coords[1] = coords[3] - e.clientY;
-  coords[2] = e.clientX;
-  coords[3] = e.clientY;
+  const clX = e.clientX;
+  const clY = e.clientY;
+  coords[0] = coords[2] - clX;
+  coords[1] = coords[3] - clY;
+  coords[2] = clX;
+  coords[3] = clY;
   
   if (onDrag !== null) {
     onDrag(coords[0], coords[1]);
@@ -213,17 +216,52 @@ const continueDrag = e => {
 /** @param {MouseEvent} e */
 const continueBgDrag = e => {
   e.preventDefault();
-  coords[0] = coords[2] - e.clientX;
-  coords[1] = coords[3] - e.clientY;
-  coords[2] = e.clientX;
-  coords[3] = e.clientY;
+  const clX = e.clientX;
+  const clY = e.clientY;
+  coords[0] = coords[2] - clX;
+  coords[1] = coords[3] - clY;
+  coords[2] = clX;
+  coords[3] = clY;
   NodeGraph.currentGraph.moveOrigin(coords[0], coords[1]);
+};
+
+/** @param {TouchEvent} e */
+const continueTouch = e => {
+  e.preventDefault();
+  const touches = e.targetTouches[0];
+  const clX = touches.pageX;
+  const clY = touches.pageY;
+  coords[0] = coords[2] - clX;
+  coords[1] = coords[3] - clY;
+  coords[2] = clX;
+  coords[3] = clY;
+  
+  if (onDrag !== null) {
+    onDrag(coords[0], coords[1]);
+  }
+};
+
+/** @param {TouchEvent} e */
+const continueBgTouch = e => {
+  e.preventDefault();
+  const touches = e.targetTouches[0];
+  const clX = touches.pageX;
+  const clY = touches.pageY;
+  coords[0] = coords[2] - clX;
+  coords[1] = coords[3] - clY;
+  coords[2] = clX;
+  coords[3] = clY;
+  NodeGraph.currentGraph.moveOrigin(coords[0], coords[1]);
+};
+
+const endBgDrag = () => {
+  document.onmousemove = null;
+  document.onmouseup = null;
 };
 
 /** @param {Readonly<MouseEvent>} e */
 const endDrag = e => {
-  document.onmousemove = null;
-  document.onmouseup = null;
+  endBgDrag();
 
   if (onEnd !== null) {
     onEnd();
@@ -233,10 +271,22 @@ const endDrag = e => {
   onEnd = null;
 };
 
-/** @param {Readonly<MouseEvent>} e */
-const endBgDrag = e => {
-  document.onmousemove = null;
-  document.onmouseup = null;
+const endBgTouch = () => {
+  document.ontouchmove = null;
+  document.ontouchend = null;
+  document.ontouchcancel = null;
+};
+
+/** @param {Readonly<TouchEvent>} e */
+const endTouch = e => {
+  endBgTouch();
+
+  if (onEnd !== null) {
+    onEnd();
+  }
+
+  onDrag = null;
+  onEnd = null;
 };
 
 /**
@@ -253,6 +303,7 @@ export const startDrag = (e, dragHandler, endHandler) => {
     onEnd = null;
   }
   
+  endBgTouch();
   onDrag = dragHandler;
   onEnd = endHandler;
   document.onmousemove = continueDrag;
@@ -269,8 +320,49 @@ const startBgDrag = e => {
     onEnd = null;
   }
 
+  endBgTouch();
   document.onmousemove = continueBgDrag;
   document.onmouseup = endBgDrag;
+};
+
+/**
+ * @param {Readonly<TouchEvent>} e
+ * @param {((x: number, y: number) => void) | null} touchHandler
+ * @param {(() => void) | null} endHandler
+ */
+export const startTouch = (e, touchHandler, endHandler) => {
+  const touches = e.targetTouches[0];
+  coords[2] = touches.pageX;
+  coords[3] = touches.pageY;
+
+  if (onEnd !== null) {
+    onEnd();
+    onEnd = null;
+  }
+  
+  endBgDrag();
+  onDrag = touchHandler;
+  onEnd = endHandler;
+  document.ontouchmove = continueTouch;
+  document.ontouchend = endTouch;
+  document.ontouchcancel = endTouch;
+};
+
+/** @param {Readonly<TouchEvent>} e */
+const startBgTouch = e => {
+  const touches = e.targetTouches[0];
+  coords[2] = touches.pageX;
+  coords[3] = touches.pageY;
+  
+  if (onEnd !== null) {
+    onEnd();
+    onEnd = null;
+  }
+
+  endBgDrag();
+  document.ontouchmove = continueBgTouch;
+  document.ontouchend = endBgTouch;
+  document.ontouchcancel = endBgTouch;
 };
 
 export const getAllNodes = () => library.values();
@@ -289,6 +381,9 @@ export const nodeExists = id => library.has(id);
 
 /** @param {string} id */
 export const getNode = id => library.get(id);
+
+/** @param {string} value */
+export const setDraggedNode = value => draggedType = value;
 
 /**
  * @param {number} x
@@ -309,6 +404,7 @@ graph.addEventListener("dragover", stopDefault);
 
 graph.addEventListener("drop", e => {
   const node = library.get(e.dataTransfer?.getData(DRAG_DROP_DATA_FORMAT) ?? "");
+  draggedType = "";
 
   if (node !== undefined) {
     const gr = NodeGraph.currentGraph;
@@ -316,4 +412,17 @@ graph.addEventListener("drop", e => {
   }
 });
 
+graph.addEventListener("touchend", e => {
+  const node = library.get(draggedType);
+  draggedType = "";
+
+  if (node !== undefined) {
+    const touches = e.targetTouches[0];
+    const gr = NodeGraph.currentGraph;
+    node.instantiate(getOffsetLeft(touches.pageX, gr), getOffsetTop(touches.pageY, gr), gr).add();
+  }
+});
+
+graph.addEventListener("touchcancel", e => draggedType = "");
 graph.addEventListener("mousedown", startBgDrag);
+graph.addEventListener("touchstart", startBgTouch);
