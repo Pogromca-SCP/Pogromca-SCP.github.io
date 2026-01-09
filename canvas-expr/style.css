@@ -72,6 +72,9 @@ body {
 }
 
 #menu {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
   border-bottom: var(--color-bg-secondary) 3px solid;
   background-color: var(--color-bg-primary);
   position: sticky;
@@ -137,6 +140,7 @@ a {
   border-radius: 10px;
   background-color: var(--color-bg-primary);
   padding: 1rem;
+  overflow-x: auto;
   overflow-y: auto;
 }
 

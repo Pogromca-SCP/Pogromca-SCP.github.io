@@ -32,8 +32,6 @@ html {
 
 body {
   margin: 0;
-  min-width: 900px;
-  min-height: 600px;
   height: 100dvh;
 }
 
