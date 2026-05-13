@@ -6,7 +6,6 @@ const CACHE_NAME = `${CACHE_PREFIX}v1`;
 
 /** @type {readonly string[]} */
 const urls = [
-  `${SCOPE}/`,
   `${SCOPE}/index.html`,
   `${SCOPE}/style.css`,
   `${SCOPE}/app.js`,
@@ -20,6 +19,16 @@ const urls = [
   `${SCOPE}/canvas-expr/js/main.js`,
   `${SCOPE}/canvas-expr/js/scanner.js`,
   `${SCOPE}/canvas-expr/js/std-lib.js`,
+  `${SCOPE}/icons/icons.html`,
+  `${SCOPE}/icons/icons.png`,
+  `${SCOPE}/icons/main.js`,
+  `${SCOPE}/icons/style.css`,
+  `${SCOPE}/trivia/style.css`,
+  `${SCOPE}/trivia/trivia.html`,
+  `${SCOPE}/trivia/trivia.png`,
+  `${SCOPE}/trivia/js/enums.js`,
+  `${SCOPE}/trivia/js/main.js`,
+  `${SCOPE}/trivia/js/utils.js`,
 ];
 
 self.addEventListener("fetch", e => e.respondWith(async () => {
