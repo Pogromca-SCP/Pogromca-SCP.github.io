@@ -1,0 +1,21 @@
+{
+  "name": "AS Portfolio Demo App",
+  "short_name": "AS PWA",
+  "id": "https://pogromca-scp.github.io",
+  "description": "Adam Szerszenowicz's portfolio app.",
+  "start_url": "https://pogromca-scp.github.io",
+  "scope": "https://pogromca-scp.github.io",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "./logo.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "./logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

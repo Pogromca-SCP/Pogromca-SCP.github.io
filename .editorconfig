@@ -7,6 +7,6 @@ trim_trailing_whitespace = true
 charset = utf-8
 tab_width = 4
 
-[*.{html,css,js}]
+[*.{html,css,js,json}]
 indent_style = space
 indent_size = 2
